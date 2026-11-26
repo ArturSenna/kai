@@ -5659,7 +5659,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     "Cores, posições e fontes do arquivo; desligue se a TV engasgar": "The file's colours, positions and fonts; turn off if the TV struggles",
     "Quando o arquivo tem mais de uma faixa de áudio": "When the file has more than one audio track",
     "O servidor do PC não conseguiu ler esta legenda.": "The PC server couldn't read this subtitle.",
-    "Reinicie a TV (segure o botão de ligar) e abra o app de novo": "Restart the TV (hold the power button) and open the app again"
+    "Reinicie a TV (segure o botão de ligar) e abra o app de novo": "Restart the TV (hold the power button) and open the app again",
+    "Carregando legenda...": "Loading subtitle..."
   };
   var AR_EXTRA = {
     "Português (Brasil)": "البرتغالية (البرازيل)",
@@ -5678,7 +5679,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     "Cores, posições e fontes do arquivo; desligue se a TV engasgar": "ألوان الملف ومواضعه وخطوطه؛ أوقفها إذا تعثّر التلفاز",
     "Quando o arquivo tem mais de uma faixa de áudio": "عندما يحتوي الملف على أكثر من مسار صوتي",
     "O servidor do PC não conseguiu ler esta legenda.": "تعذّر على خادم الكمبيوتر قراءة هذه الترجمة.",
-    "Reinicie a TV (segure o botão de ligar) e abra o app de novo": "أعد تشغيل التلفاز (اضغط مطولًا على زر التشغيل) ثم افتح التطبيق مجددًا"
+    "Reinicie a TV (segure o botão de ligar) e abra o app de novo": "أعد تشغيل التلفاز (اضغط مطولًا على زر التشغيل) ثم افتح التطبيق مجددًا",
+    "Carregando legenda...": "جارٍ تحميل الترجمة..."
   };
 
   // src/js/lib/i18n.js
@@ -5781,7 +5783,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   function postJSON(url3, body, opts) {
     return request("POST", url3, body, opts);
   }
-  function getText(url3, opts) {
+  function _getText(url3, opts) {
     return request("GET", url3, null, Object.assign({
       raw: true
     }, opts));
@@ -9229,6 +9231,87 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     return playable ? "" : bad;
   }
 
+  // src/js/lib/embedsubs.js
+  var BLOCK = 10;
+  var AHEAD_MAX = 30;
+  var AHEAD_MIN = 6;
+  var MAX_FAILS = 3;
+  function Loader(o) {
+    var session2 = o.newSession();
+    var have = {};
+    var seen = {};
+    var _cues = [];
+    var busy = false;
+    var reading = false;
+    var last2 = 0;
+    var fails = 0;
+    var _failed = false;
+    var stopped = false;
+    function blockAt(time) {
+      return Math.floor(Math.max(0, time) / BLOCK) + 1;
+    }
+    function release() {
+      if (!reading) return;
+      reading = false;
+      last2 = 0;
+      o.getText(o.stopUrl(session2)).catch(function () {});
+      session2 = o.newSession();
+    }
+    function fetchBlock(k) {
+      busy = true;
+      reading = true;
+      o.getText(o.blockUrl(session2, k)).then(function (text) {
+        have[k] = true;
+        last2 = k;
+        fails = 0;
+        o.parse(text).forEach(function (c) {
+          var key2 = c.start + "|" + c.text;
+          if (seen[key2]) return;
+          seen[key2] = true;
+          _cues.push(c);
+        });
+        _cues.sort(function (a, b) {
+          return a.start - b.start;
+        });
+        busy = false;
+        if (!stopped) o.onChange();
+      }, function () {
+        busy = false;
+        if (stopped || ++fails < MAX_FAILS) return;
+        _failed = true;
+        release();
+        o.onFail();
+      });
+    }
+    return {
+      // Call often with the playhead (seconds): fetches what is missing, one block at a time.
+      want: function want(time) {
+        if (stopped || _failed || busy) return;
+        var n = blockAt(time);
+        var missing2 = 0;
+        for (var k = n; k <= n + AHEAD_MAX && !missing2; k++) if (!have[k]) missing2 = k;
+        if (!missing2) return release();
+        if (!reading && missing2 > n + AHEAD_MIN) return;
+        if (reading && last2 && missing2 !== last2 + 1) release();
+        fetchBlock(missing2);
+      },
+      // The text for this moment is in (an empty block counts: nobody speaks).
+      covers: function covers(time) {
+        return !!have[blockAt(time)];
+      },
+      cues: function cues() {
+        return _cues;
+      },
+      failed: function failed() {
+        return _failed;
+      },
+      stop: function stop() {
+        stopped = true;
+        release();
+      }
+    };
+  }
+
   // src/js/views/player.js
   var HIDE_MS = 5e3;
   var SAVE_MS = 15e3;
@@ -9281,6 +9364,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       preload: "auto"
     });
     var subsEl = h("div.subs");
+    var subLoadEl = h("div.p-subload", null, h("span", {
+      text: t("Carregando legenda...")
+    }));
     var titleEl = h("div.p-title");
     var clockEl = h("div.p-clock");
     var posEl = h("div.pos");
@@ -9364,7 +9450,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     }), upNextTitle, upNextCount, h("div.un-buttons", {
       "data-group": ""
     }, [upNextPlay, upNextCancel])]);
-    var el = h("div.view.player", null, [videoEl, subsEl, overlay, skipBox, upNextBox, spinner, msgEl]);
+    var el = h("div.view.player", null, [videoEl, subsEl, subLoadEl, overlay, skipBox, upNextBox, spinner, msgEl]);
     var renderer = Renderer(subsEl);
     apply(subsEl, settings2);
     var alive = true;
@@ -9429,6 +9515,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         forcedOnly: ""
       };
       failedSubs = {};
+      stopEmbLoaders();
+      pendingEmbedded = null;
       embeddedAuto = false;
       embeddedAsked = false;
       addonSubsDone = false;
@@ -9627,11 +9715,13 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       if (forcedOnly !== autoSub.forcedOnly) {
         autoSub.forcedOnly = forcedOnly;
         autoSub.order = Infinity;
+        pendingEmbedded = null;
+        stopEmbLoaders(currentSub.extracted && !currentSub.auto ? currentSub.index : void 0);
         if (currentSub.auto) subsOff();
       }
       var hit = pickSub(subCandidates(), {
         langs: wantedSubs(),
-        preferEmbedded: settings2.preferEmbedded === true,
+        preferEmbedded: embeddedFirst(),
         forcedOnly: forcedOnly
       });
       if (!hit || hit.order >= autoSub.order) {
@@ -9648,11 +9738,16 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       });
       selectAddonSub(again || hit.track.sub, true);
     }
+    function embeddedFirst() {
+      var choice = savedChoice();
+      return settings2.preferEmbedded === true || !!(choice && choice.embedded);
+    }
     function considerEmbedded() {
-      if (!alive || embeddedAsked || !playedAWhile || !addonSubsDone || autoDone.sub || !settings2.subtitlesAuto || !isAvailable()) return;
+      if (!alive || embeddedAsked || !hasPlayed || autoDone.sub || !settings2.subtitlesAuto || !isAvailable()) return;
       var choice = savedChoice();
       if (choice && choice.lang === "off") return;
-      if (!wantedSubs().length || !(settings2.preferEmbedded === true || currentSub.kind === "off")) return;
+      if (!wantedSubs().length) return;
+      if (!embeddedFirst() && !(playedAWhile && addonSubsDone && currentSub.kind === "off")) return;
       embeddedAsked = true;
       var forUrl = mediaUrl;
       streamProgress(mediaUrl).then(function (p) {
@@ -9695,6 +9790,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         }, 6e3);
       }
       hasPlayed = true;
+      considerEmbedded();
       showSpinner(false);
       message("");
       updatePlayBtn();
@@ -10223,34 +10319,101 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       }).catch(function () {});
     }
     function selectEmbeddedSub(index, auto) {
-      renderer.clear();
-      stop();
       streamProgress(mediaUrl).then(function (p) {
         if (!alive) return;
-        if (p !== null && p >= 0.999 || !hasLuna()) extractedSub(index, auto);else nativeEmbeddedSub(index);
+        if (p !== null && p >= 0.999 || !hasLuna()) return extractedSub(index, auto);
+        renderer.clear();
+        stop();
+        nativeEmbeddedSub(index);
+      });
+    }
+    var embLoaders = {};
+    var pendingEmbedded = null;
+    function embLoader(index) {
+      if (embLoaders[index]) return embLoaders[index];
+      var forUrl = mediaUrl;
+      var base2 = baseUrl() + "hlsv2/";
+      var query = "?mediaURL=" + encodeURIComponent(mediaUrl);
+      embLoaders[index] = Loader({
+        newSession: function newSession() {
+          return "kai" + Math.random().toString(36).slice(2);
+        },
+        blockUrl: function blockUrl(sid, k) {
+          return through(base2 + sid + "/subtitle" + index + "/segment" + k + ".vtt" + query, 45e3);
+        },
+        stopUrl: function stopUrl(sid) {
+          return through(base2 + sid + "/destroy", 8e3);
+        },
+        getText: function getText(url3) {
+          return _getText(url3, {
+            timeout: 45e3,
+            quiet: true
+          });
+        },
+        parse: parse,
+        onChange: function onChange() {
+          return alive && forUrl === mediaUrl && embeddedChanged(index);
+        },
+        onFail: function onFail() {
+          return alive && forUrl === mediaUrl && embeddedFailed(index);
+        }
+      });
+      return embLoaders[index];
+    }
+    function stopEmbLoaders(keep) {
+      Object.keys(embLoaders).forEach(function (i) {
+        if (keep !== void 0 && Number(i) === keep) return;
+        embLoaders[i].stop();
+        delete embLoaders[i];
       });
     }
     function extractedSub(index, auto) {
+      var loader = embLoader(index);
+      loader.want(videoEl.currentTime);
+      if (auto && currentSub.kind !== "off" && !loader.covers(videoEl.currentTime)) {
+        pendingEmbedded = {
+          index: index
+        };
+        return;
+      }
+      showExtracted(index, auto);
+    }
+    function showExtracted(index, auto) {
+      pendingEmbedded = null;
+      disableEmbeddedSubs();
       nativeSubsOff();
-      var cs = {
+      stop();
+      currentSub = {
         kind: "embedded",
         index: index,
         extracted: true,
-        auto: !!auto,
-        sid: "kai" + Math.random().toString(36).slice(2),
-        segs: {},
-        cues: [],
-        busy: false,
-        fails: 0
+        auto: !!auto
       };
-      currentSub = cs;
       renderer.setOffset(savedDelay());
-      ensureSegments();
+      renderer.set(embLoader(index).cues());
+      renderer.update(videoEl.currentTime);
+      stopEmbLoaders(index);
+      updateSubLoading();
     }
-    function embeddedFailed(cs) {
-      failedSubs["embedded:" + cs.index] = true;
-      subsOff();
-      if (!cs.auto) return toast(t("O servidor do PC não conseguiu ler esta legenda."));
+    function embeddedChanged(index) {
+      if (!currentSub.extracted || currentSub.index !== index) return;
+      renderer.set(embLoaders[index].cues());
+      renderer.update(videoEl.currentTime);
+      updateSubLoading();
+    }
+    function embeddedFailed(index) {
+      failedSubs["embedded:" + index] = true;
+      var shown = currentSub.extracted && currentSub.index === index;
+      var byHand = shown && !currentSub.auto;
+      if (pendingEmbedded && pendingEmbedded.index === index) pendingEmbedded = null;
+      if (embLoaders[index]) {
+        embLoaders[index].stop();
+        delete embLoaders[index];
+      }
+      if (shown) subsOff();
+      updateSubLoading();
+      if (byHand) return toast(t("O servidor do PC não conseguiu ler esta legenda."));
+      if (currentSub.kind !== "off") return;
       autoSub = {
         order: Infinity,
         tries: autoSub.tries + 1,
@@ -10258,39 +10421,13 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       };
       autoPick();
     }
-    function ensureSegments() {
-      var cs = currentSub;
-      if (!cs.extracted || cs.busy || !alive) return;
-      var n = Math.floor(videoEl.currentTime / 10) + 1;
-      var k = !cs.segs[n] ? n : !cs.segs[n + 1] ? n + 1 : 0;
-      if (!k) return;
-      cs.segs[k] = "loading";
-      cs.busy = true;
-      var url3 = through(baseUrl() + "hlsv2/" + cs.sid + "/subtitle" + cs.index + "/segment" + k + ".vtt?mediaURL=" + encodeURIComponent(mediaUrl), 3e4);
-      getText(url3, {
-        timeout: 3e4,
-        quiet: true
-      }).then(function (txt) {
-        if (currentSub !== cs) return;
-        cs.fails = 0;
-        var seen = {};
-        cs.cues.forEach(function (c) {
-          return seen[c.start + "|" + c.text] = true;
-        });
-        parse(txt).forEach(function (c) {
-          if (!seen[c.start + "|" + c.text]) cs.cues.push(c);
-        });
-        cs.cues.sort(function (a, b) {
-          return a.start - b.start;
-        });
-        renderer.set(cs.cues);
-        renderer.update(videoEl.currentTime);
-      }).catch(function () {
-        delete cs.segs[k];
-        if (currentSub === cs && ++cs.fails >= 3) embeddedFailed(cs);
-      }).then(function () {
-        return cs.busy = false;
-      });
+    var subLoadOn = false;
+    function updateSubLoading() {
+      var on = false;
+      if (currentSub.extracted) on = !embLoaders[currentSub.index] || !embLoaders[currentSub.index].covers(videoEl.currentTime);else if (currentSub.kind === "addon") on = !!currentSub.loading;
+      if (on === subLoadOn) return;
+      subLoadOn = on;
+      subLoadEl.classList.toggle("show", on);
     }
     function nativeEmbeddedSub(index) {
       var id = mediaId();
@@ -10337,6 +10474,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       currentSub = {
         kind: "off"
       };
+      updateSubLoading();
     }
     function selectAddonSub(s, silent) {
       disableEmbeddedSubs();
@@ -10344,11 +10482,15 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       currentSub = {
         kind: "addon",
         id: key2,
-        auto: !!silent
+        auto: !!silent,
+        loading: !silent
       };
+      updateSubLoading();
       renderer.setOffset(savedDelay());
       loadFile(s.url, subtitlesProxy(s.url)).then(function (file) {
         if (!alive || currentSub.id !== key2) return;
+        currentSub.loading = false;
+        updateSubLoading();
         if (!file.cues.length) return subFailed(s, silent, t("Esta legenda está vazia ou em um formato que o app não lê."));
         showSubFile(file);
         if (!silent) toast(t("Legenda: {lang}", {
@@ -10374,6 +10516,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     }
     function subFailed(s, silent, text) {
       failedSubs[subKey(s)] = true;
+      currentSub.loading = false;
+      updateSubLoading();
       if (!silent) return toast(text);
       subsOff();
       autoSub = {
@@ -10440,31 +10584,42 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         },
         checked: currentSub.kind === "off"
       }];
+      var pref = wantedSubs();
+      var place = function place(code) {
+        var i = pref.indexOf(code);
+        return i < 0 ? 99 : i;
+      };
       if (embedded && embedded.subs.length) {
-        embedded.subs.forEach(function (tr, i) {
-          return /PGS|VOBSUB|DVD/i.test(tr.codec || "") ? null : opts2.push({
-            label: langName(ofTrack(tr.lang, tr.label)) + (tr.label ? " · " + tr.label : ""),
-            sub: t("Embutida no arquivo") + (tr.codec ? " · " + tr.codec : ""),
+        embedded.subs.map(function (tr, i) {
+          return {
+            tr: tr,
+            i: i,
+            at: place(ofTrack(tr.lang, tr.label))
+          };
+        }).filter(function (x) {
+          return !/PGS|VOBSUB|DVD/i.test(x.tr.codec || "");
+        }).sort(function (a, b) {
+          return a.at - b.at || a.i - b.i;
+        }).forEach(function (x) {
+          return opts2.push({
+            label: langName(ofTrack(x.tr.lang, x.tr.label)) + (x.tr.label ? " · " + x.tr.label : ""),
+            sub: t("Embutida no arquivo") + (x.tr.codec ? " · " + x.tr.codec : ""),
             value: {
               kind: "embedded",
-              index: i
+              index: x.i
             },
-            checked: currentSub.kind === "embedded" && currentSub.index === i
+            checked: currentSub.kind === "embedded" && currentSub.index === x.i
           });
         });
       }
-      var pref = wantedSubs();
-      var order = function order(s) {
-        var i = pref.indexOf(canon(s.lang));
-        return i < 0 ? 99 : i;
-      };
       var sorted = (addonSubs || []).map(function (s, i) {
         return {
           s: s,
-          i: i
+          i: i,
+          at: place(canon(s.lang))
         };
       }).sort(function (a, b) {
-        return order(a.s) - order(b.s) || a.i - b.i;
+        return a.at - b.at || a.i - b.i;
       }).map(function (x) {
         return x.s;
       });
@@ -10500,6 +10655,10 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         empty: addonSubs === null ? t("Carregando legendas...") : t("Nenhuma legenda."),
         onPick: function onPick(v) {
           if (v.kind === "off" || v.kind === "embedded" || v.kind === "addon") autoDone.sub = true;
+          if (v.kind === "off" || v.kind === "addon") {
+            pendingEmbedded = null;
+            stopEmbLoaders();
+          }
           if (v.kind === "off") {
             subsOff();
             rememberChoice({
@@ -10508,8 +10667,10 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           } else if (v.kind === "embedded") {
             var tr = embedded.subs[v.index];
             rememberChoice({
-              lang: ofTrack(tr.lang, tr.label)
+              lang: ofTrack(tr.lang, tr.label),
+              embedded: true
             });
+            pendingEmbedded = null;
             selectEmbeddedSub(v.index);
           } else if (v.kind === "addon") {
             rememberChoice({
@@ -10706,7 +10867,12 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
             renderer.update(videoEl.currentTime);
             checkSkip();
             if (!nativeOffDone && !(currentSub.kind === "embedded" && !currentSub.extracted)) nativeSubsOff();
-            if (currentSub.extracted) ensureSegments();
+            var now = videoEl.currentTime;
+            Object.keys(embLoaders).forEach(function (i) {
+              return embLoaders[i].want(now);
+            });
+            if (pendingEmbedded && embLoaders[pendingEmbedded.index] && embLoaders[pendingEmbedded.index].covers(now)) showExtracted(pendingEmbedded.index, true);
+            updateSubLoading();
           }, 250);
           saveTimer = setInterval(function () {
             if (!videoEl.paused) saveProgress2();
@@ -10735,6 +10901,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         clearTimeout(seekCommitTimer);
         disableEmbeddedSubs();
         stop();
+        stopEmbLoaders();
         try {
           videoEl.pause();
           videoEl.removeAttribute("src");
@@ -12563,7 +12730,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   var REPO = "ArturSenna/kai";
   var REPO_URL = "https://github.com/" + REPO;
   var VERSION = "1.2.0";
-  var BUILD = "2026-11-26T02:51:27.132Z";
+  var BUILD = "2026-11-26T03:27:25.093Z";
   var RAW = "https://raw.githubusercontent.com/" + REPO + "/main/";
   var PURGE = "https://purge.jsdelivr.net/gh/" + REPO + "/";
   var FILES = ["package.json", "dist/index.html", "dist/loader.js", "dist/app.js", "dist/app.css", "dist/remote-service.js", "dist/build.json", "dist/jassub/jassub-worker.js"];

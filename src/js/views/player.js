@@ -23,6 +23,7 @@ import * as probe from '../lib/probe.js';
 import * as trackselect from '../lib/trackselect.js';
 import * as asscanvas from '../lib/asscanvas.js';
 import * as relay from '../lib/relay.js';
+import * as embedsubs from '../lib/embedsubs.js';
 
 const HIDE_MS = 5000;
 const SAVE_MS = 15000;
@@ -53,6 +54,7 @@ function PlayerView(opts) {
 
   const videoEl = h('video', { preload: 'auto' });
   const subsEl = h('div.subs');
+  const subLoadEl = h('div.p-subload', null, h('span', { text: t('Carregando legenda...') }));
   const titleEl = h('div.p-title');
   const clockEl = h('div.p-clock');
   const posEl = h('div.pos');
@@ -88,7 +90,7 @@ function PlayerView(opts) {
     upNextCount,
     h('div.un-buttons', { 'data-group': '' }, [upNextPlay, upNextCancel]),
   ]);
-  const el = h('div.view.player', null, [videoEl, subsEl, overlay, skipBox, upNextBox, spinner, msgEl]);
+  const el = h('div.view.player', null, [videoEl, subsEl, subLoadEl, overlay, skipBox, upNextBox, spinner, msgEl]);
 
   const renderer = subs.Renderer(subsEl);
   substyle.apply(subsEl, settings);
@@ -143,6 +145,8 @@ function PlayerView(opts) {
     currentAudio = null;
     autoSub = { order: Infinity, tries: 0, forcedOnly: '' };
     failedSubs = {};
+    stopEmbLoaders();
+    pendingEmbedded = null;
     embeddedAuto = false;
     embeddedAsked = false;
     addonSubsDone = false;
@@ -345,9 +349,11 @@ function PlayerView(opts) {
       // The language being heard just became known, or changed: the earlier pick no longer applies.
       autoSub.forcedOnly = forcedOnly;
       autoSub.order = Infinity;
+      pendingEmbedded = null;
+      stopEmbLoaders(currentSub.extracted && !currentSub.auto ? currentSub.index : undefined);
       if (currentSub.auto) subsOff();
     }
-    const hit = trackselect.pickSub(subCandidates(), { langs: wantedSubs(), preferEmbedded: settings.preferEmbedded === true, forcedOnly: forcedOnly });
+    const hit = trackselect.pickSub(subCandidates(), { langs: wantedSubs(), preferEmbedded: embeddedFirst(), forcedOnly: forcedOnly });
     // Sources answer one at a time: only a better match than the current pick replaces it
     // (Brazilian Portuguese arriving after generic Portuguese).
     if (!hit || hit.order >= autoSub.order) {
@@ -364,14 +370,23 @@ function PlayerView(opts) {
     selectAddonSub(again || hit.track.sub, true);
   }
 
+  // This title's subtitles should come from the file itself: asked for in Settings, or a built-in
+  // track was picked by hand on an earlier episode.
+  function embeddedFirst() {
+    const choice = savedChoice();
+    return settings.preferEmbedded === true || !!(choice && choice.embedded);
+  }
+
   // The file's own subtitles reach this TV through the PC server, and listing them is a second read
-  // of the file. So it happens only when it can change the pick: the file's tracks are preferred in
-  // Settings, or nothing is showing (no add-on had the language, or only a forced track is wanted).
+  // of the file. When they are what is wanted, that starts as soon as the video plays (the TV's own
+  // connection comes first), so the text is being fetched while the first lines are spoken.
+  // Otherwise it is a last resort: once the add-ons have answered and nothing is showing.
   function considerEmbedded() {
-    if (!alive || embeddedAsked || !playedAWhile || !addonSubsDone || autoDone.sub || !settings.subtitlesAuto || !server.isAvailable()) return;
+    if (!alive || embeddedAsked || !hasPlayed || autoDone.sub || !settings.subtitlesAuto || !server.isAvailable()) return;
     const choice = savedChoice();
     if (choice && choice.lang === 'off') return;
-    if (!wantedSubs().length || !(settings.preferEmbedded === true || currentSub.kind === 'off')) return;
+    if (!wantedSubs().length) return;
+    if (!embeddedFirst() && !(playedAWhile && addonSubsDone && currentSub.kind === 'off')) return;
     embeddedAsked = true;
     const forUrl = mediaUrl;
     server.streamProgress(mediaUrl).then((p) => {
@@ -417,6 +432,7 @@ function PlayerView(opts) {
       setTimeout(() => alive && probe.media(videoEl), 6000);
     }
     hasPlayed = true;
+    considerEmbedded();
     showSpinner(false);
     message('');
     updatePlayBtn();
@@ -967,60 +983,107 @@ function PlayerView(opts) {
   // On Samsung the TV's player can't turn a built-in track on (no Luna), so the server always
   // extracts it there. auto = picked by the app, not from the menu.
   function selectEmbeddedSub(index, auto) {
-    renderer.clear();
-    asscanvas.stop();
     server.streamProgress(mediaUrl).then((p) => {
       if (!alive) return;
-      if ((p !== null && p >= 0.999) || !hasLuna()) extractedSub(index, auto);
-      else nativeEmbeddedSub(index);
+      if ((p !== null && p >= 0.999) || !hasLuna()) return extractedSub(index, auto);
+      renderer.clear();
+      asscanvas.stop();
+      nativeEmbeddedSub(index);
     });
   }
 
+  // ---- Built-in tracks as text from the PC server (lib/embedsubs.js) ----
+  let embLoaders = {}; // track index -> loader, for this video
+  let pendingEmbedded = null; // { index }: loading in the background, shown once its text is in
+
+  function embLoader(index) {
+    if (embLoaders[index]) return embLoaders[index];
+    const forUrl = mediaUrl;
+    const base = server.baseUrl() + 'hlsv2/';
+    const query = '?mediaURL=' + encodeURIComponent(mediaUrl);
+    embLoaders[index] = embedsubs.Loader({
+      newSession: () => 'kai' + Math.random().toString(36).slice(2),
+      blockUrl: (sid, k) => relay.through(base + sid + '/subtitle' + index + '/segment' + k + '.vtt' + query, 45000),
+      stopUrl: (sid) => relay.through(base + sid + '/destroy', 8000),
+      getText: (url) => getText(url, { timeout: 45000, quiet: true }),
+      parse: subs.parse,
+      onChange: () => alive && forUrl === mediaUrl && embeddedChanged(index),
+      onFail: () => alive && forUrl === mediaUrl && embeddedFailed(index),
+    });
+    return embLoaders[index];
+  }
+
+  // Stops the server reading the file for every track but `keep` (undefined: all of them).
+  function stopEmbLoaders(keep) {
+    Object.keys(embLoaders).forEach((i) => {
+      if (keep !== undefined && Number(i) === keep) return;
+      embLoaders[i].stop();
+      delete embLoaders[i];
+    });
+  }
+
+  // The first lines take several seconds to come from the server. Picked from the menu: the track
+  // is on at once, with "loading" on screen until its text is in. Picked by the app while another
+  // subtitle is showing: it loads in the background and takes over when ready, so the screen is
+  // never left without subtitles.
   function extractedSub(index, auto) {
+    const loader = embLoader(index);
+    loader.want(videoEl.currentTime);
+    if (auto && currentSub.kind !== 'off' && !loader.covers(videoEl.currentTime)) {
+      pendingEmbedded = { index: index };
+      return;
+    }
+    showExtracted(index, auto);
+  }
+
+  function showExtracted(index, auto) {
+    pendingEmbedded = null;
+    disableEmbeddedSubs();
     nativeSubsOff();
-    const cs = { kind: 'embedded', index: index, extracted: true, auto: !!auto, sid: 'kai' + Math.random().toString(36).slice(2), segs: {}, cues: [], busy: false, fails: 0 };
-    currentSub = cs;
+    asscanvas.stop();
+    currentSub = { kind: 'embedded', index: index, extracted: true, auto: !!auto };
     renderer.setOffset(savedDelay());
-    ensureSegments();
+    renderer.set(embLoader(index).cues());
+    renderer.update(videoEl.currentTime);
+    stopEmbLoaders(index);
+    updateSubLoading();
+  }
+
+  // More text arrived for a track.
+  function embeddedChanged(index) {
+    if (!currentSub.extracted || currentSub.index !== index) return;
+    renderer.set(embLoaders[index].cues());
+    renderer.update(videoEl.currentTime);
+    updateSubLoading();
   }
 
   // The server couldn't read the track (a picture-based one, or the server is gone).
-  function embeddedFailed(cs) {
-    failedSubs['embedded:' + cs.index] = true;
-    subsOff();
-    if (!cs.auto) return toast(t('O servidor do PC não conseguiu ler esta legenda.'));
+  function embeddedFailed(index) {
+    failedSubs['embedded:' + index] = true;
+    const shown = currentSub.extracted && currentSub.index === index;
+    const byHand = shown && !currentSub.auto;
+    if (pendingEmbedded && pendingEmbedded.index === index) pendingEmbedded = null;
+    if (embLoaders[index]) {
+      embLoaders[index].stop();
+      delete embLoaders[index];
+    }
+    if (shown) subsOff();
+    updateSubLoading();
+    if (byHand) return toast(t('O servidor do PC não conseguiu ler esta legenda.'));
+    if (currentSub.kind !== 'off') return; // it was loading behind another subtitle: that one stays
     autoSub = { order: Infinity, tries: autoSub.tries + 1, forcedOnly: autoSub.forcedOnly };
     autoPick();
   }
 
-  function ensureSegments() {
-    const cs = currentSub;
-    if (!cs.extracted || cs.busy || !alive) return;
-    const n = Math.floor(videoEl.currentTime / 10) + 1;
-    const k = !cs.segs[n] ? n : !cs.segs[n + 1] ? n + 1 : 0;
-    if (!k) return;
-    cs.segs[k] = 'loading';
-    cs.busy = true; // um bloco por vez
-    const url = relay.through(server.baseUrl() + 'hlsv2/' + cs.sid + '/subtitle' + cs.index + '/segment' + k + '.vtt?mediaURL=' + encodeURIComponent(mediaUrl), 30000);
-    getText(url, { timeout: 30000, quiet: true })
-      .then((txt) => {
-        if (currentSub !== cs) return;
-        cs.fails = 0;
-        const seen = {};
-        cs.cues.forEach((c) => (seen[c.start + '|' + c.text] = true));
-        subs.parse(txt).forEach((c) => {
-          if (!seen[c.start + '|' + c.text]) cs.cues.push(c);
-        });
-        cs.cues.sort((a, b) => a.start - b.start);
-        renderer.set(cs.cues);
-        renderer.update(videoEl.currentTime);
-      })
-      .catch(() => {
-        delete cs.segs[k];
-        // Give up after a few failures in a row instead of asking again four times a second.
-        if (currentSub === cs && ++cs.fails >= 3) embeddedFailed(cs);
-      })
-      .then(() => (cs.busy = false));
+  // "Loading subtitle..." while the track that is on has no text yet for this moment.
+  let subLoadOn = false;
+  function updateSubLoading() {
+    let on = false;
+    if (currentSub.extracted) on = !embLoaders[currentSub.index] || !embLoaders[currentSub.index].covers(videoEl.currentTime);
+    else if (currentSub.kind === 'addon') on = !!currentSub.loading;
+    if (on === subLoadOn) return;
+    subLoadOn = on;
+    subLoadEl.classList.toggle('show', on);
   }
 
   function nativeEmbeddedSub(index) {
@@ -1051,19 +1114,23 @@ function PlayerView(opts) {
     asscanvas.stop();
     renderer.clear();
     currentSub = { kind: 'off' };
+    updateSubLoading();
   }
 
   // silent = the automatic pick: no toast, and a subtitle that fails makes way for the next match.
   function selectAddonSub(s, silent) {
     disableEmbeddedSubs();
     const key = subKey(s);
-    currentSub = { kind: 'addon', id: key, auto: !!silent };
+    currentSub = { kind: 'addon', id: key, auto: !!silent, loading: !silent };
+    updateSubLoading();
     renderer.setOffset(savedDelay());
     subs
       .loadFile(s.url, server.subtitlesProxy(s.url))
       .then(
         (file) => {
           if (!alive || currentSub.id !== key) return;
+          currentSub.loading = false;
+          updateSubLoading();
           if (!file.cues.length) return subFailed(s, silent, t('Esta legenda está vazia ou em um formato que o app não lê.'));
           showSubFile(file);
           if (!silent) toast(t('Legenda: {lang}', { lang: langName(s.lang) }));
@@ -1091,6 +1158,8 @@ function PlayerView(opts) {
 
   function subFailed(s, silent, text) {
     failedSubs[subKey(s)] = true;
+    currentSub.loading = false;
+    updateSubLoading();
     if (!silent) return toast(text);
     subsOff();
     autoSub = { order: Infinity, tries: autoSub.tries + 1, forcedOnly: autoSub.forcedOnly };
@@ -1142,25 +1211,29 @@ function PlayerView(opts) {
 
   function openSubsMenu() {
     const opts2 = [{ label: t('Desligada'), value: { kind: 'off' }, checked: currentSub.kind === 'off' }];
-    if (embedded && embedded.subs.length) {
-      embedded.subs.forEach((tr, i) =>
-        /PGS|VOBSUB|DVD/i.test(tr.codec || '') ? null : opts2.push({
-          label: langName(lang.ofTrack(tr.lang, tr.label)) + (tr.label ? ' · ' + tr.label : ''),
-          sub: t('Embutida no arquivo') + (tr.codec ? ' · ' + tr.codec : ''),
-          value: { kind: 'embedded', index: i },
-          checked: currentSub.kind === 'embedded' && currentSub.index === i,
-        })
-      );
-    }
-    // Wanted languages first, in the same order the automatic pick uses; add-on order on a tie.
+    // Wanted languages first, here and below, in the order the automatic pick uses.
     const pref = wantedSubs();
-    const order = (s) => {
-      const i = pref.indexOf(lang.canon(s.lang));
+    const place = (code) => {
+      const i = pref.indexOf(code);
       return i < 0 ? 99 : i;
     };
+    if (embedded && embedded.subs.length) {
+      embedded.subs
+        .map((tr, i) => ({ tr: tr, i: i, at: place(lang.ofTrack(tr.lang, tr.label)) }))
+        .filter((x) => !/PGS|VOBSUB|DVD/i.test(x.tr.codec || ''))
+        .sort((a, b) => a.at - b.at || a.i - b.i)
+        .forEach((x) =>
+          opts2.push({
+            label: langName(lang.ofTrack(x.tr.lang, x.tr.label)) + (x.tr.label ? ' · ' + x.tr.label : ''),
+            sub: t('Embutida no arquivo') + (x.tr.codec ? ' · ' + x.tr.codec : ''),
+            value: { kind: 'embedded', index: x.i },
+            checked: currentSub.kind === 'embedded' && currentSub.index === x.i,
+          })
+        );
+    }
     const sorted = (addonSubs || [])
-      .map((s, i) => ({ s: s, i: i }))
-      .sort((a, b) => order(a.s) - order(b.s) || a.i - b.i)
+      .map((s, i) => ({ s: s, i: i, at: place(lang.canon(s.lang)) }))
+      .sort((a, b) => a.at - b.at || a.i - b.i)
       .map((x) => x.s);
     sorted.slice(0, 60).forEach((s) =>
       opts2.push({
@@ -1176,12 +1249,19 @@ function PlayerView(opts) {
       empty: addonSubs === null ? t('Carregando legendas...') : t('Nenhuma legenda.'),
       onPick: (v) => {
         if (v.kind === 'off' || v.kind === 'embedded' || v.kind === 'addon') autoDone.sub = true;
+        if (v.kind === 'off' || v.kind === 'addon') {
+          // Nothing of the file's tracks is wanted any more: the server can stop reading.
+          pendingEmbedded = null;
+          stopEmbLoaders();
+        }
         if (v.kind === 'off') {
           subsOff();
           rememberChoice({ lang: 'off' });
         } else if (v.kind === 'embedded') {
           const tr = embedded.subs[v.index];
-          rememberChoice({ lang: lang.ofTrack(tr.lang, tr.label) });
+          // Remembered as "from the file": the next episodes load it in the background from the start.
+          rememberChoice({ lang: lang.ofTrack(tr.lang, tr.label), embedded: true });
+          pendingEmbedded = null;
           selectEmbeddedSub(v.index);
         } else if (v.kind === 'addon') {
           rememberChoice({ lang: lang.canon(v.sub.lang), addon: v.sub.addon });
@@ -1371,7 +1451,10 @@ function PlayerView(opts) {
           renderer.update(videoEl.currentTime);
           checkSkip();
           if (!nativeOffDone && !(currentSub.kind === 'embedded' && !currentSub.extracted)) nativeSubsOff();
-          if (currentSub.extracted) ensureSegments();
+          const now = videoEl.currentTime;
+          Object.keys(embLoaders).forEach((i) => embLoaders[i].want(now));
+          if (pendingEmbedded && embLoaders[pendingEmbedded.index] && embLoaders[pendingEmbedded.index].covers(now)) showExtracted(pendingEmbedded.index, true);
+          updateSubLoading();
         }, 250);
         saveTimer = setInterval(() => {
           if (!videoEl.paused) saveProgress();
@@ -1399,6 +1482,7 @@ function PlayerView(opts) {
       clearTimeout(seekCommitTimer);
       disableEmbeddedSubs();
       asscanvas.stop();
+      stopEmbLoaders(); // or the PC would go on downloading the film after it is closed
       try {
         videoEl.pause();
         videoEl.removeAttribute('src');

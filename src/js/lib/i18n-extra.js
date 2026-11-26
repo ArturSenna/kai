@@ -18,6 +18,7 @@ export const EN_EXTRA = {
   'Quando o arquivo tem mais de uma faixa de áudio': 'When the file has more than one audio track',
   'O servidor do PC não conseguiu ler esta legenda.': "The PC server couldn't read this subtitle.",
   'Reinicie a TV (segure o botão de ligar) e abra o app de novo': 'Restart the TV (hold the power button) and open the app again',
+  'Carregando legenda...': 'Loading subtitle...',
 };
 
 export const AR_EXTRA = {
@@ -38,4 +39,5 @@ export const AR_EXTRA = {
   'Quando o arquivo tem mais de uma faixa de áudio': 'عندما يحتوي الملف على أكثر من مسار صوتي',
   'O servidor do PC não conseguiu ler esta legenda.': 'تعذّر على خادم الكمبيوتر قراءة هذه الترجمة.',
   'Reinicie a TV (segure o botão de ligar) e abra o app de novo': 'أعد تشغيل التلفاز (اضغط مطولًا على زر التشغيل) ثم افتح التطبيق مجددًا',
+  'Carregando legenda...': 'جارٍ تحميل الترجمة...',
 };
