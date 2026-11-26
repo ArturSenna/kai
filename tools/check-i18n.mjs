@@ -10,15 +10,16 @@ const load = async (f) => {
   const p = path.join(root, 'src/js/lib', f);
   return fs.existsSync(p) ? import(pathToFileURL(p).href) : {};
 };
-const EN = (await load('i18n-en.js')).EN || {};
-const AR = (await load('i18n-ar.js')).AR || {};
+const extra = await load('i18n-extra.js');
+const EN = Object.assign({}, (await load('i18n-en.js')).EN, extra.EN_EXTRA);
+const AR = Object.assign({}, (await load('i18n-ar.js')).AR, extra.AR_EXTRA);
 
 const used = new Map();
 const walk = (dir) => {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, e.name);
     if (e.isDirectory()) walk(p);
-    else if (p.endsWith('.js') && !/i18n(-en|-ar)?\.js$/.test(p)) {
+    else if (p.endsWith('.js') && !/i18n(-en|-ar|-extra)?\.js$/.test(p)) {
       const src = fs.readFileSync(p, 'utf8');
       const re = /\bt\(\s*(['"])((?:(?!\1)[^\\]|\\.)*)\1/g;
       let m;

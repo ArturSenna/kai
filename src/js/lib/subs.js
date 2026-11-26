@@ -1,5 +1,6 @@
 // Legendas externas (SRT/VTT) desenhadas pelo próprio app, sincronizadas com o <video>.
-import { getText } from './http.js';
+import { getBuffer } from './http.js';
+import { decode, isAss, parseAss } from './subformats.js';
 
 function toSec(ts) {
   const m = ts.trim().replace(',', '.').match(/(?:(\d+):)?(\d+):(\d+(?:\.\d+)?)/);
@@ -8,6 +9,7 @@ function toSec(ts) {
 }
 
 export function parse(text) {
+  if (isAss(text)) return parseAss(text);
   const cues = [];
   const blocks = String(text)
     .replace(/^﻿/, '')
@@ -39,13 +41,17 @@ function sanitize(s) {
   return esc.replace(/&lt;(\/?)(i|b|u)&gt;/gi, '<$1$2>').replace(/&lt;\/?[^&]*&gt;/g, '');
 }
 
+// The bytes are decoded here (UTF-8 or Windows-1252), not by the browser. If the file can't be
+// fetched, or has nothing readable in it, the PC server's converter (fallbackUrl) gets a try.
 export function load(url, fallbackUrl) {
-  return getText(url, { timeout: 20000 })
-    .catch((e) => {
-      if (fallbackUrl) return getText(fallbackUrl, { timeout: 20000 });
+  const get = (u) => getBuffer(u, { timeout: 20000 }).then((buf) => parse(decode(buf)));
+  return get(url).then(
+    (cues) => (cues.length || !fallbackUrl ? cues : get(fallbackUrl).catch(() => cues)),
+    (e) => {
+      if (fallbackUrl) return get(fallbackUrl);
       throw e;
-    })
-    .then(parse);
+    }
+  );
 }
 
 // Renderizador: chame update(tempoEmSegundos) a cada timeupdate/intervalo.

@@ -5,6 +5,13 @@ run the official Stremio app. It runs as a [TizenBrew](https://github.com/reisxd
 app module and brings the [Stremio Kai](https://github.com/allecsc/Stremio-Kai) look and
 features to Tizen, fully controlled with the Samsung remote.
 
+> **This is a fork** of [ITzAkai/kai](https://github.com/ITzAkai/kai) that adds Brazilian Portuguese
+> subtitles. **Settings → Subtitle language → Portuguese (Brazil)** turns on `pt-BR` subtitles on
+> every episode (generic Portuguese when there is no Brazilian one), a subtitle picked by hand is
+> remembered for the rest of the series, old Windows-1252 `.srt` files keep their accents, and
+> `.ass`/`.ssa` subtitles are read as plain text. To install this fork, enter `ArturSenna/kai`
+> instead of `ITzAkai/kai` in step 5 below.
+
 > **Unofficial.** Not affiliated with Stremio, Stremio Kai or Samsung. The app hosts no
 > content: it only shows what the add-ons on **your** Stremio account provide.
 

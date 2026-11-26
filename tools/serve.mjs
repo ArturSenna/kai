@@ -28,7 +28,28 @@ function testAddon(p, res) {
     });
   }
   if (p.startsWith('/test-addon/subtitles/')) {
-    return json({ subtitles: [{ id: 'teste-pt', lang: 'pob', url: 'http://localhost:' + port + '/test-addon/teste.srt' }] });
+    // Generic Portuguese first, so picking the Brazilian one proves the ranking; the Brazilian
+    // file is Windows-1252 and labelled "pt-BR" (not OpenSubtitles' "pob"); plus an ASS file.
+    const base = 'http://localhost:' + port + '/test-addon/';
+    return json({
+      subtitles: [
+        { id: 'teste-pt', lang: 'por', url: base + 'teste.srt' },
+        { id: 'teste-ptbr', lang: 'pt-BR', url: base + 'teste-ptbr.srt' },
+        { id: 'teste-ass', lang: 'eng', url: base + 'teste.ass' },
+      ],
+    });
+  }
+  if (p === '/test-addon/teste-ptbr.srt') {
+    res.writeHead(200, { 'Content-Type': 'application/octet-stream', 'Access-Control-Allow-Origin': '*' });
+    return res.end(Buffer.from('1\n00:00:01,000 --> 00:00:04,000\nLegenda brasileira: ação, coração\n\n2\n00:00:05,000 --> 00:00:09,000\nVocê não vai à praça?\n', 'latin1'));
+  }
+  if (p === '/test-addon/teste.ass') {
+    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+    return res.end(
+      '[Script Info]\nScriptType: v4.00+\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n' +
+        'Dialogue: 0,0:00:01.00,0:00:04.00,Default,,0,0,0,,{\\an8\\pos(960,80)}ASS line, {\\i1}in italics{\\i0}\n' +
+        'Dialogue: 0,0:00:05.00,0:00:09.00,Default,,0,0,0,,Second line\\Nbroken in two\n'
+    );
   }
   if (p === '/test-addon/teste.srt') {
     res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Access-Control-Allow-Origin': '*' });

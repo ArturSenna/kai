@@ -9,6 +9,7 @@ import { toast, refreshProfileChips } from '../ui.js';
 import * as router from '../router.js';
 import { openLogin } from './login.js';
 import { t, current as currentLang } from '../lib/i18n.js';
+import { PORTUGUESE_BR } from '../lib/lang.js';
 
 export function maybeShowWizard() {
   const s = store.settings();
@@ -134,7 +135,8 @@ function WizardView() {
     const ar = { label: t('Árabe'), value: ['ara', 'ar'] };
     const en = { label: t('Inglês'), value: ['eng', 'en'] };
     // O idioma do app vem primeiro.
-    const choices = (currentLang() === 'ar' ? [ar, en] : [en, ar]).concat([{ label: t('Não ligar sozinho'), value: [] }]);
+    const ptBr = { label: t('Português (Brasil)'), value: PORTUGUESE_BR };
+    const choices = (currentLang() === 'ar' ? [ar, en] : [en, ar]).concat([ptBr, { label: t('Não ligar sozinho'), value: [] }]);
     card.appendChild(
       h(
         'div.opts',

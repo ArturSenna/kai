@@ -22,12 +22,12 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         _step;
       try {
         var _loop = function _loop() {
-          var key = _step.value;
-          if (!__hasOwnProp.call(to, key) && key !== except) __defProp(to, key, {
+          var key2 = _step.value;
+          if (!__hasOwnProp.call(to, key2) && key2 !== except) __defProp(to, key2, {
             get: function get() {
-              return from[key];
+              return from[key2];
             },
-            enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
+            enumerable: !(desc = __getOwnPropDesc(from, key2)) || desc.enumerable
           });
         };
         for (_iterator.s(); !(_step = _iterator.n()).done;) {
@@ -470,15 +470,15 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
 
       var globalThis2 = require_global_this();
       var defineProperty = Object.defineProperty;
-      module.exports = function (key, value) {
+      module.exports = function (key2, value) {
         try {
-          defineProperty(globalThis2, key, {
+          defineProperty(globalThis2, key2, {
             value: value,
             configurable: true,
             writable: true
           });
         } catch (error) {
-          globalThis2[key] = value;
+          globalThis2[key2] = value;
         }
         return value;
       };
@@ -512,8 +512,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
 
       var store = require_shared_store();
       var create = Object.create || Object;
-      module.exports = function (key, value) {
-        return store[key] || (store[key] = value || create(null));
+      module.exports = function (key2, value) {
+        return store[key2] || (store[key2] = value || create(null));
       };
     }
   });
@@ -539,8 +539,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       var uncurryThis = require_function_uncurry_this();
       var toObject = require_to_object();
       var hasOwnProperty = uncurryThis({}.hasOwnProperty);
-      module.exports = Object.hasOwn || function hasOwn(it, key) {
-        return hasOwnProperty(toObject(it), key);
+      module.exports = Object.hasOwn || function hasOwn(it, key2) {
+        return hasOwnProperty(toObject(it), key2);
       };
     }
   });
@@ -554,8 +554,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       var id = 0;
       var postfix = Math.random();
       var toString = uncurryThis(1.1.toString);
-      module.exports = function (key) {
-        return "Symbol(" + (key === void 0 ? "" : key) + ")_" + toString(++id + postfix, 36);
+      module.exports = function (key2) {
+        return "Symbol(" + (key2 === void 0 ? "" : key2) + ")_" + toString(++id + postfix, 36);
       };
     }
   });
@@ -620,8 +620,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       var toPrimitive = require_to_primitive();
       var isSymbol = require_is_symbol();
       module.exports = function (argument) {
-        var key = toPrimitive(argument, "string");
-        return isSymbol(key) ? key : key + "";
+        var key2 = toPrimitive(argument, "string");
+        return isSymbol(key2) ? key2 : key2 + "";
       };
     }
   });
@@ -769,10 +769,10 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       var DESCRIPTORS = require_descriptors();
       var definePropertyModule = require_object_define_property();
       var createPropertyDescriptor = require_create_property_descriptor();
-      module.exports = DESCRIPTORS ? function (object, key, value) {
-        return definePropertyModule.f(object, key, createPropertyDescriptor(1, value));
-      } : function (object, key, value) {
-        object[key] = value;
+      module.exports = DESCRIPTORS ? function (object, key2, value) {
+        return definePropertyModule.f(object, key2, createPropertyDescriptor(1, value));
+      } : function (object, key2, value) {
+        object[key2] = value;
         return object;
       };
     }
@@ -836,8 +836,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       var shared = require_shared();
       var uid = require_uid();
       var keys = shared("keys");
-      module.exports = function (key) {
-        return keys[key] || (keys[key] = uid(key));
+      module.exports = function (key2) {
+        return keys[key2] || (keys[key2] = uid(key2));
       };
     }
   });
@@ -998,18 +998,18 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       var definePropertyModule = require_object_define_property();
       var makeBuiltIn = require_make_built_in();
       var defineGlobalProperty = require_define_global_property();
-      module.exports = function (O, key, value, options) {
+      module.exports = function (O, key2, value, options) {
         if (!options) options = {};
         var simple = options.enumerable;
-        var name = options.name !== void 0 ? options.name : key;
+        var name = options.name !== void 0 ? options.name : key2;
         if (isCallable(value)) makeBuiltIn(value, name, options);
         if (options.global) {
-          if (simple) O[key] = value;else defineGlobalProperty(key, value);
+          if (simple) O[key2] = value;else defineGlobalProperty(key2, value);
         } else {
           try {
-            if (!options.unsafe) delete O[key];else if (O[key]) simple = true;
+            if (!options.unsafe) delete O[key2];else if (O[key2]) simple = true;
           } catch (error) {}
-          if (simple) O[key] = value;else definePropertyModule.f(O, key, {
+          if (simple) O[key2] = value;else definePropertyModule.f(O, key2, {
             value: value,
             enumerable: false,
             configurable: !options.nonConfigurable,
@@ -1139,10 +1139,10 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         var O = toIndexedObject(object);
         var i = 0;
         var result = [];
-        var key;
-        for (key in O) !hasOwn(hiddenKeys, key) && hasOwn(O, key) && push2(result, key);
-        while (names.length > i) if (hasOwn(O, key = names[i++])) {
-          ~indexOf(result, key) || push2(result, key);
+        var key2;
+        for (key2 in O) !hasOwn(hiddenKeys, key2) && hasOwn(O, key2) && push2(result, key2);
+        while (names.length > i) if (hasOwn(O, key2 = names[i++])) {
+          ~indexOf(result, key2) || push2(result, key2);
         }
         return result;
       };
@@ -1214,9 +1214,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         var defineProperty = definePropertyModule.f;
         var getOwnPropertyDescriptor = getOwnPropertyDescriptorModule.f;
         for (var i = 0; i < keys.length; i++) {
-          var key = keys[i];
-          if (!hasOwn(target, key) && !(exceptions && hasOwn(exceptions, key))) {
-            defineProperty(target, key, getOwnPropertyDescriptor(source, key));
+          var key2 = keys[i];
+          if (!hasOwn(target, key2) && !(exceptions && hasOwn(exceptions, key2))) {
+            defineProperty(target, key2, getOwnPropertyDescriptor(source, key2));
           }
         }
       };
@@ -1261,7 +1261,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         var TARGET = options.target;
         var GLOBAL = options.global;
         var STATIC = options.stat;
-        var FORCED, target, key, targetProperty, sourceProperty, descriptor;
+        var FORCED, target, key2, targetProperty, sourceProperty, descriptor;
         if (GLOBAL) {
           target = globalThis2;
         } else if (STATIC) {
@@ -1269,13 +1269,13 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         } else {
           target = globalThis2[TARGET] && globalThis2[TARGET].prototype;
         }
-        if (target) for (key in source) {
-          sourceProperty = source[key];
+        if (target) for (key2 in source) {
+          sourceProperty = source[key2];
           if (options.dontCallGetSet) {
-            descriptor = getOwnPropertyDescriptor(target, key);
+            descriptor = getOwnPropertyDescriptor(target, key2);
             targetProperty = descriptor && descriptor.value;
-          } else targetProperty = target[key];
-          FORCED = isForced(GLOBAL ? key : TARGET + (STATIC ? "." : "#") + key, options.forced);
+          } else targetProperty = target[key2];
+          FORCED = isForced(GLOBAL ? key2 : TARGET + (STATIC ? "." : "#") + key2, options.forced);
           if (!FORCED && targetProperty !== void 0) {
             if (_typeof(sourceProperty) == _typeof(targetProperty)) continue;
             copyConstructorProperties(sourceProperty, targetProperty);
@@ -1283,7 +1283,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           if (options.sham || targetProperty && targetProperty.sham) {
             createNonEnumerableProperty(sourceProperty, "sham", true);
           }
-          defineBuiltIn(target, key, sourceProperty, options);
+          defineBuiltIn(target, key2, sourceProperty, options);
         }
       };
     }
@@ -1353,10 +1353,10 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           var keys = getOwnPropertySymbols ? concat(objectKeys(S), getOwnPropertySymbols(S)) : objectKeys(S);
           var length = keys.length;
           var j = 0;
-          var key;
+          var key2;
           while (length > j) {
-            key = keys[j++];
-            if (!DESCRIPTORS || call2(propertyIsEnumerable, S, key)) T[key] = S[key];
+            key2 = keys[j++];
+            if (!DESCRIPTORS || call2(propertyIsEnumerable, S, key2)) T[key2] = S[key2];
           }
         }
         return T;
@@ -1469,11 +1469,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           var length = keys.length;
           var i = 0;
           var result = [];
-          var key;
+          var key2;
           while (length > i) {
-            key = keys[i++];
-            if (!DESCRIPTORS || (IE_WORKAROUND ? key in O : propertyIsEnumerable(O, key))) {
-              push2(result, TO_ENTRIES ? [key, O[key]] : O[key]);
+            key2 = keys[i++];
+            if (!DESCRIPTORS || (IE_WORKAROUND ? key2 in O : propertyIsEnumerable(O, key2))) {
+              push2(result, TO_ENTRIES ? [key2, O[key2]] : O[key2]);
             }
           }
           return result;
@@ -1575,9 +1575,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       var CORRECT_ARGUMENTS = classofRaw(/* @__PURE__ */function () {
         return arguments;
       }()) === "Arguments";
-      var tryGet = function tryGet(it, key) {
+      var tryGet = function tryGet(it, key2) {
         try {
-          return it[key];
+          return it[key2];
         } catch (error) {}
       };
       module.exports = TO_STRING_TAG_SUPPORT ? classofRaw : function (it) {
@@ -1652,8 +1652,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         var keys = objectKeys(Properties);
         var length = keys.length;
         var index = 0;
-        var key;
-        while (length > index) definePropertyModule.f(O, key = keys[index++], props[key]);
+        var key2;
+        while (length > index) definePropertyModule.f(O, key2 = keys[index++], props[key2]);
         return O;
       };
     }
@@ -1838,9 +1838,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
 
       var uncurryThis = require_function_uncurry_this();
       var aCallable = require_a_callable();
-      module.exports = function (object, key, method) {
+      module.exports = function (object, key2, method) {
         try {
-          return uncurryThis(aCallable(Object.getOwnPropertyDescriptor(object, key)[method]));
+          return uncurryThis(aCallable(Object.getOwnPropertyDescriptor(object, key2)[method]));
         } catch (error) {}
       };
     }
@@ -2209,8 +2209,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       var DESCRIPTORS = require_descriptors();
       var definePropertyModule = require_object_define_property();
       var createPropertyDescriptor = require_create_property_descriptor();
-      module.exports = function (object, key, value) {
-        if (DESCRIPTORS) definePropertyModule.f(object, key, createPropertyDescriptor(0, value));else object[key] = value;
+      module.exports = function (object, key2, value) {
+        if (DESCRIPTORS) definePropertyModule.f(object, key2, createPropertyDescriptor(0, value));else object[key2] = value;
       };
     }
   });
@@ -2592,8 +2592,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           value: create(null)
         });
       }
-      module.exports = function (key) {
-        ArrayPrototype[UNSCOPABLES][key] = true;
+      module.exports = function (key2) {
+        ArrayPrototype[UNSCOPABLES][key2] = true;
       };
     }
   });
@@ -4470,14 +4470,14 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
               } else if (c.match(/^\s$/)) {
                 continue;
               }
-              _buffer = _buffer << 6 | decode(c.charCodeAt(0));
+              _buffer = _buffer << 6 | decode2(c.charCodeAt(0));
               _buflen += 6;
             }
             var n = _buffer >>> _buflen - 8 & 255;
             _buflen -= 8;
             return n;
           };
-          var decode = function decode(c) {
+          var decode2 = function decode2(c) {
             if (65 <= c && c <= 90) {
               return c - 65;
             } else if (97 <= c && c <= 122) {
@@ -4602,21 +4602,21 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
             var _map = {};
             var _size = 0;
             var _this2 = {};
-            _this2.add = function (key) {
-              if (_this2.contains(key)) {
-                throw "dup key:" + key;
+            _this2.add = function (key2) {
+              if (_this2.contains(key2)) {
+                throw "dup key:" + key2;
               }
-              _map[key] = _size;
+              _map[key2] = _size;
               _size += 1;
             };
             _this2.size = function () {
               return _size;
             };
-            _this2.indexOf = function (key) {
-              return _map[key];
+            _this2.indexOf = function (key2) {
+              return _map[key2];
             };
-            _this2.contains = function (key) {
-              return typeof _map[key] != "undefined";
+            _this2.contains = function (key2) {
+              return typeof _map[key2] != "undefined";
             };
             return _this2;
           };
@@ -5641,7 +5641,29 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     "Tipo de link não suportado na TV": "نوع الرابط غير مدعوم على التلفاز"
   };
 
+  // src/js/lib/i18n-extra.js
+  var EN_EXTRA = {
+    "Português (Brasil)": "Portuguese (Brazil)",
+    "Esta legenda está vazia ou em um formato que o app não lê.": "This subtitle is empty or in a format the app can't read.",
+    "Diagnóstico de reprodução": "Playback diagnostics",
+    "O que esta TV expõe (faixas de áudio e legenda). Toque um vídeo antes de abrir.": "What this TV exposes (audio and subtitle tracks). Play a video before opening.",
+    "Nenhum vídeo tocado nesta sessão.": "No video played in this session."
+  };
+  var AR_EXTRA = {
+    "Português (Brasil)": "البرتغالية (البرازيل)",
+    "Esta legenda está vazia ou em um formato que o app não lê.": "هذه الترجمة فارغة أو بتنسيق لا يستطيع التطبيق قراءته.",
+    "Diagnóstico de reprodução": "تشخيص التشغيل",
+    "O que esta TV expõe (faixas de áudio e legenda). Toque um vídeo antes de abrir.": "ما يتيحه هذا التلفاز (مسارات الصوت والترجمة). شغّل فيديو قبل الفتح.",
+    "Nenhum vídeo tocado nesta sessão.": "لم يُشغَّل أي فيديو في هذه الجلسة."
+  };
+
   // src/js/lib/i18n.js
+  Object.keys(EN_EXTRA).forEach(function (k) {
+    return EN[k] = EN_EXTRA[k];
+  });
+  Object.keys(AR_EXTRA).forEach(function (k) {
+    return AR[k] = AR_EXTRA[k];
+  });
   var lang = "en";
   var TABLES = {
     en: EN,
@@ -5685,10 +5707,12 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       var xhr = new XMLHttpRequest();
       xhr.open(method, url2, true);
       xhr.timeout = o.timeout || 2e4;
+      if (o.binary) xhr.responseType = "arraybuffer";
       if (body !== void 0 && body !== null) xhr.setRequestHeader("Content-Type", "application/json");
       if (o.headers) for (var k in o.headers) xhr.setRequestHeader(k, o.headers[k]);
       xhr.onload = function () {
         if (xhr.status >= 200 && xhr.status < 300) {
+          if (o.binary) return resolve(xhr.response);
           if (o.raw) return resolve(xhr.responseText);
           try {
             resolve(xhr.responseText ? JSON.parse(xhr.responseText) : null);
@@ -5736,6 +5760,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   function getText(url2, opts) {
     return request("GET", url2, null, Object.assign({
       raw: true
+    }, opts));
+  }
+  function getBuffer(url2, opts) {
+    return request("GET", url2, null, Object.assign({
+      binary: true
     }, opts));
   }
   var cache = /* @__PURE__ */new Map();
@@ -5815,9 +5844,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     }
   }
   function kitsuSmall(info2) {
-    var key = info2.id + ":" + info2.kind;
-    if (!kitsuCache[key]) {
-      kitsuCache[key] = new Promise(function (resolve) {
+    var key2 = info2.id + ":" + info2.kind;
+    if (!kitsuCache[key2]) {
+      kitsuCache[key2] = new Promise(function (resolve) {
         (batch[info2.id] = batch[info2.id] || []).push({
           kind: info2.kind,
           resolve: resolve
@@ -5825,7 +5854,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         if (!batchTimer) batchTimer = setTimeout(flush2, 60);
       });
     }
-    return kitsuCache[key];
+    return kitsuCache[key2];
   }
 
   // src/js/lib/dom.js
@@ -5837,12 +5866,12 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       if (p[0] === ".") el.classList.add(p.slice(1));else if (p[0] === "#") el.id = p.slice(1);
     }
     if (props) {
-      for (var key in props) {
-        var val = props[key];
+      for (var key2 in props) {
+        var val = props[key2];
         if (val === void 0 || val === null || val === false) continue;
-        if (key === "text") el.textContent = val;else if (key === "html") el.innerHTML = val;else if (key === "style" && _typeof(val) === "object") Object.assign(el.style, val);else if (key === "on") for (var ev in val) el.addEventListener(ev, val[ev]);else if (key === "onSelect") el.__select = val;else if (key === "onFocus") el.__focus = val;else if (key === "focusable") el.setAttribute("data-focus", "");else if (key === "cls") String(val).split(" ").forEach(function (c) {
+        if (key2 === "text") el.textContent = val;else if (key2 === "html") el.innerHTML = val;else if (key2 === "style" && _typeof(val) === "object") Object.assign(el.style, val);else if (key2 === "on") for (var ev in val) el.addEventListener(ev, val[ev]);else if (key2 === "onSelect") el.__select = val;else if (key2 === "onFocus") el.__focus = val;else if (key2 === "focusable") el.setAttribute("data-focus", "");else if (key2 === "cls") String(val).split(" ").forEach(function (c) {
           return c && el.classList.add(c);
-        });else el.setAttribute(key, val === true ? "" : val);
+        });else el.setAttribute(key2, val === true ? "" : val);
       }
     }
     append(el, children);
@@ -5990,7 +6019,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     var cr = cur.getBoundingClientRect();
     var cc = center(cr);
     var tol = 8;
-    var best = null;
+    var best2 = null;
     var bestScore = Infinity;
     for (var i = 0; i < list2.length; i++) {
       var el = list2[i];
@@ -6019,10 +6048,10 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       var score = primary + secondary * 2.5;
       if (score < bestScore) {
         bestScore = score;
-        best = el;
+        best2 = el;
       }
     }
-    return best;
+    return best2;
   }
   function overlap(a1, a2, b1, b2) {
     return Math.min(a2, b2) - Math.max(a1, b1) > 4;
@@ -6127,11 +6156,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     var all2 = candidates(layer.root).filter(function (e) {
       return e !== cur;
     });
-    var best = pick(all2, cur, dir);
-    if (!best) return false;
-    var bg = best.closest("[data-group]");
-    if (bg && bg !== group && bg.__last && bg.contains(bg.__last) && isVisible(bg.__last)) best = bg.__last;
-    focus(best);
+    var best2 = pick(all2, cur, dir);
+    if (!best2) return false;
+    var bg = best2.closest("[data-group]");
+    if (bg && bg !== group && bg.__last && bg.contains(bg.__last) && isVisible(bg.__last)) best2 = bg.__last;
+    focus(best2);
     return true;
   }
   function select(el) {
@@ -6252,22 +6281,22 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
 
   // src/js/lib/store.js
   var PREFIX = "kai.";
-  function rawGet(key, fallback) {
+  function rawGet(key2, fallback) {
     try {
-      var raw = window.localStorage.getItem(PREFIX + key);
+      var raw = window.localStorage.getItem(PREFIX + key2);
       return raw === null ? fallback : JSON.parse(raw);
     } catch (e) {
       return fallback;
     }
   }
-  function rawSet(key, value) {
+  function rawSet(key2, value) {
     try {
-      if (value === void 0 || value === null) window.localStorage.removeItem(PREFIX + key);else window.localStorage.setItem(PREFIX + key, JSON.stringify(value));
+      if (value === void 0 || value === null) window.localStorage.removeItem(PREFIX + key2);else window.localStorage.setItem(PREFIX + key2, JSON.stringify(value));
     } catch (e) {}
   }
   var COLORS = ["#7b5bf5", "#e5508c", "#2bb6a3", "#f0a030", "#3d8bfd", "#e55353", "#8bc34a", "#9e9e9e"];
-  function profileKey(id, key) {
-    return "p." + id + "." + key;
+  function profileKey(id, key2) {
+    return "p." + id + "." + key2;
   }
   function ensureProfiles() {
     var list2 = rawGet("profiles", null);
@@ -6348,11 +6377,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     if (rawGet("activeProfile", null) === id) rawSet("activeProfile", list2[0].id);
     return true;
   }
-  function get(key, fallback) {
-    return rawGet(profileKey(activeProfile().id, key), fallback);
+  function get(key2, fallback) {
+    return rawGet(profileKey(activeProfile().id, key2), fallback);
   }
-  function set(key, value) {
-    rawSet(profileKey(activeProfile().id, key), value);
+  function set(key2, value) {
+    rawSet(profileKey(activeProfile().id, key2), value);
   }
   var DEVICE_KEYS = ["serverUrl", "tmdbKey", "mdblistKey", "smoothScroll", "perfMode", "devlogUrl", "lastUpdateCheck", "askProfile", "wizardDone", "language"];
   var DEFAULT_SETTINGS = {
@@ -6492,14 +6521,14 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     });
   }
   function logout() {
-    var key = authKey();
+    var key2 = authKey();
     auth = null;
     set("auth", null);
     set("addons", null);
     setLibrary([]);
-    if (key) call("logout", {
+    if (key2) call("logout", {
       type: "Logout",
-      authKey: key
+      authKey: key2
     }).catch(function () {});
   }
   function getAddonCollection() {
@@ -7274,10 +7303,10 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   // src/js/views/profiles.js
   var SESSION_PICKED = "kai.profilePicked";
   var SESSION_NEW = "kai.newProfile";
-  function session(key, value) {
+  function session(key2, value) {
     try {
-      if (value === void 0) return window.sessionStorage.getItem(key);
-      if (value === null) window.sessionStorage.removeItem(key);else window.sessionStorage.setItem(key, value);
+      if (value === void 0) return window.sessionStorage.getItem(key2);
+      if (value === null) window.sessionStorage.removeItem(key2);else window.sessionStorage.setItem(key2, value);
     } catch (e) {}
     return null;
   }
@@ -7873,10 +7902,10 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         var credits = (p.combined_credits && p.combined_credits.cast || []).concat((p.combined_credits && p.combined_credits.crew || []).filter(function (c) {
           return c.job === "Director";
         })).filter(function (c) {
-          var key = c.media_type + c.id;
-          if (!c.poster_path || seen[key] || c.media_type !== "movie" && c.media_type !== "tv") return false;
+          var key2 = c.media_type + c.id;
+          if (!c.poster_path || seen[key2] || c.media_type !== "movie" && c.media_type !== "tv") return false;
           if (c.media_type === "tv" && /^(Self|Himself|Herself|Host)/i.test(c.character || "")) return false;
-          seen[key] = true;
+          seen[key2] = true;
           return true;
         }).sort(function (a, b) {
           return (b.popularity || 0) - (a.popularity || 0);
@@ -7943,11 +7972,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     });
   }
   function mdblist(meta) {
-    var key = (settings().mdblistKey || "").trim();
+    var key2 = (settings().mdblistKey || "").trim();
     var imdb = imdbOf(meta.id);
-    if (!key || !imdb) return Promise.resolve([]);
+    if (!key2 || !imdb) return Promise.resolve([]);
     var type = meta.type === "series" ? "show" : "movie";
-    return getJSONViaProxy("https://api.mdblist.com/imdb/" + type + "/" + imdb + "?apikey=" + encodeURIComponent(key), {
+    return getJSONViaProxy("https://api.mdblist.com/imdb/" + type + "/" + imdb + "?apikey=" + encodeURIComponent(key2), {
       timeout: 12e3
     }).then(function (d) {
       var out = [];
@@ -8138,6 +8167,134 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     return cinemeta(src === "cinemeta-featured" ? "imdbRating" : "top");
   }
 
+  // src/js/lib/subformats.js
+  function decode(buffer2) {
+    var bytes = new Uint8Array(buffer2);
+    if (typeof TextDecoder !== "function") return decodeLegacy(bytes);
+    if (bytes[0] === 255 && bytes[1] === 254) return new TextDecoder("utf-16le").decode(bytes);
+    if (bytes[0] === 254 && bytes[1] === 255) return new TextDecoder("utf-16be").decode(bytes);
+    try {
+      return new TextDecoder("utf-8", {
+        fatal: true
+      }).decode(bytes);
+    } catch (e) {
+      return new TextDecoder("windows-1252").decode(bytes);
+    }
+  }
+  function decodeLegacy(bytes) {
+    var bin = "";
+    for (var i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
+    try {
+      return decodeURIComponent(escape(bin));
+    } catch (e) {
+      return bin;
+    }
+  }
+  function isAss(text) {
+    var head = String(text).slice(0, 4e3);
+    return /^\s*\[(Script Info|V4\+? Styles|Events)\]/im.test(head) || /^Dialogue:\s*[^,]*,\s*\d+:\d\d:\d\d[.,]\d/m.test(head);
+  }
+  function assTime(s) {
+    var m = String(s).trim().match(/^(\d+):(\d{1,2}):(\d{1,2})(?:[.,](\d+))?$/);
+    if (!m) return NaN;
+    return parseInt(m[1], 10) * 3600 + parseInt(m[2], 10) * 60 + parseInt(m[3], 10) + (m[4] ? parseFloat("0." + m[4]) : 0);
+  }
+  function escapeHtml(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function assText(raw, italic) {
+    var on = {
+      i: !!italic,
+      b: false,
+      u: false
+    };
+    var out = italic ? "<i>" : "";
+    var drawing = false;
+    raw.split(/(\{[^}]*\})/).forEach(function (part) {
+      if (part.charAt(0) === "{" && part.charAt(part.length - 1) === "}") {
+        var re = /\\([ibup])(\d+)/g;
+        var m;
+        while (m = re.exec(part)) {
+          var want = parseInt(m[2], 10) > 0;
+          if (m[1] === "p") drawing = want;else if (on[m[1]] !== want) {
+            on[m[1]] = want;
+            out += (want ? "<" : "</") + m[1] + ">";
+          }
+        }
+      } else if (!drawing) {
+        out += escapeHtml(part.replace(/\\N/g, "\n").replace(/\\[nh]/g, " "));
+      }
+    });
+    ["u", "b", "i"].forEach(function (tag) {
+      if (on[tag]) out += "</" + tag + ">";
+    });
+    return out.replace(/<[^>]*>/g, "").trim() ? out.trim() : "";
+  }
+  function formatFields(line) {
+    return line.slice(line.indexOf(":") + 1).split(",").map(function (f) {
+      return f.trim().toLowerCase();
+    });
+  }
+  function parseAss(text) {
+    var lines = String(text).replace(/^\uFEFF/, "").replace(/\r\n?/g, "\n").split("\n");
+    var section = "";
+    var styleFields = null;
+    var eventFields = ["layer", "start", "end", "style", "name", "marginl", "marginr", "marginv", "effect", "text"];
+    var italicStyles = {};
+    var cues = [];
+    var seen = {};
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      var sec = line.match(/^\s*\[([^\]]+)\]\s*$/);
+      if (sec) {
+        section = sec[1].toLowerCase();
+        continue;
+      }
+      if (/styles/.test(section)) {
+        if (/^Format:/i.test(line)) styleFields = formatFields(line);else if (/^Style:/i.test(line) && styleFields) {
+          var v2 = line.slice(line.indexOf(":") + 1).split(",");
+          var name = (v2[styleFields.indexOf("name")] || "").trim();
+          var it = parseInt(v2[styleFields.indexOf("italic")], 10);
+          if (name && it) italicStyles[name] = true;
+        }
+        continue;
+      }
+      if (/^Format:/i.test(line)) {
+        eventFields = formatFields(line);
+        continue;
+      }
+      if (!/^Dialogue:/i.test(line)) continue;
+      var n = eventFields.length;
+      var v = line.slice(line.indexOf(":") + 1).split(",");
+      if (v.length < n) continue;
+      var start3 = assTime(v[eventFields.indexOf("start")]);
+      var end = assTime(v[eventFields.indexOf("end")]);
+      if (!isFinite(start3) || !isFinite(end) || end <= start3) continue;
+      var style = (v[eventFields.indexOf("style")] || "").trim().replace(/^\*/, "");
+      var body = assText(v.slice(n - 1).join(","), italicStyles[style]);
+      if (!body) continue;
+      var key2 = start3 + "|" + end + "|" + body;
+      if (seen[key2]) continue;
+      seen[key2] = true;
+      cues.push({
+        start: start3,
+        end: end,
+        text: body,
+        n: cues.length
+      });
+    }
+    cues.sort(function (a, b) {
+      return a.start - b.start || a.n - b.n;
+    });
+    return cues.map(function (c) {
+      return {
+        start: c.start,
+        end: c.end,
+        text: c.text
+      };
+    });
+  }
+
   // src/js/lib/subs.js
   function toSec(ts) {
     var m = ts.trim().replace(",", ".").match(/(?:(\d+):)?(\d+):(\d+(?:\.\d+)?)/);
@@ -8145,6 +8302,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     return parseInt(m[1] || "0", 10) * 3600 + parseInt(m[2], 10) * 60 + parseFloat(m[3]);
   }
   function parse(text) {
+    if (isAss(text)) return parseAss(text);
     var cues = [];
     var blocks = String(text).replace(/^﻿/, "").replace(/\r\n?/g, "\n").split(/\n{2,}/);
     for (var i = 0; i < blocks.length; i++) {
@@ -8173,14 +8331,21 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     return esc.replace(/&lt;(\/?)(i|b|u)&gt;/gi, "<$1$2>").replace(/&lt;\/?[^&]*&gt;/g, "");
   }
   function load3(url2, fallbackUrl) {
-    return getText(url2, {
-      timeout: 2e4
-    }).catch(function (e) {
-      if (fallbackUrl) return getText(fallbackUrl, {
+    var get2 = function get2(u) {
+      return getBuffer(u, {
         timeout: 2e4
+      }).then(function (buf) {
+        return parse(decode(buf));
       });
+    };
+    return get2(url2).then(function (cues) {
+      return cues.length || !fallbackUrl ? cues : get2(fallbackUrl).catch(function () {
+        return cues;
+      });
+    }, function (e) {
+      if (fallbackUrl) return get2(fallbackUrl);
       throw e;
-    }).then(parse);
+    });
   }
   function Renderer(el) {
     var cues = [];
@@ -8413,17 +8578,17 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   var malCache = {};
   function malFromAnime(a) {
     if (a.source === "myanimelist") return Promise.resolve(parseInt(a.id, 10));
-    var key = a.source + ":" + a.id;
-    if (!malCache[key]) malCache[key] = getJSON(ARM2 + "ids?source=" + a.source + "&id=" + a.id, {
+    var key2 = a.source + ":" + a.id;
+    if (!malCache[key2]) malCache[key2] = getJSON(ARM2 + "ids?source=" + a.source + "&id=" + a.id, {
       quiet: true
     }).then(function (r) {
       return r && r.myanimelist || null;
     });
-    return malCache[key];
+    return malCache[key2];
   }
   function malFromImdb(imdb, season) {
-    var key = imdb + ":" + season;
-    if (!malCache[key]) malCache[key] = getJSON(ARM2 + "imdb?id=" + imdb, {
+    var key2 = imdb + ":" + season;
+    if (!malCache[key2]) malCache[key2] = getJSON(ARM2 + "imdb?id=" + imdb, {
       quiet: true
     }).then(function (list2) {
       var arr = Array.isArray(list2) ? list2 : [];
@@ -8434,7 +8599,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     }).catch(function () {
       return null;
     });
-    return malCache[key];
+    return malCache[key2];
   }
   function isAnime(meta) {
     var g = (meta.genres || meta.genre || []).map(function (x) {
@@ -8658,6 +8823,171 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     return qr.createDataURL(cell, cell * 4);
   }
 
+  // src/js/lib/lang.js
+  var PORTUGUESE_BR = ["pob", "pt-br", "por", "pt"];
+  var GROUPS = [["pt-br", "pob pb ptbr pt-br bra brazilian brazilian-portuguese brazillian-portuguese portuguese-br portuguese-brazil portuguese-brazilian portugues-br portugues-brasil portugues-do-brasil portugues-brasileiro"], ["pt", "por pt pt-pt portuguese portugues portuguese-portugal portugues-portugal"], ["en", "eng en english ingles"], ["es", "spa es spl spn es-419 spanish espanol castellano latino"], ["ar", "ara ar arabic arabe"], ["ja", "jpn ja jp jap japanese japones"], ["fr", "fre fra fr french frances"], ["de", "ger deu de german alemao"], ["it", "ita it italian italiano"], ["ko", "kor ko korean coreano"], ["zh", "chi zho zh zht zhe chinese chines mandarin cantonese"], ["ru", "rus ru russian russo"], ["hi", "hin hi hindi"]];
+  var EXACT = {};
+  var LOOSE = [];
+  GROUPS.forEach(function (g) {
+    g[1].split(" ").forEach(function (alias) {
+      EXACT[alias] = g[0];
+      if (alias.length >= 5) LOOSE.push([alias, g[0]]);
+    });
+  });
+  var ACCENTS = {
+    á: "a",
+    à: "a",
+    â: "a",
+    ã: "a",
+    ä: "a",
+    é: "e",
+    è: "e",
+    ê: "e",
+    ë: "e",
+    í: "i",
+    ì: "i",
+    î: "i",
+    ï: "i",
+    ó: "o",
+    ò: "o",
+    ô: "o",
+    õ: "o",
+    ö: "o",
+    ú: "u",
+    ù: "u",
+    û: "u",
+    ü: "u",
+    ç: "c",
+    ñ: "n"
+  };
+  function key(text) {
+    return String(text === null || text === void 0 ? "" : text).toLowerCase().replace(/[^\u0000-\u007f]/g, function (ch) {
+      return ACCENTS[ch] || ch;
+    }).replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  }
+  function saysBrazil(k) {
+    return /(^|-)(pt-br|ptbr|pob|br|bra|brasil|brazil|brazilian|brazillian|brasileiro)(-|$)/.test(k);
+  }
+  function lookup(k) {
+    if (!k) return "";
+    if (EXACT[k]) return EXACT[k];
+    var brazil = function brazil(code) {
+      return code === "pt" && saysBrazil(k) ? "pt-br" : code;
+    };
+    var first = k.split("-")[0];
+    if (first.length <= 3 && EXACT[first]) return brazil(EXACT[first]);
+    var padded = "-" + k + "-";
+    for (var i = 0; i < LOOSE.length; i++) {
+      if (padded.indexOf("-" + LOOSE[i][0] + "-") >= 0) return brazil(LOOSE[i][1]);
+    }
+    return "";
+  }
+  function canon(code) {
+    var k = key(code);
+    return lookup(k) || k;
+  }
+  function ofTrack(code, label) {
+    var c = canon(code);
+    var l = key(label);
+    if (c === "pt" && saysBrazil(l)) return "pt-br";
+    if (!c || c === "und") return lookup(l) || c;
+    return c;
+  }
+  function prefs(list2) {
+    var out = [];
+    (list2 || []).forEach(function (x) {
+      var c = canon(x);
+      if (c && out.indexOf(c) < 0) out.push(c);
+    });
+    return out;
+  }
+  function best(items, prefList, getLang) {
+    var found = null;
+    (items || []).forEach(function (item) {
+      var r = prefList.indexOf(getLang(item));
+      if (r >= 0 && (!found || r < found.rank)) found = {
+        item: item,
+        rank: r
+      };
+    });
+    return found;
+  }
+
+  // src/js/lib/probe.js
+  var lastMedia = null;
+  function yn(x) {
+    return x ? "yes" : "no";
+  }
+  function environment() {
+    var ua = navigator.userAgent || "";
+    var chrome = (ua.match(/Chrom(?:e|ium)\/(\d+)/) || [])[1] || "?";
+    var tizenVersion = "";
+    try {
+      tizenVersion = window.tizen.systeminfo.getCapability("http://tizen.org/feature/platform.version");
+    } catch (e) {}
+    var webgl2 = false;
+    try {
+      webgl2 = !!document.createElement("canvas").getContext("webgl2");
+    } catch (e) {}
+    var w = window.webapis;
+    return [{
+      label: "Chromium " + chrome + (tizenVersion ? " · Tizen " + tizenVersion : "")
+    }, {
+      label: "tizen: " + yn(window.tizen) + " · webapis: " + yn(w) + " · avplay: " + yn(w && w.avplay)
+    }, {
+      label: "WebAssembly: " + yn((typeof WebAssembly === "undefined" ? "undefined" : _typeof(WebAssembly)) === "object") + " · WebGL2: " + yn(webgl2),
+      sub: "OffscreenCanvas: " + yn(typeof OffscreenCanvas === "function")
+    }];
+  }
+  function loadWebapis() {
+    if (window.webapis) return Promise.resolve(true);
+    return new Promise(function (resolve) {
+      var done = function done() {
+        return resolve(!!window.webapis);
+      };
+      var s = document.createElement("script");
+      s.src = "$WEBAPIS/webapis/webapis.js";
+      s.onload = s.onerror = done;
+      setTimeout(done, 4e3);
+      document.head.appendChild(s);
+    });
+  }
+  function trackRows(videoEl, name) {
+    var tracks2 = videoEl[name];
+    if (!tracks2) return [{
+      label: name + ": not exposed"
+    }];
+    var out = [{
+      label: name + ": " + tracks2.length
+    }];
+    for (var i = 0; i < tracks2.length && i < 12; i++) {
+      var tr = tracks2[i];
+      var state = name === "audioTracks" ? tr.enabled ? "on" : "off" : tr.mode + (tr.cues ? " · " + tr.cues.length + " cues" : "");
+      out.push({
+        label: "#" + i + " " + ([tr.language, tr.label].filter(Boolean).join(" · ") || "(no language or title)"),
+        sub: [tr.kind, state].filter(Boolean).join(" · ")
+      });
+    }
+    return out;
+  }
+  function media(videoEl) {
+    var ext = (String(videoEl.currentSrc || "").split(/[?#]/)[0].match(/\.([a-z0-9]{2,4})$/i) || [])[1] || "?";
+    lastMedia = [{
+      label: "video: " + videoEl.videoWidth + "x" + videoEl.videoHeight + " · ." + ext
+    }].concat(trackRows(videoEl, "audioTracks")).concat(trackRows(videoEl, "textTracks"));
+    log.info("Diagnóstico", environment().concat(lastMedia).map(function (r) {
+      return r.label + (r.sub ? " (" + r.sub + ")" : "");
+    }).join(" ; "));
+  }
+  function report() {
+    return loadWebapis().then(function () {
+      return {
+        environment: environment(),
+        media: lastMedia
+      };
+    });
+  }
+
   // src/js/views/player.js
   var HIDE_MS = 5e3;
   var SAVE_MS = 15e3;
@@ -8687,11 +9017,15 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     rus: "Russo",
     ara: "Árabe",
     hin: "Hindi",
-    und: "Indefinido"
+    und: "Indefinido",
+    zh: "Chinês",
+    ru: "Russo",
+    ar: "Árabe",
+    hi: "Hindi"
   };
   function langName(code) {
     if (!code) return t("Desconhecido");
-    var name = LANG_NAMES[String(code).toLowerCase()];
+    var name = LANG_NAMES[String(code).toLowerCase()] || LANG_NAMES[canon(code)];
     return name ? t(name) : code;
   }
   function openPlayer(opts) {
@@ -8846,6 +9180,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       currentSub = {
         kind: "off"
       };
+      autoSub = {
+        rank: Infinity,
+        tries: 0
+      };
+      failedSubs = {};
       segments = [];
       segmentsLoaded = false;
       if (typeof upNextStop === "function") upNextStop(false);
@@ -8898,41 +9237,62 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       sub: false,
       audio: false
     };
+    var autoSub = {
+      rank: Infinity,
+      tries: 0
+    };
+    var failedSubs = {};
+    var AUTO_SUB_TRIES = 4;
+    function subKey(s) {
+      return s.id || s.url;
+    }
+    var SUB_CHOICES = "subChoices";
+    function savedChoice() {
+      return (get(SUB_CHOICES, {}) || {})[meta.id] || null;
+    }
+    function rememberChoice(choice) {
+      if (meta.id === "dev" || !choice.lang || choice.lang === "und") return;
+      var all2 = get(SUB_CHOICES, {}) || {};
+      delete all2[meta.id];
+      all2[meta.id] = choice;
+      var keys = Object.keys(all2);
+      if (keys.length > 200) delete all2[keys[0]];
+      set(SUB_CHOICES, all2);
+    }
+    function wantedSubs() {
+      var choice = savedChoice();
+      var list2 = prefs(settings2.subtitleLangs);
+      if (!choice || choice.lang === "off") return list2;
+      return [choice.lang].concat(list2.filter(function (x) {
+        return x !== choice.lang;
+      }));
+    }
     function autoPick() {
-      var prefSubs = (settings2.subtitleLangs || []).map(function (x) {
-        return x.toLowerCase();
-      });
-      var prefAudio = (settings2.audioLangs || []).map(function (x) {
-        return x.toLowerCase();
-      });
+      var prefAudio = prefs(settings2.audioLangs);
       if (!autoDone.audio && prefAudio.length && embedded && embedded.audio.length > 1) {
         autoDone.audio = true;
-        var already = embedded.audio[0] && prefAudio.indexOf(String(embedded.audio[0].lang).toLowerCase()) >= 0;
-        if (!already) {
-          var idx = embedded.audio.findIndex(function (tr) {
-            return prefAudio.indexOf(String(tr.lang).toLowerCase()) >= 0;
-          });
-          if (idx > 0) selectEmbeddedAudio(idx);
-        }
+        var hit2 = best(embedded.audio, prefAudio, function (tr) {
+          return ofTrack(tr.lang, tr.label);
+        });
+        var idx = hit2 ? embedded.audio.indexOf(hit2.item) : -1;
+        if (idx > 0) selectEmbeddedAudio(idx);
       }
-      if (autoDone.sub || !settings2.subtitlesAuto || !prefSubs.length || !addonSubs) return;
-      var _loop4 = function _loop4(p) {
-          var s = addonSubs.find(function (x) {
-            return String(x.lang).toLowerCase() === prefSubs[p];
-          });
-          if (s) {
-            autoDone.sub = true;
-            selectAddonSub(s, true);
-            return {
-              v: void 0
-            };
-          }
-        },
-        _ret2;
-      for (var p = 0; p < prefSubs.length; p++) {
-        _ret2 = _loop4(p);
-        if (_ret2) return _ret2.v;
-      }
+      if (autoDone.sub || !settings2.subtitlesAuto || !addonSubs || autoSub.tries >= AUTO_SUB_TRIES) return;
+      var choice = savedChoice();
+      if (choice && choice.lang === "off") return;
+      var wanted = wantedSubs();
+      var usable = addonSubs.filter(function (s) {
+        return !failedSubs[subKey(s)];
+      });
+      var hit = best(usable, wanted, function (s) {
+        return canon(s.lang);
+      });
+      if (!hit || hit.rank >= autoSub.rank) return;
+      var sameAddon = choice && hit.rank === 0 && usable.find(function (s) {
+        return s.addon === choice.addon && canon(s.lang) === choice.lang;
+      });
+      autoSub.rank = hit.rank;
+      selectAddonSub(sameAddon || hit.item, true);
     }
     function scheduleAudioPick() {
       if (!(settings2.audioLangs || []).length || !isAvailable()) return;
@@ -8954,7 +9314,12 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       loadSegments();
     });
     videoEl.addEventListener("playing", function () {
-      if (!hasPlayed) scheduleAudioPick();
+      if (!hasPlayed) {
+        scheduleAudioPick();
+        setTimeout(function () {
+          return alive && media(videoEl);
+        }, 6e3);
+      }
       hasPlayed = true;
       showSpinner(false);
       message("");
@@ -9573,20 +9938,36 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     }
     function selectAddonSub(s, silent) {
       disableEmbeddedSubs();
+      var key2 = subKey(s);
       currentSub = {
         kind: "addon",
-        id: s.id || s.url
+        id: key2
       };
       renderer.setOffset(savedDelay());
       load3(s.url, subtitlesProxy(s.url)).then(function (cues) {
-        if (!alive || currentSub.id !== (s.id || s.url)) return;
+        if (!alive || currentSub.id !== key2) return;
+        if (!cues.length) return subFailed(s, silent, t("Esta legenda está vazia ou em um formato que o app não lê."));
         renderer.set(cues);
         if (!silent) toast(t("Legenda: {lang}", {
           lang: langName(s.lang)
         }));
-      }).catch(function () {
-        return toast(t("Não foi possível baixar a legenda."));
+      }, function () {
+        return alive && currentSub.id === key2 && subFailed(s, silent, t("Não foi possível baixar a legenda."));
       });
+    }
+    function subFailed(s, silent, text) {
+      failedSubs[subKey(s)] = true;
+      if (!silent) return toast(text);
+      renderer.clear();
+      currentSub = {
+        kind: "off"
+      };
+      autoSub = {
+        rank: Infinity,
+        tries: autoSub.tries + 1
+      };
+      autoPick();
+      if (currentSub.kind === "off") toast(text);
     }
     function withTracks(open) {
       if (embedded || !isAvailable()) return open();
@@ -9652,13 +10033,20 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           });
         });
       }
-      var pref = (settings2.subtitleLangs || []).map(function (x) {
-        return x.toLowerCase();
-      });
-      var sorted = (addonSubs || []).slice().sort(function (a, b) {
-        var ia = pref.indexOf(String(a.lang).toLowerCase());
-        var ib = pref.indexOf(String(b.lang).toLowerCase());
-        return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+      var pref = wantedSubs();
+      var order = function order(s) {
+        var i = pref.indexOf(canon(s.lang));
+        return i < 0 ? 99 : i;
+      };
+      var sorted = (addonSubs || []).map(function (s, i) {
+        return {
+          s: s,
+          i: i
+        };
+      }).sort(function (a, b) {
+        return order(a.s) - order(b.s) || a.i - b.i;
+      }).map(function (x) {
+        return x.s;
       });
       sorted.slice(0, 60).forEach(function (s) {
         return opts2.push({
@@ -9698,7 +10086,22 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
             currentSub = {
               kind: "off"
             };
-          } else if (v.kind === "embedded") selectEmbeddedSub(v.index);else if (v.kind === "addon") selectAddonSub(v.sub);else if (v.kind === "delay") delayMenu();else if (v.kind === "size") sizeMenu();
+            rememberChoice({
+              lang: "off"
+            });
+          } else if (v.kind === "embedded") {
+            var tr = embedded.subs[v.index];
+            rememberChoice({
+              lang: ofTrack(tr.lang, tr.label)
+            });
+            selectEmbeddedSub(v.index);
+          } else if (v.kind === "addon") {
+            rememberChoice({
+              lang: canon(v.sub.lang),
+              addon: v.sub.addon
+            });
+            selectAddonSub(v.sub);
+          } else if (v.kind === "delay") delayMenu();else if (v.kind === "size") sizeMenu();
         }
       });
     }
@@ -10615,11 +11018,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         var debridPending = groups.some(function (g) {
           return addonRank(g.addon) === 0 && !g.done;
         });
-        var best = list3[0];
-        var clean = best && !needsServer(best) && !streamBadges(best).some(function (b) {
+        var best2 = list3[0];
+        var clean = best2 && !needsServer(best2) && !streamBadges(best2).some(function (b) {
           return b.warn;
         });
-        if (!best) {
+        if (!best2) {
           if (pendingCount <= 0 || timedOut) {
             stopSmart();
             if (pendingCount <= 0) toast(t("Escolha inteligente: nenhuma fonte que a TV toque. Escolha na lista."), 5e3);
@@ -10628,7 +11031,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         }
         if (pendingCount > 0 && !timedOut && (debridPending || !clean)) return;
         stopSmart();
-        play(video, best, all2, list3.slice(1, 1 + SMART_FALLBACKS));
+        play(video, best2, all2, list3.slice(1, 1 + SMART_FALLBACKS));
       }
       function status2() {
         if (smartActive) {
@@ -11203,7 +11606,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     function loadNearby() {
       if (el.offsetParent === null) return;
       var limit = window.innerHeight * 2.2;
-      var _loop5 = function _loop5() {
+      var _loop4 = function _loop4() {
           var p = pending2[i];
           if (p.state !== "idle") return 0; // continue
           if (!p.row.parentNode) {
@@ -11219,11 +11622,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
             loadNearby();
           });
         },
-        _ret3;
+        _ret2;
       for (var i = 0; i < pending2.length && active < 2; i++) {
-        _ret3 = _loop5();
-        if (_ret3 === 0) continue;
-        if (_ret3 === 1) break;
+        _ret2 = _loop4();
+        if (_ret2 === 0) continue;
+        if (_ret2 === 1) break;
       }
     }
     function renderBoard() {
@@ -11440,7 +11843,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       if (it.year) parts.push(it.year);
       if (it.runtime) parts.push(it.runtime);
       if (it.genres && it.genres.length) parts.push(it.genres.slice(0, 3).join(", "));
-      meta.innerHTML = (it.rating ? '<span class="imdb">★ ' + escapeHtml(it.rating) + "</span> · " : "") + escapeHtml(parts.join(" · "));
+      meta.innerHTML = (it.rating ? '<span class="imdb">★ ' + escapeHtml2(it.rating) + "</span> · " : "") + escapeHtml2(parts.join(" · "));
       desc.textContent = it.description || "";
       clear(dots);
       items.forEach(function (_, i) {
@@ -11512,7 +11915,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       }
     };
   }
-  function escapeHtml(s) {
+  function escapeHtml2(s) {
     return String(s).replace(/[&<>"]/g, function (c) {
       return {
         "&": "&amp;",
@@ -11735,10 +12138,10 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   }
 
   // src/js/api/update.js
-  var REPO = "ITzAkai/kai";
+  var REPO = "ArturSenna/kai";
   var REPO_URL = "https://github.com/" + REPO;
   var VERSION = "1.2.0";
-  var BUILD = "2026-11-06T18:06:07.124Z";
+  var BUILD = "2026-11-26T01:47:21.114Z";
   var RAW = "https://raw.githubusercontent.com/" + REPO + "/main/";
   var PURGE = "https://purge.jsdelivr.net/gh/" + REPO + "/";
   var FILES = ["package.json", "dist/index.html", "dist/loader.js", "dist/app.js", "dist/app.css", "dist/remote-service.js", "dist/build.json"];
@@ -11979,6 +12382,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     label: "Inglês",
     value: ["eng", "en"]
   }, {
+    label: "Português (Brasil)",
+    value: PORTUGUESE_BR
+  }, {
     label: "Árabe",
     value: ["ara", "ar"]
   }, {
@@ -11994,6 +12400,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   }, {
     label: "Inglês quando houver",
     value: ["eng", "en"]
+  }, {
+    label: "Português (dublado) quando houver",
+    value: PORTUGUESE_BR
   }, {
     label: "Árabe quando houver",
     value: ["ara", "ar"]
@@ -12468,7 +12877,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       apply(preview, s);
       body.appendChild(h("div.sub-preview", null, preview));
       var lb = labels(s);
-      var choose = function choose(title, sub, list3, key, value, label) {
+      var choose = function choose(title, sub, list3, key2, value, label) {
         return body.appendChild(row(title, sub, t(String(label)), function () {
           return menu(title, list3.map(function (x) {
             return {
@@ -12479,7 +12888,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           }), {
             onPick: function onPick(v) {
               var patch = {};
-              patch[key] = v;
+              patch[key2] = v;
               saveSettings(patch);
               render();
             }
@@ -12528,15 +12937,15 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       body.appendChild(h("div.set-section", {
         text: t("Metadados extras (opcional)")
       }));
-      var keyRow = function keyRow(title, sub, key, placeholder) {
+      var keyRow = function keyRow(title, sub, key2, placeholder) {
         var input = h("input.input", {
           type: "text",
-          value: s[key] || "",
+          value: s[key2] || "",
           placeholder: placeholder
         });
         input.__submit = function (v) {
           var patch = {};
-          patch[key] = v.trim();
+          patch[key2] = v.trim();
           saveSettings(patch);
           toast(v.trim() ? t("Chave salva") : t("Chave removida"));
           render();
@@ -12627,6 +13036,15 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       }, [h("div.label", null, [t("Log remoto"), h("small", {
         text: t("npm run logs no PC")
       })]), logInput]));
+      body.appendChild(row(t("Diagnóstico de reprodução"), t("O que esta TV expõe (faixas de áudio e legenda). Toque um vídeo antes de abrir."), "", function () {
+        return report().then(function (r) {
+          return menu(t("Diagnóstico de reprodução"), r.environment.concat(r.media || [{
+            label: t("Nenhum vídeo tocado nesta sessão.")
+          }]), {
+            center: true
+          });
+        });
+      }));
       body.appendChild(h("div.set-section", {
         text: t("Atualizações")
       }));
@@ -12739,13 +13157,13 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       });
     });
   }
-  function resolveAnime(media) {
-    return getJSON("https://arm.haglund.dev/api/v2/ids?source=anilist&id=" + media.id, {
+  function resolveAnime(media2) {
+    return getJSON("https://arm.haglund.dev/api/v2/ids?source=anilist&id=" + media2.id, {
       quiet: true
     }).catch(function () {
       return null;
     }).then(function (ids) {
-      var movieFirst = media.format === "MOVIE" || ids && ids.media === "MOVIE";
+      var movieFirst = media2.format === "MOVIE" || ids && ids.media === "MOVIE";
       var types = movieFirst ? ["movie", "series"] : ["series", "movie"];
       var cands = [];
       var add = function add(id) {
@@ -12758,7 +13176,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       };
       if (ids && ids.kitsu) add("kitsu:" + ids.kitsu);
       if (ids && ids.imdb) add(ids.imdb);
-      add("anilist:" + media.id);
+      add("anilist:" + media2.id);
       var usable = cands.filter(function (c) {
         return withResource("meta", c.type, c.id).length > 0;
       });
@@ -12789,9 +13207,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       lists[0].concat(lists[1]).forEach(function (e) {
         var show2 = e.show || e._embedded && e._embedded.show;
         if (!show2 || !show2.externals || !show2.externals.imdb || NOT_SERIES.test(show2.type || "")) return;
-        var key = show2.id + ":" + e.season + ":" + e.number;
-        if (seen[key]) return;
-        seen[key] = true;
+        var key2 = show2.id + ":" + e.season + ":" + e.number;
+        if (seen[key2]) return;
+        seen[key2] = true;
         var network = show2.webChannel && show2.webChannel.name || show2.network && show2.network.name || "";
         var at = e.airstamp ? Date.parse(e.airstamp) : 0;
         out.push({
@@ -12883,7 +13301,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     }
     function renderDays() {
       clear(days);
-      var _loop6 = function _loop6() {
+      var _loop5 = function _loop5() {
         var off = o;
         var d = dayStart(off);
         days.appendChild(h("div.chip", {
@@ -12899,7 +13317,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         }));
       };
       for (var o = -1; o <= 6; o++) {
-        _loop6();
+        _loop5();
       }
       days.__last = days.children[current3 + 1];
     }
@@ -13132,7 +13550,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         label: t("Inglês"),
         value: ["eng", "en"]
       };
-      var choices = (current() === "ar" ? [ar, en] : [en, ar]).concat([{
+      var ptBr = {
+        label: t("Português (Brasil)"),
+        value: PORTUGUESE_BR
+      };
+      var choices = (current() === "ar" ? [ar, en] : [en, ar]).concat([ptBr, {
         label: t("Não ligar sozinho"),
         value: []
       }]);

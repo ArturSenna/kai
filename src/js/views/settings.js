@@ -17,9 +17,12 @@ import { avatar, switchProfile, createProfile } from './profiles.js';
 import { t } from '../lib/i18n.js';
 import * as phone from '../lib/phone.js';
 import * as theme from '../lib/theme.js';
+import { PORTUGUESE_BR } from '../lib/lang.js';
+import * as probe from '../lib/probe.js';
 
 const SUB_LANGS = [
   { label: 'Inglês', value: ['eng', 'en'] },
+  { label: 'Português (Brasil)', value: PORTUGUESE_BR },
   { label: 'Árabe', value: ['ara', 'ar'] },
   { label: 'Espanhol', value: ['spa', 'es'] },
   { label: 'Nenhum (não ligar sozinho)', value: [] },
@@ -27,6 +30,7 @@ const SUB_LANGS = [
 const AUDIO_LANGS = [
   { label: 'Original do arquivo', value: [] },
   { label: 'Inglês quando houver', value: ['eng', 'en'] },
+  { label: 'Português (dublado) quando houver', value: PORTUGUESE_BR },
   { label: 'Árabe quando houver', value: ['ara', 'ar'] },
   { label: 'Japonês quando houver', value: ['jpn', 'ja'] },
 ];
@@ -512,6 +516,14 @@ export function SettingsView() {
         h('div.label', null, [t('Log remoto'), h('small', { text: t('npm run logs no PC') })]),
         logInput,
       ])
+    );
+    // What the TV's player exposes (embedded tracks, AVPlay, WebAssembly), shown on screen.
+    body.appendChild(
+      row(t('Diagnóstico de reprodução'), t('O que esta TV expõe (faixas de áudio e legenda). Toque um vídeo antes de abrir.'), '', () =>
+        probe.report().then((r) =>
+          menu(t('Diagnóstico de reprodução'), r.environment.concat(r.media || [{ label: t('Nenhum vídeo tocado nesta sessão.') }]), { center: true })
+        )
+      )
     );
     body.appendChild(h('div.set-section', { text: t('Atualizações') }));
     body.appendChild(row(t('Versão instalada'), device || 'Stremio Kai', shortDate(update.BUILD), null));

@@ -12,6 +12,11 @@ const watch = process.argv.includes('--watch');
 // Build id: the in-app updater compares it with dist/build.json on GitHub.
 const BUILD = new Date().toISOString();
 const APP_VERSION = JSON.parse(fs.readFileSync(path.join(root, 'appinfo.json'), 'utf8')).version;
+// GitHub "owner/name" the app loads and updates itself from: package.json's repository, so a fork
+// only changes that one line (or KAI_REPO for a one-off build).
+const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+const REPO = process.env.KAI_REPO || String((pkg.repository && pkg.repository.url) || '').replace(/^.*github\.com[/:]/, '').replace(/\.git$/, '');
+if (!/^[\w.-]+\/[\w.-]+$/.test(REPO)) throw new Error(`package.json "repository.url" is not a GitHub repository: "${REPO}"`);
 
 function copyDir(from, to) {
   fs.mkdirSync(to, { recursive: true });
@@ -50,6 +55,7 @@ const esbuildOptions = {
     __KAI_MDBLIST__: JSON.stringify(process.env.KAI_MDBLIST || ''),
     __KAI_VERSION__: JSON.stringify(APP_VERSION),
     __KAI_BUILD__: JSON.stringify(BUILD),
+    __KAI_REPO__: JSON.stringify(REPO),
   },
   logLevel: 'warning',
 };
@@ -59,6 +65,11 @@ async function emit(result) {
   fs.mkdirSync(dist, { recursive: true });
   copyDir(path.join(src, 'static'), dist);
   fs.copyFileSync(path.join(root, 'appinfo.json'), path.join(dist, 'appinfo.json'));
+  // loader.js is plain ES5 outside the bundle: its repository is written in here.
+  const loaderFile = path.join(dist, 'loader.js');
+  const loader = fs.readFileSync(loaderFile, 'utf8');
+  if (!loader.includes('__KAI_REPO__')) throw new Error('src/static/loader.js lost its __KAI_REPO__ placeholder');
+  fs.writeFileSync(loaderFile, loader.split('__KAI_REPO__').join(REPO));
   const fonts = path.join(root, 'node_modules', '@fontsource', 'montserrat', 'files');
   fs.mkdirSync(path.join(dist, 'fonts'), { recursive: true });
   for (const w of [400, 600, 700, 800]) {
@@ -88,7 +99,7 @@ async function emit(result) {
       console.warn(`[aviso] "${bad}" ainda aparece no bundle perto de: ${code.slice(i - 60, i + 40).replace(/\n/g, ' ')}`);
     }
   }
-  console.log(`[build] dist/app.js ${(code.length / 1024).toFixed(0)} KB`);
+  console.log(`[build] dist/app.js ${(code.length / 1024).toFixed(0)} KB (repository: ${REPO})`);
   // Phone remote: the TizenBrew service (Node 4 on the TV) with the phone page built in.
   const page = fs.readFileSync(path.join(src, 'remote', 'remote.html'), 'utf8');
   const service = fs.readFileSync(path.join(root, 'service', 'remote-service.js'), 'utf8');

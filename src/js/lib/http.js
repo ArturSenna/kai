@@ -8,10 +8,12 @@ export function request(method, url, body, opts) {
     const xhr = new XMLHttpRequest();
     xhr.open(method, url, true);
     xhr.timeout = o.timeout || 20000;
+    if (o.binary) xhr.responseType = 'arraybuffer';
     if (body !== undefined && body !== null) xhr.setRequestHeader('Content-Type', 'application/json');
     if (o.headers) for (const k in o.headers) xhr.setRequestHeader(k, o.headers[k]);
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
+        if (o.binary) return resolve(xhr.response); // responseText throws on a binary request
         if (o.raw) return resolve(xhr.responseText);
         try {
           resolve(xhr.responseText ? JSON.parse(xhr.responseText) : null);
@@ -52,6 +54,11 @@ export function postJSON(url, body, opts) {
 
 export function getText(url, opts) {
   return request('GET', url, null, Object.assign({ raw: true }, opts));
+}
+
+// Raw bytes (ArrayBuffer), for files whose text encoding the server doesn't declare.
+export function getBuffer(url, opts) {
+  return request('GET', url, null, Object.assign({ binary: true }, opts));
 }
 
 // Cache em memória com validade, para catálogos e metadados.

@@ -3,6 +3,11 @@
 // ou automático pelo idioma da TV.
 import { EN } from './i18n-en.js';
 import { AR } from './i18n-ar.js';
+import { EN_EXTRA, AR_EXTRA } from './i18n-extra.js';
+
+// Phrases added by this fork live in i18n-extra.js.
+Object.keys(EN_EXTRA).forEach((k) => (EN[k] = EN_EXTRA[k]));
+Object.keys(AR_EXTRA).forEach((k) => (AR[k] = AR_EXTRA[k]));
 
 let lang = 'en';
 const TABLES = { en: EN, ar: AR };
