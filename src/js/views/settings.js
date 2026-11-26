@@ -19,6 +19,7 @@ import * as phone from '../lib/phone.js';
 import * as theme from '../lib/theme.js';
 import { PORTUGUESE_BR } from '../lib/lang.js';
 import * as probe from '../lib/probe.js';
+import * as relay from '../lib/relay.js';
 
 const SUB_LANGS = [
   { label: 'Inglês', value: ['eng', 'en'] },
@@ -112,6 +113,12 @@ export function SettingsView() {
         })
         .catch((e) => toast(t('Não foi possível instalar: {msg}', { msg: e.message }), 5000));
     });
+  }
+
+  // The PC server is reached through the app's helper on the TV (lib/relay.js). An older copy of
+  // the helper stays loaded until the TV restarts, and then the server looks unreachable.
+  function helperHint() {
+    return relay.missing() ? '  ·  ' + t('Reinicie a TV (segure o botão de ligar) e abra o app de novo') : '';
   }
 
   function toggle(on) {
@@ -273,7 +280,7 @@ export function SettingsView() {
     urlInput.__submit = (v) => {
       store.saveSettings({ serverUrl: v.trim() });
       server.check().then((r) => {
-        toast(r.ok ? t('Servidor conectado') : t('Servidor não respondeu em {url}', { url: server.baseUrl() }));
+        toast(r.ok ? t('Servidor conectado') : t('Servidor não respondeu em {url}', { url: server.baseUrl() }) + helperHint(), 7000);
         render();
       });
     };
@@ -302,7 +309,7 @@ export function SettingsView() {
     body.appendChild(
       row(t('Testar conexão'), '', '', () =>
         server.check().then((r) => {
-          toast(r.ok ? t('Servidor OK') + (r.version ? ' (v' + r.version + ')' : '') : t('Sem resposta de {url}', { url: server.baseUrl() || '-' }));
+          toast(r.ok ? t('Servidor OK') + (r.version ? ' (v' + r.version + ')' : '') : t('Sem resposta de {url}', { url: server.baseUrl() || '-' }) + helperHint(), 7000);
           render();
         })
       )

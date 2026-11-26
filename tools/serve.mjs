@@ -9,7 +9,8 @@ const port = Number(process.env.PORT || 5173);
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.woff2': 'font/woff2', '.wasm': 'application/wasm' };
 
 // Addon de teste (só para desenvolvimento): http://localhost:5173/test-addon/manifest.json
-const TEST_VIDEO = 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_5MB.mp4';
+// TEST_VIDEO=<url> swaps the first test source, e.g. for an MKV with several audio and subtitle tracks.
+const TEST_VIDEO = process.env.TEST_VIDEO || 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_5MB.mp4';
 const TEST_LONG = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'; // ~10 min (HLS)
 function testAddon(p, res) {
   const json = (o) => {

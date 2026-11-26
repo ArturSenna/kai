@@ -4,6 +4,7 @@ import { getJSON, postJSON } from '../lib/http.js';
 import * as store from '../lib/store.js';
 import { getTvIp } from '../lib/luna.js';
 import { t } from '../lib/i18n.js';
+import * as relay from '../lib/relay.js';
 
 let status = { ok: false, checkedAt: 0, url: '' };
 
@@ -21,7 +22,10 @@ export function check(urlOverride) {
     status = { ok: false, checkedAt: Date.now(), url: '' };
     return Promise.resolve(status);
   }
-  return getJSON(u + 'settings', { timeout: 4000, quiet: true })
+  // Through the TV's helper when there is one (lib/relay.js): the server doesn't answer this page.
+  return relay
+    .ready()
+    .then(() => getJSON(relay.through(u + 'settings', 4000), { timeout: 4000, quiet: true }))
     .then((r) => {
       status = { ok: true, checkedAt: Date.now(), url: u, version: r && r.values && r.values.serverVersion };
       return status;
@@ -42,7 +46,9 @@ export function lastStatus() {
 
 // Procura o servidor na mesma sub-rede da TV (x.x.x.1–254), em lotes.
 export function scan(onProgress) {
-  return getTvIp().then((ip) => {
+  // The helper knows the TV's address (newer TVs hide it from web pages).
+  const tvIp = relay.ready().then(() => relay.tvIp() || getTvIp());
+  return tvIp.then((ip) => {
     const prefix = ip.split('.').slice(0, 3).join('.') + '.';
     const hosts = [];
     for (let i = 1; i < 255; i++) if (prefix + i !== ip) hosts.push(prefix + i);
@@ -54,7 +60,7 @@ export function scan(onProgress) {
       const slice = hosts.slice(start, start + batch);
       return Promise.all(
         slice.map((h) =>
-          getJSON('http://' + h + ':11470/settings', { timeout: 1500, quiet: true })
+          getJSON(relay.through('http://' + h + ':11470/settings', 1500), { timeout: 1500, quiet: true })
             .then(() => {
               if (!found) found = h;
             })
@@ -193,13 +199,16 @@ export function toPlayable(stream, seriesInfo) {
 export function tracks(mediaUrl) {
   const base = baseUrl();
   if (!base) return Promise.resolve(null);
-  return getJSON(base + 'tracks/' + encodeURIComponent(mediaUrl), { timeout: 20000, quiet: true }).then((list) => {
-    const arr = Array.isArray(list) ? list : [];
-    return {
-      audio: arr.filter((tk) => tk && tk.type === 'audio'),
-      subs: arr.filter((tk) => tk && tk.type === 'text'),
-    };
-  });
+  return relay
+    .ready()
+    .then(() => getJSON(relay.through(base + 'tracks/' + encodeURIComponent(mediaUrl), 20000), { timeout: 20000, quiet: true }))
+    .then((list) => {
+      const arr = Array.isArray(list) ? list : [];
+      return {
+        audio: arr.filter((tk) => tk && tk.type === 'audio'),
+        subs: arr.filter((tk) => tk && tk.type === 'text'),
+      };
+    });
 }
 
 // Quanto do arquivo do torrent já está no PC (0–1). Links diretos (debrid/HTTP) não têm: null.
@@ -215,5 +224,5 @@ export function streamProgress(mediaUrl) {
 // Converte legendas externas para VTT pelo servidor (contorna CORS/codificação).
 export function subtitlesProxy(subUrl) {
   const base = baseUrl();
-  return base ? base + 'subtitles.vtt?from=' + encodeURIComponent(subUrl) : null;
+  return base ? relay.through(base + 'subtitles.vtt?from=' + encodeURIComponent(subUrl), 20000) : null;
 }

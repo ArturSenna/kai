@@ -2,6 +2,7 @@
 // - Serves the remote page to phones on the same Wi-Fi at http://<TV IP>:8095
 // - Phones send key presses and text, guarded by a 4-digit PIN shown in the app's Settings.
 // - The app on the TV long-polls /api/events from 127.0.0.1 and replays them as remote keys.
+// - It also fetches from the PC's Stremio server for the app (/api/relay), see relay() below.
 'use strict';
 
 var http = require('http');
@@ -130,6 +131,53 @@ function tvKey(keyName, cb) {
   }, 15000);
 }
 
+// The PC's Stremio server only answers web pages on its own list (strem.io sites, itself), and the
+// app's page under TizenBrew (http://127.0.0.1:8081) is not on it, so the TV's browser hides the
+// answers from the app. This service is not a web page: it asks the server and hands the answer on.
+// Kept narrow on purpose, so it can't be used as a way into the home network:
+//   - only the TV itself may call it, and only from a page the TV serves (TizenBrew's);
+//   - only plain GETs, only to an http address on the home network (never this TV, never the internet).
+function isHomeAddress(host) {
+  return /^(10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)$/.test(host || '');
+}
+
+function relay(req, res, q) {
+  var origin = req.headers.origin || '';
+  var fromTvPage = !origin || /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(origin);
+  var head = { 'Cache-Control': 'no-store' };
+  if (origin && fromTvPage) {
+    head['Access-Control-Allow-Origin'] = origin;
+    head.Vary = 'Origin';
+  }
+  var answered = false;
+  var fail = function (status, message) {
+    if (answered) return;
+    answered = true;
+    head['Content-Type'] = 'application/json; charset=utf-8';
+    res.writeHead(status, head);
+    res.end(JSON.stringify({ error: message }));
+  };
+  if (!isLocal(req) || !fromTvPage) return fail(403, 'local only');
+  if (req.method !== 'GET') return fail(405, 'GET only');
+  var target = require('url').parse(String(q.u || ''));
+  if (target.protocol !== 'http:' || !isHomeAddress(target.hostname)) return fail(400, 'home-network http addresses only');
+
+  var finished = false;
+  var out = http.get({ hostname: target.hostname, port: target.port || 80, path: target.path, headers: { Accept: '*/*' } }, function (up) {
+    if (answered) return;
+    answered = true;
+    head['Content-Type'] = up.headers['content-type'] || 'application/octet-stream';
+    res.writeHead(up.statusCode, head);
+    up.on('end', function () { finished = true; });
+    up.pipe(res);
+  });
+  // The app says how long it will wait (t, in ms): a network scan must not leave hundreds of calls hanging.
+  out.setTimeout(Math.max(500, Math.min(60000, parseInt(q.t, 10) || 20000)), function () { out.abort(); });
+  out.on('error', function () { fail(502, 'no answer'); });
+  // The app stopped waiting. (Newer Node also fires 'close' after a normal answer: hence `finished`.)
+  res.on('close', function () { if (!finished) out.abort(); });
+}
+
 var server = http.createServer(function (req, res) {
   try {
     handle(req, res);
@@ -142,12 +190,13 @@ function handle(req, res) {
   var url = require('url').parse(req.url, true);
   var q = url.query;
 
+  if (url.pathname === '/api/relay') return relay(req, res, q);
   if (req.method === 'OPTIONS') return send(res, 204, '');
 
   // ---- TV side (app on the same TV only) ----
   if (url.pathname === '/api/info') {
     if (!isLocal(req)) return send(res, 403, { error: 'local only' });
-    return send(res, 200, { ip: tvIp(), port: PORT, pin: PIN, last: nextId - 1, version: 1 });
+    return send(res, 200, { ip: tvIp(), port: PORT, pin: PIN, last: nextId - 1, version: 2, relay: true });
   }
   if (url.pathname === '/api/events') {
     if (!isLocal(req)) return send(res, 403, { error: 'local only' });

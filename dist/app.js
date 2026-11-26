@@ -875,11 +875,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       };
       var getterFor = function getterFor(TYPE) {
         return function (it) {
-          var state2;
-          if (!isObject(it) || (state2 = get2(it)).type !== TYPE) {
+          var state3;
+          if (!isObject(it) || (state3 = get2(it)).type !== TYPE) {
             throw new TypeError2("Incompatible receiver, " + TYPE + " required");
           }
-          return state2;
+          return state3;
         };
       };
       if (NATIVE_WEAK_MAP || shared.state) {
@@ -977,9 +977,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
             });
           } else if (value.prototype) value.prototype = void 0;
         } catch (error) {}
-        var state2 = enforceInternalState(value);
-        if (!hasOwn(state2, "source")) {
-          state2.source = join(TEMPLATE, typeof name == "string" ? name : "");
+        var state3 = enforceInternalState(value);
+        if (!hasOwn(state3, "source")) {
+          state3.source = join(TEMPLATE, typeof name == "string" ? name : "");
         }
         return value;
       };
@@ -2047,13 +2047,13 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           index: 0
         });
       }, function next() {
-        var state2 = getInternalState(this);
-        var string = state2.string;
-        var index = state2.index;
+        var state3 = getInternalState(this);
+        var string = state3.string;
+        var index = state3.index;
         var point;
         if (index >= string.length) return createIterResultObject(void 0, true);
         point = charAt(string, index);
-        state2.index += point.length;
+        state3.index += point.length;
         return createIterResultObject(point, false);
       });
     }
@@ -5658,7 +5658,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     "Legendas ASS com o estilo original": "ASS subtitles with their original styling",
     "Cores, posições e fontes do arquivo; desligue se a TV engasgar": "The file's colours, positions and fonts; turn off if the TV struggles",
     "Quando o arquivo tem mais de uma faixa de áudio": "When the file has more than one audio track",
-    "O servidor do PC não conseguiu ler esta legenda.": "The PC server couldn't read this subtitle."
+    "O servidor do PC não conseguiu ler esta legenda.": "The PC server couldn't read this subtitle.",
+    "Reinicie a TV (segure o botão de ligar) e abra o app de novo": "Restart the TV (hold the power button) and open the app again"
   };
   var AR_EXTRA = {
     "Português (Brasil)": "البرتغالية (البرازيل)",
@@ -5676,7 +5677,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     "Legendas ASS com o estilo original": "ترجمات ASS بتنسيقها الأصلي",
     "Cores, posições e fontes do arquivo; desligue se a TV engasgar": "ألوان الملف ومواضعه وخطوطه؛ أوقفها إذا تعثّر التلفاز",
     "Quando o arquivo tem mais de uma faixa de áudio": "عندما يحتوي الملف على أكثر من مسار صوتي",
-    "O servidor do PC não conseguiu ler esta legenda.": "تعذّر على خادم الكمبيوتر قراءة هذه الترجمة."
+    "O servidor do PC não conseguiu ler esta legenda.": "تعذّر على خادم الكمبيوتر قراءة هذه الترجمة.",
+    "Reinicie a TV (segure o botão de ligar) e abra o app de novo": "أعد تشغيل التلفاز (اضغط مطولًا على زر التشغيل) ثم افتح التطبيق مجددًا"
   };
 
   // src/js/lib/i18n.js
@@ -6858,6 +6860,54 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     });
   }
 
+  // src/js/lib/relay.js
+  var HELPER = "http://127.0.0.1:8095";
+  var ENABLED = isTizen() || window.location.hostname === "localhost";
+  var ASK_AGAIN_MS = 1e4;
+  var HOME = /^http:\/\/(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/;
+  var state = {
+    ok: false,
+    ip: "",
+    at: 0
+  };
+  var pending2 = null;
+  function ready() {
+    if (!ENABLED) return Promise.resolve(false);
+    if (state.ok || Date.now() - state.at < ASK_AGAIN_MS) return Promise.resolve(state.ok);
+    if (!pending2) {
+      pending2 = getJSON(HELPER + "/api/info", {
+        timeout: 2500,
+        quiet: true
+      }).then(function (info2) {
+        return state = {
+          ok: !!(info2 && info2.relay),
+          ip: info2 && info2.ip || "",
+          at: Date.now()
+        };
+      }, function () {
+        return state = {
+          ok: false,
+          ip: "",
+          at: Date.now()
+        };
+      }).then(function () {
+        pending2 = null;
+        return state.ok;
+      });
+    }
+    return pending2;
+  }
+  function missing() {
+    return ENABLED && !state.ok;
+  }
+  function tvIp() {
+    return state.ip;
+  }
+  function through(url3, timeoutMs) {
+    if (!state.ok || !HOME.test(url3)) return url3;
+    return HELPER + "/api/relay?t=" + (timeoutMs || 2e4) + "&u=" + encodeURIComponent(url3);
+  }
+
   // src/js/api/server.js
   var status = {
     ok: false,
@@ -6881,9 +6931,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       };
       return Promise.resolve(status);
     }
-    return getJSON(u + "settings", {
-      timeout: 4e3,
-      quiet: true
+    return ready().then(function () {
+      return getJSON(through(u + "settings", 4e3), {
+        timeout: 4e3,
+        quiet: true
+      });
     }).then(function (r) {
       status = {
         ok: true,
@@ -6908,7 +6960,10 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     return status;
   }
   function scan(onProgress) {
-    return getTvIp().then(function (ip) {
+    var tvIp2 = ready().then(function () {
+      return tvIp() || getTvIp();
+    });
+    return tvIp2.then(function (ip) {
       var prefix = ip.split(".").slice(0, 3).join(".") + ".";
       var hosts = [];
       for (var i = 1; i < 255; i++) if (prefix + i !== ip) hosts.push(prefix + i);
@@ -6919,7 +6974,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         if (found || start4 >= hosts.length) return Promise.resolve(found);
         var slice = hosts.slice(start4, start4 + batch2);
         return Promise.all(slice.map(function (h2) {
-          return getJSON("http://" + h2 + ":11470/settings", {
+          return getJSON(through("http://" + h2 + ":11470/settings", 1500), {
             timeout: 1500,
             quiet: true
           }).then(function () {
@@ -7080,9 +7135,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   function tracks(mediaUrl) {
     var base2 = baseUrl();
     if (!base2) return Promise.resolve(null);
-    return getJSON(base2 + "tracks/" + encodeURIComponent(mediaUrl), {
-      timeout: 2e4,
-      quiet: true
+    return ready().then(function () {
+      return getJSON(through(base2 + "tracks/" + encodeURIComponent(mediaUrl), 2e4), {
+        timeout: 2e4,
+        quiet: true
+      });
     }).then(function (list2) {
       var arr = Array.isArray(list2) ? list2 : [];
       return {
@@ -7110,7 +7167,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   }
   function subtitlesProxy(subUrl) {
     var base2 = baseUrl();
-    return base2 ? base2 + "subtitles.vtt?from=" + encodeURIComponent(subUrl) : null;
+    return base2 ? through(base2 + "subtitles.vtt?from=" + encodeURIComponent(subUrl), 2e4) : null;
   }
 
   // src/js/api/addons.js
@@ -8744,11 +8801,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     el.dispatchEvent(ev);
     if (submit) fireKey(ENTER);
   }
-  function nowPlaying(state2) {
+  function nowPlaying(state3) {
     var x = new XMLHttpRequest();
     x.open("POST", BASE + "/api/state");
     x.onerror = function () {};
-    x.send(JSON.stringify(state2 || null));
+    x.send(JSON.stringify(state3 || null));
   }
   function browse(data) {
     var x = new XMLHttpRequest();
@@ -8943,7 +9000,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   var host = null;
   var current3 = null;
   var readyTimer = null;
-  var state = "not used yet";
+  var state2 = "not used yet";
   function supported() {
     return (typeof WebAssembly === "undefined" ? "undefined" : _typeof(WebAssembly)) === "object" && typeof Worker === "function" && typeof EventTarget === "function";
   }
@@ -8975,11 +9032,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     var token = {};
     current3 = token;
     host = videoEl.parentNode;
-    state = "loading";
+    state2 = "loading";
     var fail = function fail(reason) {
       if (current3 !== token) return;
       stop();
-      state = "failed: " + reason;
+      state2 = "failed: " + reason;
       log.warn("Legenda ASS com estilo indisponível:", reason);
       opts.onFail(reason);
     };
@@ -9005,7 +9062,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       instance.addEventListener("ready", function () {
         if (current3 !== token) return;
         clearTimeout(readyTimer);
-        state = "ready";
+        state2 = "ready";
         log.info("Legenda ASS com estilo: pronta");
       });
       readyTimer = setTimeout(function () {
@@ -9034,7 +9091,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     if (instance) instance.timeOffset = -sec;
   }
   function status2() {
-    return state;
+    return state2;
   }
 
   // src/js/lib/probe.js
@@ -9088,10 +9145,10 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     }];
     for (var i = 0; i < tracks2.length && i < 12; i++) {
       var tr = tracks2[i];
-      var state2 = name === "audioTracks" ? tr.enabled ? "on" : "off" : tr.mode + (tr.cues ? " · " + tr.cues.length + " cues" : "");
+      var state3 = name === "audioTracks" ? tr.enabled ? "on" : "off" : tr.mode + (tr.cues ? " · " + tr.cues.length + " cues" : "");
       out.push({
         label: "#" + i + " " + ([tr.language, tr.label].filter(Boolean).join(" · ") || "(no language or title)"),
-        sub: [tr.kind, state2].filter(Boolean).join(" · ")
+        sub: [tr.kind, state3].filter(Boolean).join(" · ")
       });
     }
     return out;
@@ -10209,7 +10266,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       if (!k) return;
       cs.segs[k] = "loading";
       cs.busy = true;
-      var url3 = baseUrl() + "hlsv2/" + cs.sid + "/subtitle" + cs.index + "/segment" + k + ".vtt?mediaURL=" + encodeURIComponent(mediaUrl);
+      var url3 = through(baseUrl() + "hlsv2/" + cs.sid + "/subtitle" + cs.index + "/segment" + k + ".vtt?mediaURL=" + encodeURIComponent(mediaUrl), 3e4);
       getText(url3, {
         timeout: 3e4,
         quiet: true
@@ -11966,13 +12023,13 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       cwRow.appendChild(track);
       loadVisibleImages(cwRow);
     }
-    var pending2 = [];
+    var pending3 = [];
     var active = 0;
     function loadNearby() {
       if (el.offsetParent === null) return;
       var limit = window.innerHeight * 2.2;
       var _loop4 = function _loop4() {
-          var p = pending2[i];
+          var p = pending3[i];
           if (p.state !== "idle") return 0; // continue
           if (!p.row.parentNode) {
             p.state = "done";
@@ -11988,7 +12045,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           });
         },
         _ret2;
-      for (var i = 0; i < pending2.length && active < 2; i++) {
+      for (var i = 0; i < pending3.length && active < 2; i++) {
         _ret2 = _loop4();
         if (_ret2 === 0) continue;
         if (_ret2 === 1) break;
@@ -11996,7 +12053,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     }
     function renderBoard() {
       loadedBoard = true;
-      pending2 = [];
+      pending3 = [];
       clear(rows);
       rows.appendChild(spinnerLine(t("Carregando catálogos...")));
       load().then(function () {
@@ -12005,7 +12062,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         if (!cats.length) rows.appendChild(h("div.row-empty", {
           text: t("Nenhum catálogo. Entre na sua conta em Ajustes.")
         }));
-        pending2 = cats.map(function (c) {
+        pending3 = cats.map(function (c) {
           return Object.assign(buildRow(c, rows), {
             state: "idle"
           });
@@ -12043,7 +12100,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       freeMemory: function freeMemory() {
         stop2();
         newLoadedAt = 0;
-        pending2 = [];
+        pending3 = [];
         clear(rows);
         loadedBoard = false;
       },
@@ -12361,7 +12418,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           text: t("Nenhum addon com busca instalado.")
         }));
         var found = 0;
-        var pending2 = cats.length;
+        var pending3 = cats.length;
         cats.forEach(function (entry) {
           var row = h("div.row", {
             "data-anchor": "30"
@@ -12389,8 +12446,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
             results.appendChild(row);
             loadVisibleImages(row);
           }).catch(function () {}).then(function () {
-            pending2--;
-            if (my === token && pending2 === 0 && !found) results.appendChild(h("div.hint", {
+            pending3--;
+            if (my === token && pending3 === 0 && !found) results.appendChild(h("div.hint", {
               text: t('Nada encontrado para "{q}".', {
                 q: query
               })
@@ -12506,7 +12563,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   var REPO = "ArturSenna/kai";
   var REPO_URL = "https://github.com/" + REPO;
   var VERSION = "1.2.0";
-  var BUILD = "2026-11-26T02:30:46.671Z";
+  var BUILD = "2026-11-26T02:51:27.132Z";
   var RAW = "https://raw.githubusercontent.com/" + REPO + "/main/";
   var PURGE = "https://purge.jsdelivr.net/gh/" + REPO + "/";
   var FILES = ["package.json", "dist/index.html", "dist/loader.js", "dist/app.js", "dist/app.css", "dist/remote-service.js", "dist/build.json", "dist/jassub/jassub-worker.js"];
@@ -12873,6 +12930,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         });
       });
     }
+    function helperHint() {
+      return missing() ? "  ·  " + t("Reinicie a TV (segure o botão de ligar) e abra o app de novo") : "";
+    }
     function toggle(on) {
       return h("div.toggle", {
         cls: on ? "on" : ""
@@ -13085,7 +13145,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         check().then(function (r) {
           toast(r.ok ? t("Servidor conectado") : t("Servidor não respondeu em {url}", {
             url: baseUrl()
-          }));
+          }) + helperHint(), 7e3);
           render();
         });
       };
@@ -13122,7 +13182,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         return check().then(function (r) {
           toast(r.ok ? t("Servidor OK") + (r.version ? " (v" + r.version + ")" : "") : t("Sem resposta de {url}", {
             url: baseUrl() || "-"
-          }));
+          }) + helperHint(), 7e3);
           render();
         });
       }));

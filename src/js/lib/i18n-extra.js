@@ -17,6 +17,7 @@ export const EN_EXTRA = {
   'Cores, posições e fontes do arquivo; desligue se a TV engasgar': "The file's colours, positions and fonts; turn off if the TV struggles",
   'Quando o arquivo tem mais de uma faixa de áudio': 'When the file has more than one audio track',
   'O servidor do PC não conseguiu ler esta legenda.': "The PC server couldn't read this subtitle.",
+  'Reinicie a TV (segure o botão de ligar) e abra o app de novo': 'Restart the TV (hold the power button) and open the app again',
 };
 
 export const AR_EXTRA = {
@@ -36,4 +37,5 @@ export const AR_EXTRA = {
   'Cores, posições e fontes do arquivo; desligue se a TV engasgar': 'ألوان الملف ومواضعه وخطوطه؛ أوقفها إذا تعثّر التلفاز',
   'Quando o arquivo tem mais de uma faixa de áudio': 'عندما يحتوي الملف على أكثر من مسار صوتي',
   'O servidor do PC não conseguiu ler esta legenda.': 'تعذّر على خادم الكمبيوتر قراءة هذه الترجمة.',
+  'Reinicie a TV (segure o botão de ligar) e abra o app de novo': 'أعد تشغيل التلفاز (اضغط مطولًا على زر التشغيل) ثم افتح التطبيق مجددًا',
 };

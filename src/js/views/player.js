@@ -22,6 +22,7 @@ import * as lang from '../lib/lang.js';
 import * as probe from '../lib/probe.js';
 import * as trackselect from '../lib/trackselect.js';
 import * as asscanvas from '../lib/asscanvas.js';
+import * as relay from '../lib/relay.js';
 
 const HIDE_MS = 5000;
 const SAVE_MS = 15000;
@@ -1000,7 +1001,7 @@ function PlayerView(opts) {
     if (!k) return;
     cs.segs[k] = 'loading';
     cs.busy = true; // um bloco por vez
-    const url = server.baseUrl() + 'hlsv2/' + cs.sid + '/subtitle' + cs.index + '/segment' + k + '.vtt?mediaURL=' + encodeURIComponent(mediaUrl);
+    const url = relay.through(server.baseUrl() + 'hlsv2/' + cs.sid + '/subtitle' + cs.index + '/segment' + k + '.vtt?mediaURL=' + encodeURIComponent(mediaUrl), 30000);
     getText(url, { timeout: 30000, quiet: true })
       .then((txt) => {
         if (currentSub !== cs) return;
