@@ -1,6 +1,7 @@
 // What this TV's web engine exposes, to decide how embedded audio/subtitle tracks can be reached
 // (Settings → Playback diagnostics, and the remote log). Read-only: it changes nothing in playback.
 import { log } from './log.js';
+import * as asscanvas from './asscanvas.js';
 
 // Rows are { label, sub } so they fit a menu line on the TV (long lines are cut off there).
 let lastMedia = null; // rows about the last video played
@@ -29,6 +30,7 @@ export function environment() {
     { label: 'Chromium ' + chrome + (tizenVersion ? ' · Tizen ' + tizenVersion : '') },
     { label: 'tizen: ' + yn(window.tizen) + ' · webapis: ' + yn(w) + ' · avplay: ' + yn(w && w.avplay) },
     { label: 'WebAssembly: ' + yn(typeof WebAssembly === 'object') + ' · WebGL2: ' + yn(webgl2), sub: 'OffscreenCanvas: ' + yn(typeof OffscreenCanvas === 'function') },
+    { label: 'Styled ASS: ' + asscanvas.status() },
   ];
 }
 

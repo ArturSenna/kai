@@ -5,12 +5,22 @@ run the official Stremio app. It runs as a [TizenBrew](https://github.com/reisxd
 app module and brings the [Stremio Kai](https://github.com/allecsc/Stremio-Kai) look and
 features to Tizen, fully controlled with the Samsung remote.
 
-> **This is a fork** of [ITzAkai/kai](https://github.com/ITzAkai/kai) that adds Brazilian Portuguese
-> subtitles. **Settings → Subtitle language → Portuguese (Brazil)** turns on `pt-BR` subtitles on
-> every episode (generic Portuguese when there is no Brazilian one), a subtitle picked by hand is
-> remembered for the rest of the series, old Windows-1252 `.srt` files keep their accents, and
-> `.ass`/`.ssa` subtitles are read as plain text. To install this fork, enter `ArturSenna/kai`
-> instead of `ITzAkai/kai` in step 5 below.
+> **This is a fork** of [ITzAkai/kai](https://github.com/ITzAkai/kai). To install it, enter
+> `ArturSenna/kai` instead of `ITzAkai/kai` in step 5 below. What it adds:
+>
+> - **Portuguese (Brazil) subtitles** on every episode (Settings → Subtitle language), with generic
+>   Portuguese and an optional second language as fallbacks. A subtitle or audio track picked by
+>   hand is remembered for the rest of the series.
+> - **Smart track selection**, after desktop Kai's Smart Track Selector: the preferred audio
+>   language is picked from the TV's own track list, no subtitles come on when the audio is already
+>   in your language (only forced ones), and signs/songs or commentary tracks are never picked.
+> - **Built-in (MKV) subtitles** through [stremio-service](https://github.com/Stremio/stremio-service/releases)
+>   on a PC: Samsung's player doesn't expose them, so the PC extracts them as text.
+> - **ASS/SSA subtitles** drawn with their own fonts, colours and positions
+>   ([JASSUB](https://github.com/ThaUnknown/jassub)), plain text where the TV can't run it; old
+>   Windows-1252 `.srt` files keep their accents.
+> - Sources whose only sound is **DTS or TrueHD** (silent on Samsung TVs) are marked and left for
+>   last by Smart Choice.
 
 > **Unofficial.** Not affiliated with Stremio, Stremio Kai or Samsung. The app hosts no
 > content: it only shows what the add-ons on **your** Stremio account provide.

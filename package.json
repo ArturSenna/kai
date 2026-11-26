@@ -1,8 +1,8 @@
 {
   "name": "stremio-kai-tizen",
-  "version": "1.2.0-tizen.1",
+  "version": "1.2.0-fork.2",
   "private": true,
-  "description": "Stremio Kai Timeworn ported to old Samsung Tizen TVs (2017+, Tizen 3.0) as a TizenBrew app module",
+  "description": "ArturSenna's fork of ITzAkai/kai (Stremio Kai for Samsung Tizen TVs): Brazilian Portuguese subtitles, smart audio and subtitle track selection, styled ASS subtitles",
   "license": "GPL-3.0",
   "type": "module",
   "scripts": {
@@ -24,7 +24,8 @@
     "@webos-tools/cli": "^3.2.6",
     "acorn": "^8.19.0",
     "core-js": "^3.45.0",
-    "esbuild": "^0.25.0"
+    "esbuild": "^0.25.0",
+    "jassub": "1.8.8"
   },
   "repository": {
     "type": "git",

@@ -27,6 +27,14 @@ const SUB_LANGS = [
   { label: 'Espanhol', value: ['spa', 'es'] },
   { label: 'Nenhum (não ligar sozinho)', value: [] },
 ];
+// Tried when the first language has no subtitles at all.
+const SUB_LANGS_2 = [
+  { label: 'Nenhuma', value: [] },
+  { label: 'Inglês', value: ['eng', 'en'] },
+  { label: 'Português (Brasil)', value: PORTUGUESE_BR },
+  { label: 'Espanhol', value: ['spa', 'es'] },
+  { label: 'Árabe', value: ['ara', 'ar'] },
+];
 const AUDIO_LANGS = [
   { label: 'Original do arquivo', value: [] },
   { label: 'Inglês quando houver', value: ['eng', 'en'] },
@@ -377,15 +385,39 @@ export function SettingsView() {
         })
       )
     );
+    const sub2Name = (SUB_LANGS_2.find((x) => JSON.stringify(x.value) === JSON.stringify(s.subtitleLangs2 || [])) || SUB_LANGS_2[0]).label;
+    body.appendChild(
+      row(t('Segunda opção de legenda'), t('Usada quando não há legenda no idioma principal'), t(sub2Name), () =>
+        menu(t('Segunda opção de legenda'), SUB_LANGS_2.map((x) => ({ label: t(x.label), value: x.value, checked: x.label === sub2Name })), {
+          onPick: (v) => {
+            store.saveSettings({ subtitleLangs2: v });
+            render();
+          },
+        })
+      )
+    );
     body.appendChild(
       row(t('Ligar legenda automaticamente'), t('Se o áudio não estiver no seu idioma'), '', () => {
         store.saveSettings({ subtitlesAuto: !store.settings().subtitlesAuto });
         render();
       }, toggle(s.subtitlesAuto))
     );
+    // Smart Track Selector options (lib/trackselect.js); the defaults live where they are read.
+    const flag = (title, sub, key, on) =>
+      body.appendChild(
+        row(title, sub, '', () => {
+          const patch = {};
+          patch[key] = !on;
+          store.saveSettings(patch);
+          render();
+        }, toggle(on))
+      );
+    flag(t('Sem legenda quando o áudio já é no seu idioma'), t('Só entram as legendas forçadas (falas em outro idioma), quando o arquivo tem'), 'subsSkipNative', s.subsSkipNative !== false);
+    flag(t('Preferir a legenda embutida no arquivo'), t('Sincronia melhor que a dos addons; precisa do servidor do PC'), 'preferEmbedded', s.preferEmbedded === true);
+    flag(t('Legendas ASS com o estilo original'), t('Cores, posições e fontes do arquivo; desligue se a TV engasgar'), 'assStyled', s.assStyled !== false);
     const audName = (AUDIO_LANGS.find((x) => JSON.stringify(x.value) === JSON.stringify(s.audioLangs)) || AUDIO_LANGS[0]).label;
     body.appendChild(
-      row(t('Áudio preferido'), t('Precisa do servidor do PC para ler as faixas'), t(audName), () =>
+      row(t('Áudio preferido'), t('Quando o arquivo tem mais de uma faixa de áudio'), t(audName), () =>
         menu(t('Áudio preferido'), AUDIO_LANGS.map((x) => ({ label: t(x.label), value: x.value, checked: x.label === audName })), {
           onPick: (v) => {
             store.saveSettings({ audioLangs: v });

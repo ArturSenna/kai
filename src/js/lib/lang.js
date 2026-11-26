@@ -44,6 +44,17 @@ function key(text) {
     .replace(/^-+|-+$/g, '');
 }
 
+// The words of a track title, normalised: "Signs & Songs [Forçada]" -> ['signs', 'songs', 'forcada'].
+export function words(text) {
+  const k = key(text);
+  return k ? k.split('-') : [];
+}
+
+// The language without its region: Brazilian Portuguese is Portuguese.
+export function base(code) {
+  return code === 'pt-br' ? 'pt' : code;
+}
+
 // A label that says "Brazil" somewhere ("Dublado BR", "PT-BR 5.1", "Brazilian").
 function saysBrazil(k) {
   return /(^|-)(pt-br|ptbr|pob|br|bra|brasil|brazil|brazilian|brazillian|brasileiro)(-|$)/.test(k);
@@ -88,16 +99,4 @@ export function prefs(list) {
     if (c && out.indexOf(c) < 0) out.push(c);
   });
   return out;
-}
-
-// The most wanted item: lowest rank first, earlier in the list on a tie.
-// getLang(item) -> canonical code (canon() or ofTrack()).
-// Returns { item, rank } or null when nothing matches the preference.
-export function best(items, prefList, getLang) {
-  let found = null;
-  (items || []).forEach((item) => {
-    const r = prefList.indexOf(getLang(item));
-    if (r >= 0 && (!found || r < found.rank)) found = { item: item, rank: r };
-  });
-  return found;
 }

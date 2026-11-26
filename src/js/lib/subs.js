@@ -41,12 +41,18 @@ function sanitize(s) {
   return esc.replace(/&lt;(\/?)(i|b|u)&gt;/gi, '<$1$2>').replace(/&lt;\/?[^&]*&gt;/g, '');
 }
 
+// Fetches a subtitle file: { cues, ass }. cues is the text reading of any format; ass is the file's
+// own text when it is ASS/SSA (for the styled renderer), else null.
 // The bytes are decoded here (UTF-8 or Windows-1252), not by the browser. If the file can't be
 // fetched, or has nothing readable in it, the PC server's converter (fallbackUrl) gets a try.
-export function load(url, fallbackUrl) {
-  const get = (u) => getBuffer(u, { timeout: 20000 }).then((buf) => parse(decode(buf)));
+export function loadFile(url, fallbackUrl) {
+  const get = (u) =>
+    getBuffer(u, { timeout: 20000 }).then((buf) => {
+      const text = decode(buf);
+      return { cues: parse(text), ass: isAss(text) ? text : null };
+    });
   return get(url).then(
-    (cues) => (cues.length || !fallbackUrl ? cues : get(fallbackUrl).catch(() => cues)),
+    (file) => (file.cues.length || !fallbackUrl ? file : get(fallbackUrl).catch(() => file)),
     (e) => {
       if (fallbackUrl) return get(fallbackUrl);
       throw e;

@@ -16,6 +16,8 @@ import * as extras from '../api/extras.js';
 import { smallThumb } from '../lib/img.js';
 import { isAnime } from '../api/skip.js';
 import { t, epLabel } from '../lib/i18n.js';
+import { isTizen } from '../lib/platform.js';
+import { unplayableAudio } from '../lib/trackselect.js';
 
 export function openDetails(type, id, opts) {
   router.push(DetailsView(type, id, opts || {}));
@@ -327,6 +329,10 @@ function DetailsView(type, id, opts) {
     if (/dolby.?vision|\bdovi\b|\bdv\b/i.test(text)) out.push({ t: 'Dolby Vision', warn: true });
     else if (/hdr/i.test(text)) out.push({ t: 'HDR' });
     if (/remux/i.test(text)) out.push({ t: 'REMUX', warn: true });
+    // Samsung TVs don't decode DTS or TrueHD: a source with only that sound plays silent, so it is
+    // marked like the other formats to avoid and Smart Choice leaves it for last.
+    const mute = isTizen() ? unplayableAudio(text) : '';
+    if (mute) out.push({ t: mute, warn: true });
     const m = text.match(/(\d+(?:[.,]\d+)?)\s*(GB|MB)\b/i);
     if (m) {
       const mb = parseFloat(m[1].replace(',', '.')) * (m[2].toUpperCase() === 'GB' ? 1024 : 1);

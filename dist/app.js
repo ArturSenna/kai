@@ -736,12 +736,12 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         P = toPropertyKey(P);
         anObject(Attributes);
         if (typeof O === "function" && P === "prototype" && "value" in Attributes && WRITABLE in Attributes && !Attributes[WRITABLE]) {
-          var current3 = $getOwnPropertyDescriptor(O, P);
-          if (current3 && current3[WRITABLE]) {
+          var current4 = $getOwnPropertyDescriptor(O, P);
+          if (current4 && current4[WRITABLE]) {
             O[P] = Attributes.value;
             Attributes = {
-              configurable: CONFIGURABLE in Attributes ? Attributes[CONFIGURABLE] : current3[CONFIGURABLE],
-              enumerable: ENUMERABLE in Attributes ? Attributes[ENUMERABLE] : current3[ENUMERABLE],
+              configurable: CONFIGURABLE in Attributes ? Attributes[CONFIGURABLE] : current4[CONFIGURABLE],
+              enumerable: ENUMERABLE in Attributes ? Attributes[ENUMERABLE] : current4[ENUMERABLE],
               writable: false
             };
           }
@@ -875,11 +875,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       };
       var getterFor = function getterFor(TYPE) {
         return function (it) {
-          var state;
-          if (!isObject(it) || (state = get2(it)).type !== TYPE) {
+          var state2;
+          if (!isObject(it) || (state2 = get2(it)).type !== TYPE) {
             throw new TypeError2("Incompatible receiver, " + TYPE + " required");
           }
-          return state;
+          return state2;
         };
       };
       if (NATIVE_WEAK_MAP || shared.state) {
@@ -977,9 +977,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
             });
           } else if (value.prototype) value.prototype = void 0;
         } catch (error) {}
-        var state = enforceInternalState(value);
-        if (!hasOwn(state, "source")) {
-          state.source = join(TEMPLATE, typeof name == "string" ? name : "");
+        var state2 = enforceInternalState(value);
+        if (!hasOwn(state2, "source")) {
+          state2.source = join(TEMPLATE, typeof name == "string" ? name : "");
         }
         return value;
       };
@@ -1261,7 +1261,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         var TARGET = options.target;
         var GLOBAL = options.global;
         var STATIC = options.stat;
-        var FORCED, target, key2, targetProperty, sourceProperty, descriptor;
+        var FORCED2, target, key2, targetProperty, sourceProperty, descriptor;
         if (GLOBAL) {
           target = globalThis2;
         } else if (STATIC) {
@@ -1275,8 +1275,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
             descriptor = getOwnPropertyDescriptor(target, key2);
             targetProperty = descriptor && descriptor.value;
           } else targetProperty = target[key2];
-          FORCED = isForced(GLOBAL ? key2 : TARGET + (STATIC ? "." : "#") + key2, options.forced);
-          if (!FORCED && targetProperty !== void 0) {
+          FORCED2 = isForced(GLOBAL ? key2 : TARGET + (STATIC ? "." : "#") + key2, options.forced);
+          if (!FORCED2 && targetProperty !== void 0) {
             if (_typeof(sourceProperty) == _typeof(targetProperty)) continue;
             copyConstructorProperties(sourceProperty, targetProperty);
           }
@@ -1932,7 +1932,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       var returnThis = function returnThis() {
         return this;
       };
-      module.exports = function (Iterable, NAME, IteratorConstructor, next, DEFAULT, IS_SET, FORCED) {
+      module.exports = function (Iterable, NAME, IteratorConstructor, next, DEFAULT, IS_SET, FORCED2) {
         createIteratorConstructor(IteratorConstructor, NAME, next);
         var getIterationMethod = function getIterationMethod(KIND) {
           if (KIND === DEFAULT && defaultIterator) return defaultIterator;
@@ -1992,7 +1992,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
             keys: IS_SET ? defaultIterator : getIterationMethod(KEYS),
             entries: getIterationMethod(ENTRIES)
           };
-          if (FORCED) for (KEY3 in methods) {
+          if (FORCED2) for (KEY3 in methods) {
             if (BUGGY_SAFARI_ITERATORS || INCORRECT_VALUES_NAME || !(KEY3 in IterablePrototype)) {
               defineBuiltIn(IterablePrototype, KEY3, methods[KEY3]);
             }
@@ -2002,7 +2002,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
             forced: BUGGY_SAFARI_ITERATORS || INCORRECT_VALUES_NAME
           }, methods);
         }
-        if ((!IS_PURE || FORCED) && IterablePrototype[ITERATOR] !== defaultIterator) {
+        if ((!IS_PURE || FORCED2) && IterablePrototype[ITERATOR] !== defaultIterator) {
           defineBuiltIn(IterablePrototype, ITERATOR, defaultIterator, {
             name: DEFAULT
           });
@@ -2047,13 +2047,13 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           index: 0
         });
       }, function next() {
-        var state = getInternalState(this);
-        var string = state.string;
-        var index = state.index;
+        var state2 = getInternalState(this);
+        var string = state2.string;
+        var index = state2.index;
         var point;
         if (index >= string.length) return createIterResultObject(void 0, true);
         point = charAt(string, index);
-        state.index += point.length;
+        state2.index += point.length;
         return createIterResultObject(point, false);
       });
     }
@@ -4760,8 +4760,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     error: function error() {
       send("error", arguments);
     },
-    setRemote: function setRemote(url2) {
-      remoteUrl = url2 || "";
+    setRemote: function setRemote(url3) {
+      remoteUrl = url3 || "";
       flush();
     }
   };
@@ -5647,14 +5647,36 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     "Esta legenda está vazia ou em um formato que o app não lê.": "This subtitle is empty or in a format the app can't read.",
     "Diagnóstico de reprodução": "Playback diagnostics",
     "O que esta TV expõe (faixas de áudio e legenda). Toque um vídeo antes de abrir.": "What this TV exposes (audio and subtitle tracks). Play a video before opening.",
-    "Nenhum vídeo tocado nesta sessão.": "No video played in this session."
+    "Nenhum vídeo tocado nesta sessão.": "No video played in this session.",
+    "Nenhuma": "None",
+    "Segunda opção de legenda": "Second-choice subtitle language",
+    "Usada quando não há legenda no idioma principal": "Used when there are no subtitles in the main language",
+    "Sem legenda quando o áudio já é no seu idioma": "No subtitles when the audio is already in your language",
+    "Só entram as legendas forçadas (falas em outro idioma), quando o arquivo tem": "Only forced subtitles (lines in another language) come on, when the file has them",
+    "Preferir a legenda embutida no arquivo": "Prefer the file's built-in subtitles",
+    "Sincronia melhor que a dos addons; precisa do servidor do PC": "Better timing than add-on subtitles; needs the PC server",
+    "Legendas ASS com o estilo original": "ASS subtitles with their original styling",
+    "Cores, posições e fontes do arquivo; desligue se a TV engasgar": "The file's colours, positions and fonts; turn off if the TV struggles",
+    "Quando o arquivo tem mais de uma faixa de áudio": "When the file has more than one audio track",
+    "O servidor do PC não conseguiu ler esta legenda.": "The PC server couldn't read this subtitle."
   };
   var AR_EXTRA = {
     "Português (Brasil)": "البرتغالية (البرازيل)",
     "Esta legenda está vazia ou em um formato que o app não lê.": "هذه الترجمة فارغة أو بتنسيق لا يستطيع التطبيق قراءته.",
     "Diagnóstico de reprodução": "تشخيص التشغيل",
     "O que esta TV expõe (faixas de áudio e legenda). Toque um vídeo antes de abrir.": "ما يتيحه هذا التلفاز (مسارات الصوت والترجمة). شغّل فيديو قبل الفتح.",
-    "Nenhum vídeo tocado nesta sessão.": "لم يُشغَّل أي فيديو في هذه الجلسة."
+    "Nenhum vídeo tocado nesta sessão.": "لم يُشغَّل أي فيديو في هذه الجلسة.",
+    "Nenhuma": "لا شيء",
+    "Segunda opção de legenda": "لغة الترجمة البديلة",
+    "Usada quando não há legenda no idioma principal": "تُستخدم عند عدم توفر ترجمة باللغة الأساسية",
+    "Sem legenda quando o áudio já é no seu idioma": "بدون ترجمة عندما يكون الصوت بلغتك",
+    "Só entram as legendas forçadas (falas em outro idioma), quando o arquivo tem": "تظهر فقط الترجمات الإجبارية (الحوار بلغة أخرى) إن وُجدت في الملف",
+    "Preferir a legenda embutida no arquivo": "تفضيل الترجمة المضمّنة في الملف",
+    "Sincronia melhor que a dos addons; precisa do servidor do PC": "توقيت أدق من ترجمات الإضافات؛ يتطلب خادم الكمبيوتر",
+    "Legendas ASS com o estilo original": "ترجمات ASS بتنسيقها الأصلي",
+    "Cores, posições e fontes do arquivo; desligue se a TV engasgar": "ألوان الملف ومواضعه وخطوطه؛ أوقفها إذا تعثّر التلفاز",
+    "Quando o arquivo tem mais de uma faixa de áudio": "عندما يحتوي الملف على أكثر من مسار صوتي",
+    "O servidor do PC não conseguiu ler esta legenda.": "تعذّر على خادم الكمبيوتر قراءة هذه الترجمة."
   };
 
   // src/js/lib/i18n.js
@@ -5701,11 +5723,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   }
 
   // src/js/lib/http.js
-  function request(method, url2, body, opts) {
+  function request(method, url3, body, opts) {
     var o = opts || {};
     return new Promise(function (resolve, reject) {
       var xhr = new XMLHttpRequest();
-      xhr.open(method, url2, true);
+      xhr.open(method, url3, true);
       xhr.timeout = o.timeout || 2e4;
       if (o.binary) xhr.responseType = "arraybuffer";
       if (body !== void 0 && body !== null) xhr.setRequestHeader("Content-Type", "application/json");
@@ -5718,13 +5740,13 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
             resolve(xhr.responseText ? JSON.parse(xhr.responseText) : null);
           } catch (e) {
             reject(new Error(t("JSON inválido de {url}", {
-              url: url2
+              url: url3
             })));
           }
         } else {
           var err = new Error(t("HTTP {code} em {url}", {
             code: xhr.status,
-            url: url2
+            url: url3
           }));
           err.status = xhr.status;
           reject(err);
@@ -5732,14 +5754,14 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       };
       xhr.onerror = function () {
         var err = new Error(t("Falha de rede em {url}", {
-          url: url2
+          url: url3
         }));
         err.status = 0;
         reject(err);
       };
       xhr.ontimeout = function () {
         var err = new Error(t("Tempo esgotado em {url}", {
-          url: url2
+          url: url3
         }));
         err.status = 0;
         err.timeout = true;
@@ -5751,32 +5773,32 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       throw err;
     });
   }
-  function getJSON(url2, opts) {
-    return request("GET", url2, null, opts);
+  function getJSON(url3, opts) {
+    return request("GET", url3, null, opts);
   }
-  function postJSON(url2, body, opts) {
-    return request("POST", url2, body, opts);
+  function postJSON(url3, body, opts) {
+    return request("POST", url3, body, opts);
   }
-  function getText(url2, opts) {
-    return request("GET", url2, null, Object.assign({
+  function getText(url3, opts) {
+    return request("GET", url3, null, Object.assign({
       raw: true
     }, opts));
   }
-  function getBuffer(url2, opts) {
-    return request("GET", url2, null, Object.assign({
+  function getBuffer(url3, opts) {
+    return request("GET", url3, null, Object.assign({
       binary: true
     }, opts));
   }
   var cache = /* @__PURE__ */new Map();
-  function cachedJSON(url2, ttlMs, opts) {
-    var hit = cache.get(url2);
+  function cachedJSON(url3, ttlMs, opts) {
+    var hit = cache.get(url3);
     var now = Date.now();
     if (hit && now - hit.t < (ttlMs || 6e5)) return hit.p;
-    var p = getJSON(url2, opts).catch(function (e) {
-      cache.delete(url2);
+    var p = getJSON(url3, opts).catch(function (e) {
+      cache.delete(url3);
       throw e;
     });
-    cache.set(url2, {
+    cache.set(url3, {
       t: now,
       p: p
     });
@@ -5785,24 +5807,24 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   }
 
   // src/js/lib/img.js
-  function smallPoster(url2) {
-    if (!url2) return url2;
-    return String(url2).replace(/(images\.metahub\.space\/poster\/)(medium|large)\//, "$1small/").replace(/(image\.tmdb\.org\/t\/p\/)[^/]+\//, "$1w185/").replace(/(artworks\.thetvdb\.com\/banners\/(?:[^?]*\/)?posters\/[^/?]+?)(?:_t)?\.(jpg|png)/, "$1_t.$2").replace(/(static\.tvmaze\.com\/uploads\/images\/)(original_untouched|large_landscape|medium_landscape)\//, "$1medium_portrait/").replace(/(kitsu\.app\/anime\/poster_images\/\d+\/)(original|large|medium)\.(jpg|jpeg|png)/, "$1small.jpg");
+  function smallPoster(url3) {
+    if (!url3) return url3;
+    return String(url3).replace(/(images\.metahub\.space\/poster\/)(medium|large)\//, "$1small/").replace(/(image\.tmdb\.org\/t\/p\/)[^/]+\//, "$1w185/").replace(/(artworks\.thetvdb\.com\/banners\/(?:[^?]*\/)?posters\/[^/?]+?)(?:_t)?\.(jpg|png)/, "$1_t.$2").replace(/(static\.tvmaze\.com\/uploads\/images\/)(original_untouched|large_landscape|medium_landscape)\//, "$1medium_portrait/").replace(/(kitsu\.app\/anime\/poster_images\/\d+\/)(original|large|medium)\.(jpg|jpeg|png)/, "$1small.jpg");
   }
-  function smallBackground(url2) {
-    if (!url2) return url2;
-    return String(url2).replace(/(images\.metahub\.space\/background\/)(medium|large)\//, "$1small/").replace(/(image\.tmdb\.org\/t\/p\/)[^/]+\//, "$1w300/").replace(/(kitsu\.app\/anime\/(?:poster|cover)_images\/\d+\/)(original|large)\.(jpg|jpeg|png)/, "$1small.jpg").replace(/(artworks\.thetvdb\.com\/banners\/(?:[^?]*\/)?(?:posters|fanart)\/[^/?]+?)(?:_t)?\.(jpg|png)/, "$1_t.$2");
+  function smallBackground(url3) {
+    if (!url3) return url3;
+    return String(url3).replace(/(images\.metahub\.space\/background\/)(medium|large)\//, "$1small/").replace(/(image\.tmdb\.org\/t\/p\/)[^/]+\//, "$1w300/").replace(/(kitsu\.app\/anime\/(?:poster|cover)_images\/\d+\/)(original|large)\.(jpg|jpeg|png)/, "$1small.jpg").replace(/(artworks\.thetvdb\.com\/banners\/(?:[^?]*\/)?(?:posters|fanart)\/[^/?]+?)(?:_t)?\.(jpg|png)/, "$1_t.$2");
   }
-  function smallThumb(url2) {
-    if (!url2) return url2;
-    return String(url2).replace(/(image\.tmdb\.org\/t\/p\/)[^/]+\//, "$1w300/").replace(/(artworks\.thetvdb\.com\/banners\/(?:[^?]*\/)?episodes\/[^/?]+?)(?:_t)?\.(jpg|png)/, "$1_t.$2");
+  function smallThumb(url3) {
+    if (!url3) return url3;
+    return String(url3).replace(/(image\.tmdb\.org\/t\/p\/)[^/]+\//, "$1w300/").replace(/(artworks\.thetvdb\.com\/banners\/(?:[^?]*\/)?episodes\/[^/?]+?)(?:_t)?\.(jpg|png)/, "$1_t.$2");
   }
   var KITSU_RE = /(?:media\.kitsu\.app|kitsu-production-media\.[^/]+)\/anime\/(?:poster_images\/)?(\d+)\/(poster_image|cover_image)\/(?!small-|tiny-|medium-|large-)/;
   var kitsuCache = {};
   var batch = {};
   var batchTimer = null;
-  function kitsuInfo(url2) {
-    var m = String(url2 || "").match(KITSU_RE);
+  function kitsuInfo(url3) {
+    var m = String(url3 || "").match(KITSU_RE);
     return m ? {
       id: m[1],
       kind: m[2] === "cover_image" ? "cover" : "poster"
@@ -5895,10 +5917,10 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   function setOn(el, on) {
     if (on && !el.__on) {
       el.__on = true;
-      var url2 = el.getAttribute("data-lazy");
-      var kitsu = kitsuInfo(url2);
+      var url3 = el.getAttribute("data-lazy");
+      var kitsu = kitsuInfo(url3);
       if (!kitsu) {
-        el.src = url2;
+        el.src = url3;
         return;
       }
       kitsuSmall(kitsu).then(function (small) {
@@ -6019,7 +6041,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     var cr = cur.getBoundingClientRect();
     var cc = center(cr);
     var tol = 8;
-    var best2 = null;
+    var best = null;
     var bestScore = Infinity;
     for (var i = 0; i < list2.length; i++) {
       var el = list2[i];
@@ -6048,18 +6070,18 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       var score = primary + secondary * 2.5;
       if (score < bestScore) {
         bestScore = score;
-        best2 = el;
+        best = el;
       }
     }
-    return best2;
+    return best;
   }
   function overlap(a1, a2, b1, b2) {
     return Math.min(a2, b2) - Math.max(a1, b1) > 4;
   }
   function animateScroll(node, prop, target) {
     if (node.__anim) cancelAnimationFrame(node.__anim);
-    var start3 = node[prop];
-    var delta = target - start3;
+    var start4 = node[prop];
+    var delta = target - start4;
     if (!smooth || Math.abs(delta) < 2) {
       node[prop] = target;
       if (scrollHook) scrollHook(node);
@@ -6069,7 +6091,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     var t0 = Date.now();
     var _step2 = function step() {
       var k = Math.min(1, (Date.now() - t0) / dur);
-      node[prop] = start3 + delta * (1 - Math.pow(1 - k, 3));
+      node[prop] = start4 + delta * (1 - Math.pow(1 - k, 3));
       if (k < 1) node.__anim = requestAnimationFrame(_step2);else {
         node.__anim = null;
         if (scrollHook) scrollHook(node);
@@ -6156,11 +6178,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     var all2 = candidates(layer.root).filter(function (e) {
       return e !== cur;
     });
-    var best2 = pick(all2, cur, dir);
-    if (!best2) return false;
-    var bg = best2.closest("[data-group]");
-    if (bg && bg !== group && bg.__last && bg.contains(bg.__last) && isVisible(bg.__last)) best2 = bg.__last;
-    focus(best2);
+    var best = pick(all2, cur, dir);
+    if (!best) return false;
+    var bg = best.closest("[data-group]");
+    if (bg && bg !== group && bg.__last && bg.contains(bg.__last) && isVisible(bg.__last)) best = bg.__last;
+    focus(best);
     return true;
   }
   function select(el) {
@@ -6425,10 +6447,10 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       en: ["eng", "en"],
       ar: ["ara", "ar"]
     }[current()];
-    var base = Object.assign({}, DEFAULT_SETTINGS, subs ? {
+    var base2 = Object.assign({}, DEFAULT_SETTINGS, subs ? {
       subtitleLangs: subs
     } : null);
-    return Object.assign(base, rawGet("device", {}), get("settings", {}));
+    return Object.assign(base2, rawGet("device", {}), get("settings", {}));
   }
   function saveSettings(patch) {
     var dev = rawGet("device", {});
@@ -6893,9 +6915,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       var found = null;
       var done = 0;
       var batch2 = 24;
-      var _runBatch = function runBatch(start3) {
-        if (found || start3 >= hosts.length) return Promise.resolve(found);
-        var slice = hosts.slice(start3, start3 + batch2);
+      var _runBatch = function runBatch(start4) {
+        if (found || start4 >= hosts.length) return Promise.resolve(found);
+        var slice = hosts.slice(start4, start4 + batch2);
         return Promise.all(slice.map(function (h2) {
           return getJSON("http://" + h2 + ":11470/settings", {
             timeout: 1500,
@@ -6907,7 +6929,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
             if (onProgress) onProgress(done, hosts.length);
           });
         })).then(function () {
-          return _runBatch(start3 + batch2);
+          return _runBatch(start4 + batch2);
         });
       };
       return _runBatch(0);
@@ -6939,8 +6961,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     for (var i = 0; i + 4 <= bits.length; i += 4) hex += parseInt(bits.substr(i, 4), 2).toString(16);
     return hex;
   }
-  function torrentUrl(base, infoHash, fileIdx, sources) {
-    var u = base + encodeURIComponent(infoHash) + "/" + encodeURIComponent(fileIdx);
+  function torrentUrl(base2, infoHash, fileIdx, sources) {
+    var u = base2 + encodeURIComponent(infoHash) + "/" + encodeURIComponent(fileIdx);
     if (sources && sources.length) {
       u += "?" + sources.map(function (s) {
         return "tr=" + encodeURIComponent(s);
@@ -6948,9 +6970,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     }
     return u;
   }
-  function createTorrent(base, infoHash, fileIdx, sources, seriesInfo) {
+  function createTorrent(base2, infoHash, fileIdx, sources, seriesInfo) {
     var hasIdx = fileIdx !== null && fileIdx !== void 0 && isFinite(fileIdx);
-    if ((!sources || !sources.length) && hasIdx) return Promise.resolve(torrentUrl(base, infoHash, fileIdx, []));
+    if ((!sources || !sources.length) && hasIdx) return Promise.resolve(torrentUrl(base2, infoHash, fileIdx, []));
     var body = {
       torrent: {
         infoHash: infoHash
@@ -6973,13 +6995,13 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       if (seriesInfo && isFinite(seriesInfo.season)) body.guessFileIdx.season = seriesInfo.season;
       if (seriesInfo && isFinite(seriesInfo.episode)) body.guessFileIdx.episode = seriesInfo.episode;
     } else body.guessFileIdx = false;
-    return postJSON(base + encodeURIComponent(infoHash) + "/create", body, {
+    return postJSON(base2 + encodeURIComponent(infoHash) + "/create", body, {
       timeout: 3e4
     }).then(function (r) {
-      return torrentUrl(base, infoHash, hasIdx ? fileIdx : r && r.guessedFileIdx, body.peerSearch ? body.peerSearch.sources : []);
+      return torrentUrl(base2, infoHash, hasIdx ? fileIdx : r && r.guessedFileIdx, body.peerSearch ? body.peerSearch.sources : []);
     });
   }
-  function proxyUrl(base, streamUrl, reqHeaders, resHeaders) {
+  function proxyUrl(base2, streamUrl, reqHeaders, resHeaders) {
     var m = streamUrl.match(/^(https?:\/\/[^/?#]+)([^?#]*)(\?[^#]*)?/);
     if (!m) return streamUrl;
     var parts = ["d=" + encodeURIComponent(m[1])];
@@ -6989,19 +7011,19 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     Object.keys(resHeaders || {}).forEach(function (k) {
       return parts.push("r=" + encodeURIComponent(k + ":" + resHeaders[k]));
     });
-    return base + "proxy/" + parts.join("&") + (m[2] || "/") + (m[3] || "");
+    return base2 + "proxy/" + parts.join("&") + (m[2] || "/") + (m[3] || "");
   }
-  function corsProxyUrl(url2) {
-    var base = isAvailable() ? baseUrl() : "";
-    var m = url2.match(/^(https?:\/\/[^/?#]+)(.*)$/);
-    if (!base || !m) return null;
-    return base + "proxy/d=" + encodeURIComponent(m[1]) + "&r=" + encodeURIComponent("Access-Control-Allow-Origin:*") + (m[2] || "/");
+  function corsProxyUrl(url3) {
+    var base2 = isAvailable() ? baseUrl() : "";
+    var m = url3.match(/^(https?:\/\/[^/?#]+)(.*)$/);
+    if (!base2 || !m) return null;
+    return base2 + "proxy/d=" + encodeURIComponent(m[1]) + "&r=" + encodeURIComponent("Access-Control-Allow-Origin:*") + (m[2] || "/");
   }
-  function getJSONViaProxy(url2, opts) {
-    return getJSON(url2, Object.assign({
+  function getJSONViaProxy(url3, opts) {
+    return getJSON(url3, Object.assign({
       quiet: true
     }, opts)).catch(function (e) {
-      var p = corsProxyUrl(url2);
+      var p = corsProxyUrl(url3);
       if (!p || e.status && e.status !== 0) throw e;
       return getJSON(p, Object.assign({
         quiet: true
@@ -7019,13 +7041,13 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     return typeof stream.url === "string" || typeof stream.infoHash === "string";
   }
   function toPlayable(stream, seriesInfo) {
-    var base = baseUrl();
+    var base2 = baseUrl();
     if (typeof stream.url === "string") {
       if (stream.url.indexOf("magnet:") === 0) {
-        if (!base) return Promise.reject(new Error(t("Este link é torrent: configure o servidor do PC")));
+        if (!base2) return Promise.reject(new Error(t("Este link é torrent: configure o servidor do PC")));
         var mg = parseMagnet(stream.url);
         if (!mg) return Promise.reject(new Error(t("Magnet inválido")));
-        return createTorrent(base, mg.infoHash, null, mg.sources, seriesInfo).then(function (u) {
+        return createTorrent(base2, mg.infoHash, null, mg.sources, seriesInfo).then(function (u) {
           return {
             url: u,
             viaServer: true
@@ -7033,9 +7055,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         });
       }
       var ph = stream.behaviorHints && stream.behaviorHints.proxyHeaders;
-      if (ph && base) {
+      if (ph && base2) {
         return Promise.resolve({
-          url: proxyUrl(base, stream.url, ph.request, ph.response),
+          url: proxyUrl(base2, stream.url, ph.request, ph.response),
           viaServer: true
         });
       }
@@ -7045,8 +7067,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       });
     }
     if (typeof stream.infoHash === "string") {
-      if (!base) return Promise.reject(new Error(t("Este link é torrent: configure o servidor do PC")));
-      return createTorrent(base, stream.infoHash.toLowerCase(), stream.fileIdx, stream.sources || [], seriesInfo).then(function (u) {
+      if (!base2) return Promise.reject(new Error(t("Este link é torrent: configure o servidor do PC")));
+      return createTorrent(base2, stream.infoHash.toLowerCase(), stream.fileIdx, stream.sources || [], seriesInfo).then(function (u) {
         return {
           url: u,
           viaServer: true
@@ -7056,9 +7078,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     return Promise.reject(new Error(t("Tipo de link não suportado na TV")));
   }
   function tracks(mediaUrl) {
-    var base = baseUrl();
-    if (!base) return Promise.resolve(null);
-    return getJSON(base + "tracks/" + encodeURIComponent(mediaUrl), {
+    var base2 = baseUrl();
+    if (!base2) return Promise.resolve(null);
+    return getJSON(base2 + "tracks/" + encodeURIComponent(mediaUrl), {
       timeout: 2e4,
       quiet: true
     }).then(function (list2) {
@@ -7075,9 +7097,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   }
   function streamProgress(mediaUrl) {
     var m = String(mediaUrl || "").match(/\/([a-f0-9]{40})\/(\d+)/i);
-    var base = baseUrl();
-    if (!m || !base) return Promise.resolve(null);
-    return getJSON(base + m[1] + "/" + m[2] + "/stats.json", {
+    var base2 = baseUrl();
+    if (!m || !base2) return Promise.resolve(null);
+    return getJSON(base2 + m[1] + "/" + m[2] + "/stats.json", {
       timeout: 5e3,
       quiet: true
     }).then(function (r) {
@@ -7087,8 +7109,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     });
   }
   function subtitlesProxy(subUrl) {
-    var base = baseUrl();
-    return base ? base + "subtitles.vtt?from=" + encodeURIComponent(subUrl) : null;
+    var base2 = baseUrl();
+    return base2 ? base2 + "subtitles.vtt?from=" + encodeURIComponent(subUrl) : null;
   }
 
   // src/js/api/addons.js
@@ -8049,13 +8071,13 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     });
   }
   function ratings(meta, anime) {
-    var base = meta.imdbRating ? [{
+    var base2 = meta.imdbRating ? [{
       cls: "imdb",
       label: "IMDb",
       value: String(meta.imdbRating)
     }] : [];
     return Promise.all([mdblist(meta), anime ? anilistScore(meta) : Promise.resolve([])]).then(function (r) {
-      return base.concat(r[0], r[1]);
+      return base2.concat(r[0], r[1]);
     });
   }
 
@@ -8267,17 +8289,17 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       var n = eventFields.length;
       var v = line.slice(line.indexOf(":") + 1).split(",");
       if (v.length < n) continue;
-      var start3 = assTime(v[eventFields.indexOf("start")]);
+      var start4 = assTime(v[eventFields.indexOf("start")]);
       var end = assTime(v[eventFields.indexOf("end")]);
-      if (!isFinite(start3) || !isFinite(end) || end <= start3) continue;
+      if (!isFinite(start4) || !isFinite(end) || end <= start4) continue;
       var style = (v[eventFields.indexOf("style")] || "").trim().replace(/^\*/, "");
       var body = assText(v.slice(n - 1).join(","), italicStyles[style]);
       if (!body) continue;
-      var key2 = start3 + "|" + end + "|" + body;
+      var key2 = start4 + "|" + end + "|" + body;
       if (seen[key2]) continue;
       seen[key2] = true;
       cues.push({
-        start: start3,
+        start: start4,
         end: end,
         text: body,
         n: cues.length
@@ -8311,12 +8333,12 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       while (j < lines.length && lines[j].indexOf("-->") < 0) j++;
       if (j >= lines.length) continue;
       var parts = lines[j].split("-->");
-      var start3 = toSec(parts[0]);
+      var start4 = toSec(parts[0]);
       var end = toSec(parts[1].trim().split(/\s+/)[0]);
-      if (!isFinite(start3) || !isFinite(end)) continue;
+      if (!isFinite(start4) || !isFinite(end)) continue;
       var body = lines.slice(j + 1).join("\n").replace(/\{\\[^}]*\}/g, "").trim();
       if (body) cues.push({
-        start: start3,
+        start: start4,
         end: end,
         text: sanitize(body)
       });
@@ -8330,17 +8352,21 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     var esc = s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     return esc.replace(/&lt;(\/?)(i|b|u)&gt;/gi, "<$1$2>").replace(/&lt;\/?[^&]*&gt;/g, "");
   }
-  function load3(url2, fallbackUrl) {
+  function loadFile(url3, fallbackUrl) {
     var get2 = function get2(u) {
       return getBuffer(u, {
         timeout: 2e4
       }).then(function (buf) {
-        return parse(decode(buf));
+        var text = decode(buf);
+        return {
+          cues: parse(text),
+          ass: isAss(text) ? text : null
+        };
       });
     };
-    return get2(url2).then(function (cues) {
-      return cues.length || !fallbackUrl ? cues : get2(fallbackUrl).catch(function () {
-        return cues;
+    return get2(url3).then(function (file) {
+      return file.cues.length || !fallbackUrl ? file : get2(fallbackUrl).catch(function () {
+        return file;
       });
     }, function (e) {
       if (fallbackUrl) return get2(fallbackUrl);
@@ -8525,8 +8551,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   var INTRODB = "https://api.introdb.app/segments";
   var ANISKIP = "https://api.aniskip.com/v2/skip-times/";
   var ARM2 = "https://arm.haglund.dev/api/v2/";
-  function getJSONWithProxy(url2) {
-    return getJSONViaProxy(url2, {
+  function getJSONWithProxy(url3) {
+    return getJSONViaProxy(url3, {
       timeout: 1e4
     });
   }
@@ -8681,10 +8707,10 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   var ENTER = 13;
   var last = 0;
   var started = false;
-  function request2(url2, timeout) {
+  function request2(url3, timeout) {
     return new Promise(function (resolve, reject) {
       var x = new XMLHttpRequest();
-      x.open("GET", url2);
+      x.open("GET", url3);
       x.timeout = timeout;
       x.onload = function () {
         try {
@@ -8718,11 +8744,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     el.dispatchEvent(ev);
     if (submit) fireKey(ENTER);
   }
-  function nowPlaying(state) {
+  function nowPlaying(state2) {
     var x = new XMLHttpRequest();
     x.open("POST", BASE + "/api/state");
     x.onerror = function () {};
-    x.send(JSON.stringify(state || null));
+    x.send(JSON.stringify(state2 || null));
   }
   function browse(data) {
     var x = new XMLHttpRequest();
@@ -8865,6 +8891,13 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       return ACCENTS[ch] || ch;
     }).replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   }
+  function words(text) {
+    var k = key(text);
+    return k ? k.split("-") : [];
+  }
+  function base(code) {
+    return code === "pt-br" ? "pt" : code;
+  }
   function saysBrazil(k) {
     return /(^|-)(pt-br|ptbr|pob|br|bra|brasil|brazil|brazilian|brazillian|brasileiro)(-|$)/.test(k);
   }
@@ -8901,16 +8934,107 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     });
     return out;
   }
-  function best(items, prefList, getLang) {
-    var found = null;
-    (items || []).forEach(function (item) {
-      var r = prefList.indexOf(getLang(item));
-      if (r >= 0 && (!found || r < found.rank)) found = {
-        item: item,
-        rank: r
-      };
+
+  // src/js/lib/asscanvas.js
+  var DIR = "jassub/";
+  var READY_MS = 2e4;
+  var scriptPromise = null;
+  var instance = null;
+  var host = null;
+  var current3 = null;
+  var readyTimer = null;
+  var state = "not used yet";
+  function supported() {
+    return (typeof WebAssembly === "undefined" ? "undefined" : _typeof(WebAssembly)) === "object" && typeof Worker === "function" && typeof EventTarget === "function";
+  }
+  function url2(file, samePage) {
+    var base2 = samePage ? "" : window.__KAI_BASE__ || "";
+    return new URL(base2 + DIR + file, document.baseURI).href;
+  }
+  function loadScript() {
+    if (!scriptPromise) {
+      scriptPromise = new Promise(function (resolve, reject) {
+        var s = document.createElement("script");
+        s.src = url2("jassub.umd.js");
+        s.onload = function () {
+          return window.JASSUB ? resolve(window.JASSUB) : reject(new Error("script did not run on this engine"));
+        };
+        s.onerror = function () {
+          return reject(new Error("script not found"));
+        };
+        document.head.appendChild(s);
+      }).catch(function (e) {
+        scriptPromise = null;
+        throw e;
+      });
+    }
+    return scriptPromise;
+  }
+  function start2(videoEl, text, opts) {
+    stop();
+    var token = {};
+    current3 = token;
+    host = videoEl.parentNode;
+    state = "loading";
+    var fail = function fail(reason) {
+      if (current3 !== token) return;
+      stop();
+      state = "failed: " + reason;
+      log.warn("Legenda ASS com estilo indisponível:", reason);
+      opts.onFail(reason);
+    };
+    loadScript().then(function (JASSUB) {
+      if (current3 !== token) return;
+      instance = new JASSUB({
+        video: videoEl,
+        subContent: text,
+        workerUrl: url2("jassub-worker.js", true),
+        wasmUrl: url2("jassub-worker.wasm"),
+        modernWasmUrl: url2("jassub-worker-modern.wasm"),
+        availableFonts: {
+          "liberation sans": url2("default.woff2")
+        },
+        fallbackFont: "liberation sans",
+        // Timed from the video's own events: the TV's hardware player gives no per-frame callback to rely on.
+        onDemandRender: false,
+        timeOffset: -(opts.offset || 0)
+      });
+      instance.addEventListener("error", function (e) {
+        return fail(e && (e.error && e.error.message || e.message) || "renderer error");
+      });
+      instance.addEventListener("ready", function () {
+        if (current3 !== token) return;
+        clearTimeout(readyTimer);
+        state = "ready";
+        log.info("Legenda ASS com estilo: pronta");
+      });
+      readyTimer = setTimeout(function () {
+        return fail("no answer from the renderer");
+      }, READY_MS);
+    }).catch(function (e) {
+      return fail(e.message);
     });
-    return found;
+  }
+  function stop() {
+    current3 = null;
+    clearTimeout(readyTimer);
+    if (instance) {
+      try {
+        instance.destroy();
+      } catch (e) {}
+      instance = null;
+    }
+    if (host) {
+      var left = host.querySelectorAll(".JASSUB");
+      for (var i = 0; i < left.length; i++) left[i].parentNode.removeChild(left[i]);
+      host = null;
+    }
+  }
+  function setOffset(sec) {
+    if (instance) instance.timeOffset = -sec;
+  }
+  function status2() {
+    return state;
   }
 
   // src/js/lib/probe.js
@@ -8937,6 +9061,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     }, {
       label: "WebAssembly: " + yn((typeof WebAssembly === "undefined" ? "undefined" : _typeof(WebAssembly)) === "object") + " · WebGL2: " + yn(webgl2),
       sub: "OffscreenCanvas: " + yn(typeof OffscreenCanvas === "function")
+    }, {
+      label: "Styled ASS: " + status2()
     }];
   }
   function loadWebapis() {
@@ -8962,10 +9088,10 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     }];
     for (var i = 0; i < tracks2.length && i < 12; i++) {
       var tr = tracks2[i];
-      var state = name === "audioTracks" ? tr.enabled ? "on" : "off" : tr.mode + (tr.cues ? " · " + tr.cues.length + " cues" : "");
+      var state2 = name === "audioTracks" ? tr.enabled ? "on" : "off" : tr.mode + (tr.cues ? " · " + tr.cues.length + " cues" : "");
       out.push({
         label: "#" + i + " " + ([tr.language, tr.label].filter(Boolean).join(" · ") || "(no language or title)"),
-        sub: [tr.kind, state].filter(Boolean).join(" · ")
+        sub: [tr.kind, state2].filter(Boolean).join(" · ")
       });
     }
     return out;
@@ -8986,6 +9112,64 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         media: lastMedia
       };
     });
+  }
+
+  // src/js/lib/trackselect.js
+  var SUB_REJECT = ["sign", "signs", "song", "songs", "karaoke", "commentary", "comentario", "comentarios", "credits", "creditos", "placas", "musicas"];
+  var FORCED = ["forced", "forcada", "forcadas", "forcado", "forcados", "foreign"];
+  var FULL = ["full", "dialogue", "dialog", "dialogos", "complete", "completa", "completo"];
+  var AUDIO_REJECT = ["commentary", "comentario", "comentarios", "descriptive", "description", "descricao", "audiodescricao"];
+  function titled(title, list2) {
+    return words(title).some(function (w) {
+      return list2.indexOf(w) >= 0;
+    });
+  }
+  function isForcedSub(track) {
+    return !!track.forced || titled(track.title, FORCED);
+  }
+  function rejectedSub(track) {
+    return !!track.bitmap || titled(track.title, SUB_REJECT) || /\bs\s*&\s*s\b/i.test(track.title || "");
+  }
+  function pickSub(tracks2, opts) {
+    var langs = opts.langs || [];
+    var best = null;
+    (tracks2 || []).forEach(function (track) {
+      if (rejectedSub(track)) return;
+      var forced = isForcedSub(track);
+      var rank = langs.indexOf(track.lang);
+      if (opts.forcedOnly) {
+        if (!forced || base(track.lang) !== opts.forcedOnly) return;
+        if (rank < 0) rank = langs.length;
+      } else if (forced || rank < 0) return;
+      var preferredSource = track.source === "embedded" === !!opts.preferEmbedded;
+      var order = rank * 4 + (preferredSource ? 0 : 2) + (titled(track.title, FULL) ? 0 : 1);
+      if (!best || order < best.order) best = {
+        track: track,
+        rank: rank,
+        order: order
+      };
+    });
+    return best;
+  }
+  function pickAudio(tracks2, langs) {
+    var best = -1;
+    var bestRank = Infinity;
+    (tracks2 || []).forEach(function (track, i) {
+      if (titled(track.title, AUDIO_REJECT)) return;
+      var rank = (langs || []).indexOf(track.lang);
+      if (rank >= 0 && rank < bestRank) {
+        best = i;
+        bestRank = rank;
+      }
+    });
+    return best;
+  }
+  function unplayableAudio(text) {
+    var t2 = String(text || "");
+    var bad = /\btrue[\s.-]?hd\b/i.test(t2) ? "TrueHD" : /\bdts(?![a-z])/i.test(t2) ? "DTS" : "";
+    if (!bad) return "";
+    var playable = /\b(aac|e-?ac-?3|ac-?3|ddp|dd\+?|dolby\s?digital|opus|flac|mp3|dual[\s.-]?audio|multi)\b/i.test(t2.replace(/\bdd\+/gi, "ddp "));
+    return playable ? "" : bad;
   }
 
   // src/js/views/player.js
@@ -9169,7 +9353,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       });
       return i >= 0 && i + 1 < vids.length ? vids[i + 1] : null;
     }
-    function start3() {
+    function start4() {
       setTitle();
       showSpinner(true);
       message("");
@@ -9180,11 +9364,18 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       currentSub = {
         kind: "off"
       };
+      stop();
+      currentAudio = null;
       autoSub = {
-        rank: Infinity,
-        tries: 0
+        order: Infinity,
+        tries: 0,
+        forcedOnly: ""
       };
       failedSubs = {};
+      embeddedAuto = false;
+      embeddedAsked = false;
+      addonSubsDone = false;
+      playedAWhile = false;
       segments = [];
       segmentsLoaded = false;
       if (typeof upNextStop === "function") upNextStop(false);
@@ -9231,6 +9422,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         autoPick();
       }).catch(function () {
         if (!addonSubs) addonSubs = [];
+      }).then(function () {
+        if (!alive || forVideo !== video) return;
+        if (!addonSubs) addonSubs = [];
+        addonSubsDone = true;
+        considerEmbedded();
       });
     }
     var autoDone = {
@@ -9238,69 +9434,178 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       audio: false
     };
     var autoSub = {
-      rank: Infinity,
-      tries: 0
+      order: Infinity,
+      tries: 0,
+      forcedOnly: ""
     };
     var failedSubs = {};
+    var embeddedAuto = false;
+    var embeddedAsked = false;
+    var addonSubsDone = false;
+    var playedAWhile = false;
     var AUTO_SUB_TRIES = 4;
     function subKey(s) {
       return s.id || s.url;
     }
     var SUB_CHOICES = "subChoices";
-    function savedChoice() {
-      return (get(SUB_CHOICES, {}) || {})[meta.id] || null;
+    var AUDIO_CHOICES = "audioChoices";
+    function savedFor(key2) {
+      return (get(key2, {}) || {})[meta.id] || null;
     }
-    function rememberChoice(choice) {
-      if (meta.id === "dev" || !choice.lang || choice.lang === "und") return;
-      var all2 = get(SUB_CHOICES, {}) || {};
+    function rememberFor(key2, value) {
+      if (meta.id === "dev") return;
+      var all2 = get(key2, {}) || {};
       delete all2[meta.id];
-      all2[meta.id] = choice;
+      all2[meta.id] = value;
       var keys = Object.keys(all2);
       if (keys.length > 200) delete all2[keys[0]];
-      set(SUB_CHOICES, all2);
+      set(key2, all2);
+    }
+    function savedChoice() {
+      return savedFor(SUB_CHOICES);
+    }
+    function rememberChoice(choice) {
+      if (choice.lang && choice.lang !== "und") rememberFor(SUB_CHOICES, choice);
+    }
+    function audioTracks() {
+      var native = videoEl.audioTracks;
+      var out = [];
+      if (native && native.length) {
+        for (var i = 0; i < native.length; i++) out.push({
+          lang: ofTrack(native[i].language, native[i].label),
+          title: native[i].label || "",
+          active: !!native[i].enabled
+        });
+      } else if (embedded && embedded.audio.length) {
+        embedded.audio.forEach(function (tr, i) {
+          return out.push({
+            lang: ofTrack(tr.lang, tr.label),
+            title: tr.label || "",
+            active: currentAudio === null ? i === 0 : currentAudio === i
+          });
+        });
+      }
+      return out;
+    }
+    function audioLang() {
+      var on = audioTracks().find(function (a) {
+        return a.active;
+      });
+      return on && on.lang !== "und" ? on.lang : "";
+    }
+    function autoPickAudio() {
+      var list2 = audioTracks();
+      if (autoDone.audio || !list2.length) return;
+      autoDone.audio = true;
+      var choice = savedFor(AUDIO_CHOICES);
+      var wanted = prefs(settings2.audioLangs);
+      var idx = list2.length > 1 ? pickAudio(list2, choice ? [choice].concat(wanted.filter(function (x) {
+        return x !== choice;
+      })) : wanted) : -1;
+      if (idx >= 0 && !list2[idx].active) {
+        log.info("Áudio automático: faixa " + idx + " (" + list2[idx].lang + ")");
+        selectEmbeddedAudio(idx);
+      }
+      autoPick();
+    }
+    function scheduleAudioPick() {
+      autoPickAudio();
+      [1500, 5e3].forEach(function (ms) {
+        return setTimeout(function () {
+          return alive && autoPickAudio();
+        }, ms);
+      });
+      setTimeout(function () {
+        if (!alive || !hasPlayed || autoDone.audio || !isAvailable()) return;
+        if (!prefs(settings2.audioLangs).length && !savedFor(AUDIO_CHOICES)) return;
+        loadEmbeddedTracks().then(function () {
+          return alive && autoPickAudio();
+        });
+      }, 2e4);
     }
     function wantedSubs() {
       var choice = savedChoice();
-      var list2 = prefs(settings2.subtitleLangs);
+      var list2 = prefs((settings2.subtitleLangs || []).concat(settings2.subtitleLangs2 || []));
       if (!choice || choice.lang === "off") return list2;
       return [choice.lang].concat(list2.filter(function (x) {
         return x !== choice.lang;
       }));
     }
-    function autoPick() {
-      var prefAudio = prefs(settings2.audioLangs);
-      if (!autoDone.audio && prefAudio.length && embedded && embedded.audio.length > 1) {
-        autoDone.audio = true;
-        var hit2 = best(embedded.audio, prefAudio, function (tr) {
-          return ofTrack(tr.lang, tr.label);
+    function nativeAudio() {
+      if (settings2.subsSkipNative === false || savedChoice()) return "";
+      var heard = base(audioLang());
+      return heard && prefs(settings2.subtitleLangs).map(base).indexOf(heard) >= 0 ? heard : "";
+    }
+    function subCandidates() {
+      var list2 = (addonSubs || []).filter(function (s) {
+        return !failedSubs[subKey(s)];
+      }).map(function (s) {
+        return {
+          source: "addon",
+          sub: s,
+          lang: canon(s.lang),
+          title: ""
+        };
+      });
+      if (embedded && embeddedAuto) {
+        embedded.subs.forEach(function (tr, i) {
+          if (failedSubs["embedded:" + i]) return;
+          list2.push({
+            source: "embedded",
+            index: i,
+            lang: ofTrack(tr.lang, tr.label),
+            title: tr.label || "",
+            forced: !!tr.forced,
+            bitmap: /PGS|VOBSUB|DVD/i.test(tr.codec || "")
+          });
         });
-        var idx = hit2 ? embedded.audio.indexOf(hit2.item) : -1;
-        if (idx > 0) selectEmbeddedAudio(idx);
       }
-      if (autoDone.sub || !settings2.subtitlesAuto || !addonSubs || autoSub.tries >= AUTO_SUB_TRIES) return;
+      return list2;
+    }
+    function autoPick() {
+      if (autoDone.sub || !settings2.subtitlesAuto || autoSub.tries >= AUTO_SUB_TRIES) return;
       var choice = savedChoice();
       if (choice && choice.lang === "off") return;
-      var wanted = wantedSubs();
-      var usable = addonSubs.filter(function (s) {
-        return !failedSubs[subKey(s)];
+      var forcedOnly = nativeAudio();
+      if (forcedOnly !== autoSub.forcedOnly) {
+        autoSub.forcedOnly = forcedOnly;
+        autoSub.order = Infinity;
+        if (currentSub.auto) subsOff();
+      }
+      var hit = pickSub(subCandidates(), {
+        langs: wantedSubs(),
+        preferEmbedded: settings2.preferEmbedded === true,
+        forcedOnly: forcedOnly
       });
-      var hit = best(usable, wanted, function (s) {
-        return canon(s.lang);
+      if (!hit || hit.order >= autoSub.order) {
+        considerEmbedded();
+        return;
+      }
+      autoSub.order = hit.order;
+      if (hit.track.source === "embedded") {
+        selectEmbeddedSub(hit.track.index, true);
+        return;
+      }
+      var again = choice && hit.rank === 0 && (addonSubs || []).find(function (s) {
+        return !failedSubs[subKey(s)] && s.addon === choice.addon && canon(s.lang) === choice.lang;
       });
-      if (!hit || hit.rank >= autoSub.rank) return;
-      var sameAddon = choice && hit.rank === 0 && usable.find(function (s) {
-        return s.addon === choice.addon && canon(s.lang) === choice.lang;
-      });
-      autoSub.rank = hit.rank;
-      selectAddonSub(sameAddon || hit.item, true);
+      selectAddonSub(again || hit.track.sub, true);
     }
-    function scheduleAudioPick() {
-      if (!(settings2.audioLangs || []).length || !isAvailable()) return;
-      setTimeout(function () {
-        if (alive && hasPlayed) loadEmbeddedTracks().then(function () {
-          return autoPick();
+    function considerEmbedded() {
+      if (!alive || embeddedAsked || !playedAWhile || !addonSubsDone || autoDone.sub || !settings2.subtitlesAuto || !isAvailable()) return;
+      var choice = savedChoice();
+      if (choice && choice.lang === "off") return;
+      if (!wantedSubs().length || !(settings2.preferEmbedded === true || currentSub.kind === "off")) return;
+      embeddedAsked = true;
+      var forUrl = mediaUrl;
+      streamProgress(mediaUrl).then(function (p) {
+        if (!alive || forUrl !== mediaUrl || p !== null && p < 0.999) return;
+        loadEmbeddedTracks().then(function (tracks2) {
+          if (!alive || !tracks2 || forUrl !== mediaUrl) return;
+          embeddedAuto = true;
+          autoPick();
         });
-      }, 2e4);
+      });
     }
     videoEl.addEventListener("loadedmetadata", function () {
       if (pendingStart > 0) {
@@ -9315,7 +9620,19 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     });
     videoEl.addEventListener("playing", function () {
       if (!hasPlayed) {
-        scheduleAudioPick();
+        var forVideo = video;
+        if (audioAfterReopen !== null) {
+          var idx = audioAfterReopen;
+          audioAfterReopen = null;
+          setTimeout(function () {
+            return alive && forVideo === video && selectEmbeddedAudio(idx);
+          }, 1500);
+        } else scheduleAudioPick();
+        setTimeout(function () {
+          if (!alive || forVideo !== video) return;
+          playedAWhile = true;
+          considerEmbedded();
+        }, 3e3);
         setTimeout(function () {
           return alive && media(videoEl);
         }, 6e3);
@@ -9444,12 +9761,13 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     function setSubDelay(v) {
       v = Math.round(Math.max(-30, Math.min(30, v)) * 100) / 100;
       renderer.setOffset(v);
+      setOffset(v);
       rememberDelay(v);
       return v;
     }
     function nudgeSubs(dir) {
       if (currentSub.kind === "off") return toast(t("Ligue uma legenda primeiro."));
-      if (currentSub.kind === "embedded") return toast(t("O ajuste funciona com legendas de addons (OpenSubtitles etc.)."), 4e3);
+      if (currentSub.kind === "embedded" && !currentSub.extracted) return toast(t("O ajuste funciona com legendas de addons (OpenSubtitles etc.)."), 4e3);
       var v = setSubDelay(renderer.offset() + dir * SUB_STEP);
       toast(t("Atraso da legenda: {n}s", {
         n: (v > 0 ? "+" : "") + v.toFixed(2)
@@ -9467,7 +9785,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           sub: false,
           audio: false
         };
-        start3();
+        start4();
         return;
       }
       if (!triedTranscode && isAvailable()) {
@@ -9642,6 +9960,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         reopenAt(pos);
       }
     }
+    var audioAfterReopen = null;
     function reopenAt(pos) {
       showSpinner(true);
       toast(t("Reconectando ao vídeo..."));
@@ -9655,6 +9974,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       setTimeout(function () {
         if (!alive) return;
         hasPlayed = false;
+        audioAfterReopen = currentAudio;
         videoEl.autoplay = true;
         videoEl.src = src;
         nativeOffDone = false;
@@ -9695,7 +10015,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     }
     function transcode() {
       triedTranscode = true;
-      var base = baseUrl();
+      var base2 = baseUrl();
       var id = Math.random().toString(36).slice(2) + Date.now().toString(36);
       var q = ["mediaURL=" + encodeURIComponent(mediaUrl)];
       ["h264", "h265", "hevc"].forEach(function (c) {
@@ -9705,12 +10025,12 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         return q.push("audioCodecs=" + c);
       });
       q.push("maxAudioChannels=6");
-      var url2 = base + "hlsv2/" + id + "/master.m3u8?" + q.join("&");
+      var url3 = base2 + "hlsv2/" + id + "/master.m3u8?" + q.join("&");
       pendingStart = videoEl.currentTime * 1e3 || pendingStart;
       showSpinner(true);
       message("");
-      log.info("Transcodificando", url2);
-      videoEl.src = url2;
+      log.info("Transcodificando", url3);
+      videoEl.src = url3;
       videoEl.load();
       videoEl.play();
     }
@@ -9845,26 +10165,41 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         enable: false
       }).catch(function () {});
     }
-    function selectEmbeddedSub(index) {
+    function selectEmbeddedSub(index, auto) {
       renderer.clear();
+      stop();
       streamProgress(mediaUrl).then(function (p) {
         if (!alive) return;
-        if (p !== null && p >= 0.999) extractedSub(index);else nativeEmbeddedSub(index);
+        if (p !== null && p >= 0.999 || !hasLuna()) extractedSub(index, auto);else nativeEmbeddedSub(index);
       });
     }
-    function extractedSub(index) {
+    function extractedSub(index, auto) {
       nativeSubsOff();
       var cs = {
         kind: "embedded",
         index: index,
         extracted: true,
+        auto: !!auto,
         sid: "kai" + Math.random().toString(36).slice(2),
         segs: {},
         cues: [],
-        busy: false
+        busy: false,
+        fails: 0
       };
       currentSub = cs;
+      renderer.setOffset(savedDelay());
       ensureSegments();
+    }
+    function embeddedFailed(cs) {
+      failedSubs["embedded:" + cs.index] = true;
+      subsOff();
+      if (!cs.auto) return toast(t("O servidor do PC não conseguiu ler esta legenda."));
+      autoSub = {
+        order: Infinity,
+        tries: autoSub.tries + 1,
+        forcedOnly: autoSub.forcedOnly
+      };
+      autoPick();
     }
     function ensureSegments() {
       var cs = currentSub;
@@ -9874,12 +10209,13 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       if (!k) return;
       cs.segs[k] = "loading";
       cs.busy = true;
-      var url2 = baseUrl() + "hlsv2/" + cs.sid + "/subtitle" + cs.index + "/segment" + k + ".vtt?mediaURL=" + encodeURIComponent(mediaUrl);
-      getText(url2, {
+      var url3 = baseUrl() + "hlsv2/" + cs.sid + "/subtitle" + cs.index + "/segment" + k + ".vtt?mediaURL=" + encodeURIComponent(mediaUrl);
+      getText(url3, {
         timeout: 3e4,
         quiet: true
       }).then(function (txt) {
         if (currentSub !== cs) return;
+        cs.fails = 0;
         var seen = {};
         cs.cues.forEach(function (c) {
           return seen[c.start + "|" + c.text] = true;
@@ -9893,7 +10229,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         renderer.set(cs.cues);
         renderer.update(videoEl.currentTime);
       }).catch(function () {
-        return delete cs.segs[k];
+        delete cs.segs[k];
+        if (currentSub === cs && ++cs.fails >= 3) embeddedFailed(cs);
       }).then(function () {
         return cs.busy = false;
       });
@@ -9936,18 +10273,27 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         }).catch(function () {});
       }
     }
+    function subsOff() {
+      disableEmbeddedSubs();
+      stop();
+      renderer.clear();
+      currentSub = {
+        kind: "off"
+      };
+    }
     function selectAddonSub(s, silent) {
       disableEmbeddedSubs();
       var key2 = subKey(s);
       currentSub = {
         kind: "addon",
-        id: key2
+        id: key2,
+        auto: !!silent
       };
       renderer.setOffset(savedDelay());
-      load3(s.url, subtitlesProxy(s.url)).then(function (cues) {
+      loadFile(s.url, subtitlesProxy(s.url)).then(function (file) {
         if (!alive || currentSub.id !== key2) return;
-        if (!cues.length) return subFailed(s, silent, t("Esta legenda está vazia ou em um formato que o app não lê."));
-        renderer.set(cues);
+        if (!file.cues.length) return subFailed(s, silent, t("Esta legenda está vazia ou em um formato que o app não lê."));
+        showSubFile(file);
         if (!silent) toast(t("Legenda: {lang}", {
           lang: langName(s.lang)
         }));
@@ -9955,16 +10301,28 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         return alive && currentSub.id === key2 && subFailed(s, silent, t("Não foi possível baixar a legenda."));
       });
     }
+    function showSubFile(file) {
+      stop();
+      if (!file.ass || settings2.assStyled === false || !supported()) return renderer.set(file.cues);
+      var cs = currentSub;
+      renderer.clear();
+      start2(videoEl, file.ass, {
+        offset: renderer.offset(),
+        onFail: function onFail() {
+          if (!alive || currentSub !== cs) return;
+          renderer.set(file.cues);
+          renderer.update(videoEl.currentTime);
+        }
+      });
+    }
     function subFailed(s, silent, text) {
       failedSubs[subKey(s)] = true;
       if (!silent) return toast(text);
-      renderer.clear();
-      currentSub = {
-        kind: "off"
-      };
+      subsOff();
       autoSub = {
-        rank: Infinity,
-        tries: autoSub.tries + 1
+        order: Infinity,
+        tries: autoSub.tries + 1,
+        forcedOnly: autoSub.forcedOnly
       };
       autoPick();
       if (currentSub.kind === "off") toast(text);
@@ -9985,7 +10343,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       if (native && native.length) {
         for (var i = 0; i < native.length; i++) {
           list2.push({
-            label: langName(native[i].language) + (native[i].label ? " · " + native[i].label : ""),
+            label: langName(ofTrack(native[i].language, native[i].label)) + (native[i].label ? " · " + native[i].label : ""),
             value: i,
             checked: native[i].enabled
           });
@@ -9993,7 +10351,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       } else if (embedded && embedded.audio.length) {
         list2 = embedded.audio.map(function (tr, i) {
           return {
-            label: langName(tr.lang) + (tr.label ? " · " + tr.label : ""),
+            label: langName(ofTrack(tr.lang, tr.label)) + (tr.label ? " · " + tr.label : ""),
             sub: [tr.codec, tr.channels ? t("{n} canais", {
               n: tr.channels
             }) : ""].filter(Boolean).join(" · "),
@@ -10005,7 +10363,12 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       menu(t("Áudio"), list2, {
         empty: isAvailable() ? t("Só uma faixa de áudio.") : t("Para listar as faixas, conecte o servidor do PC em Ajustes."),
         onPick: function onPick(i) {
-          return selectEmbeddedAudio(i);
+          var picked = audioTracks()[i];
+          if (picked && picked.lang && picked.lang !== "und") rememberFor(AUDIO_CHOICES, picked.lang);
+          selectEmbeddedAudio(i);
+          setTimeout(function () {
+            return alive && autoPick();
+          }, 500);
         }
       });
     }
@@ -10023,7 +10386,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       if (embedded && embedded.subs.length) {
         embedded.subs.forEach(function (tr, i) {
           return /PGS|VOBSUB|DVD/i.test(tr.codec || "") ? null : opts2.push({
-            label: langName(tr.lang) + (tr.label ? " · " + tr.label : ""),
+            label: langName(ofTrack(tr.lang, tr.label)) + (tr.label ? " · " + tr.label : ""),
             sub: t("Embutida no arquivo") + (tr.codec ? " · " + tr.codec : ""),
             value: {
               kind: "embedded",
@@ -10081,11 +10444,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         onPick: function onPick(v) {
           if (v.kind === "off" || v.kind === "embedded" || v.kind === "addon") autoDone.sub = true;
           if (v.kind === "off") {
-            disableEmbeddedSubs();
-            renderer.clear();
-            currentSub = {
-              kind: "off"
-            };
+            subsOff();
             rememberChoice({
               lang: "off"
             });
@@ -10161,7 +10520,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
             sub: false,
             audio: false
           };
-          start3();
+          start4();
         }
       });
     }
@@ -10187,7 +10546,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
             sub: false,
             audio: false
           };
-          start3();
+          start4();
         } else {
           pop();
           openDetails(meta.type, meta.id, {
@@ -10284,7 +10643,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       onKey: onKey,
       onShow: function onShow() {
         if (!ticker) {
-          start3();
+          start4();
           ticker = setInterval(function () {
             if (controlsOn) updateTimes();
             renderer.update(videoEl.currentTime);
@@ -10318,6 +10677,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         clearTimeout(hideTimer);
         clearTimeout(seekCommitTimer);
         disableEmbeddedSubs();
+        stop();
         try {
           videoEl.pause();
           videoEl.removeAttribute("src");
@@ -10469,7 +10829,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     el.appendChild(h("div.trailer-focus", {
       focusable: true
     }));
-    function load5() {
+    function load4() {
       var params = "autoplay=1&controls=0&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&enablejsapi=1&hl=" + current();
       frame.src = "https://www.youtube-nocookie.com/embed/" + ids[index] + "?" + params;
       playing = true;
@@ -10493,7 +10853,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         return hint.classList.add("faded");
       }, 3e3);
     }
-    load5();
+    load4();
     return {
       el: el,
       onKey: function onKey(e) {
@@ -10506,13 +10866,13 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         }
         if ((k === KEY.RIGHT || k === KEY.FF) && ids.length > 1) {
           index = (index + 1) % ids.length;
-          load5();
+          load4();
           return true;
         }
         if (k === KEY.LEFT || k === KEY.RW) {
           if (ids.length > 1 && k === KEY.LEFT) {
             index = (index - 1 + ids.length) % ids.length;
-            load5();
+            load4();
           }
           return true;
         }
@@ -10902,6 +11262,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         t: "REMUX",
         warn: true
       });
+      var mute = isTizen() ? unplayableAudio(text) : "";
+      if (mute) out.push({
+        t: mute,
+        warn: true
+      });
       var m = text.match(/(\d+(?:[.,]\d+)?)\s*(GB|MB)\b/i);
       if (m) {
         var mb = parseFloat(m[1].replace(",", ".")) * (m[2].toUpperCase() === "GB" ? 1024 : 1);
@@ -11018,11 +11383,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         var debridPending = groups.some(function (g) {
           return addonRank(g.addon) === 0 && !g.done;
         });
-        var best2 = list3[0];
-        var clean = best2 && !needsServer(best2) && !streamBadges(best2).some(function (b) {
+        var best = list3[0];
+        var clean = best && !needsServer(best) && !streamBadges(best).some(function (b) {
           return b.warn;
         });
-        if (!best2) {
+        if (!best) {
           if (pendingCount <= 0 || timedOut) {
             stopSmart();
             if (pendingCount <= 0) toast(t("Escolha inteligente: nenhuma fonte que a TV toque. Escolha na lista."), 5e3);
@@ -11031,9 +11396,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         }
         if (pendingCount > 0 && !timedOut && (debridPending || !clean)) return;
         stopSmart();
-        play(video, best2, all2, list3.slice(1, 1 + SMART_FALLBACKS));
+        play(video, best, all2, list3.slice(1, 1 + SMART_FALLBACKS));
       }
-      function status2() {
+      function status3() {
         if (smartActive) {
           sub.textContent = t("Escolha inteligente: procurando a melhor fonte...") + "  ·  " + t("aperte uma seta para escolher você");
           barFill.style.width = Math.round((srcs.length - pendingCount) / srcs.length * 100) + "%";
@@ -11061,7 +11426,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           return g.el.style.display = filter === "all" || filter === g.addon.transportUrl ? "" : "none";
         });
         list2.scrollTop = 0;
-        status2();
+        status3();
         var first = firstVisibleItem();
         if (first) focus(first);
       }
@@ -11090,11 +11455,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           }
         });
       }
-      status2();
+      status3();
       (serverOk ? Promise.resolve() : check().then(function (r) {
         return serverOk = r.ok;
       })).then(function () {
-        status2();
+        status3();
         return fetchStreams(meta.type, video.id, function (addon, streams) {
           if (!alive || streamsVideo !== video) return;
           pendingCount--;
@@ -11123,7 +11488,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
               text: t("Nenhuma fonte encontrada.")
             }));
           }
-          status2();
+          status3();
           decideSmart(false);
         });
       }).catch(function () {});
@@ -11164,7 +11529,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     function play(video, stream, all2, fallbacks) {
       var li = libraryItem(meta.id);
       var resumeMs = li && li.state && li.state.video_id === video.id ? li.state.timeOffset : 0;
-      var start3 = function start3(ms) {
+      var start4 = function start4(ms) {
         return openPlayer({
           meta: meta,
           video: video,
@@ -11188,10 +11553,10 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         }], {
           center: true,
           onPick: function onPick(v) {
-            return start3(v);
+            return start4(v);
           }
         });
-      } else start3(0);
+      } else start4(0);
     }
     function formatDate(iso) {
       var d = new Date(iso);
@@ -11311,7 +11676,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     });
   }
   var run = 0;
-  function load4() {
+  function load3() {
     var my = ++run;
     return load().then(function () {
       return scan2(my);
@@ -11321,7 +11686,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       return list2;
     });
   }
-  function stop() {
+  function stop2() {
     run++;
   }
   function scan2(my) {
@@ -11360,12 +11725,12 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       "data-scroll-y": ""
     });
     var grid = h("div.grid");
-    var status2 = h("div.grid-status");
+    var status3 = h("div.grid-status");
     scroller.appendChild(h("div.row-title.catalog-title", {
       text: catalogTitle(entry)
     }));
     scroller.appendChild(grid);
-    scroller.appendChild(status2);
+    scroller.appendChild(status3);
     el.appendChild(scroller);
     var paging = canPage(entry);
     var seen = {};
@@ -11391,8 +11756,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     function more() {
       if (loading || done) return;
       loading = true;
-      clear(status2);
-      status2.appendChild(spinnerLine(t("Carregando...")));
+      clear(status3);
+      status3.appendChild(spinnerLine(t("Carregando...")));
       var before = count;
       fetchCatalog(entry, count ? {
         skip: count
@@ -11403,8 +11768,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         done = true;
       }).then(function () {
         loading = false;
-        clear(status2);
-        if (!count) status2.appendChild(h("div.hint", {
+        clear(status3);
+        if (!count) status3.appendChild(h("div.hint", {
           text: t("Nada por aqui.")
         }));
       });
@@ -11464,7 +11829,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     function loadNew(force) {
       if (perf() || !force && Date.now() - newLoadedAt < 30 * 6e4) return;
       newLoadedAt = Date.now();
-      load4().then(function (list2) {
+      load3().then(function (list2) {
         newList = list2;
         renderNew();
         publishBrowse();
@@ -11676,7 +12041,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       },
       // Chamado quando um vídeo começa: solta as fileiras (o catálogo volta do cache ao retornar).
       freeMemory: function freeMemory() {
-        stop();
+        stop2();
         newLoadedAt = 0;
         pending2 = [];
         clear(rows);
@@ -11717,7 +12082,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     row.appendChild(title);
     row.appendChild(track);
     parent.appendChild(row);
-    var load5 = function load5() {
+    var load4 = function load4() {
       return fetchCatalog(entry).then(function (metas) {
         clear(track);
         track.classList.remove("pending");
@@ -11751,7 +12116,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     };
     return {
       row: row,
-      load: load5
+      load: load4
     };
   }
   function perf() {
@@ -12141,10 +12506,10 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   var REPO = "ArturSenna/kai";
   var REPO_URL = "https://github.com/" + REPO;
   var VERSION = "1.2.0";
-  var BUILD = "2026-11-26T01:47:21.114Z";
+  var BUILD = "2026-11-26T02:30:46.671Z";
   var RAW = "https://raw.githubusercontent.com/" + REPO + "/main/";
   var PURGE = "https://purge.jsdelivr.net/gh/" + REPO + "/";
-  var FILES = ["package.json", "dist/index.html", "dist/loader.js", "dist/app.js", "dist/app.css", "dist/remote-service.js", "dist/build.json"];
+  var FILES = ["package.json", "dist/index.html", "dist/loader.js", "dist/app.js", "dist/app.css", "dist/remote-service.js", "dist/build.json", "dist/jassub/jassub-worker.js"];
   function latest() {
     var bust = "?t=" + Date.now();
     return Promise.all([getJSON(RAW + "dist/build.json" + bust, {
@@ -12394,6 +12759,22 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     label: "Nenhum (não ligar sozinho)",
     value: []
   }];
+  var SUB_LANGS_2 = [{
+    label: "Nenhuma",
+    value: []
+  }, {
+    label: "Inglês",
+    value: ["eng", "en"]
+  }, {
+    label: "Português (Brasil)",
+    value: PORTUGUESE_BR
+  }, {
+    label: "Espanhol",
+    value: ["spa", "es"]
+  }, {
+    label: "Árabe",
+    value: ["ara", "ar"]
+  }];
   var AUDIO_LANGS = [{
     label: "Original do arquivo",
     value: []
@@ -12469,13 +12850,13 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       if (isNaN(d.getTime())) return "";
       return ("0" + d.getDate()).slice(-2) + "/" + ("0" + (d.getMonth() + 1)).slice(-2) + "/" + d.getFullYear() + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
     }
-    function installFromUrl(url2, name) {
+    function installFromUrl(url3, name) {
       if (!isLoggedIn()) return toast(t("Entre na conta primeiro"));
       confirmDialog(t("Instalar {name} na sua conta Stremio?", {
         name: name
       }), t("Instalar"), function () {
         toast(t("Instalando..."));
-        installAddon(url2).then(function (m) {
+        installAddon(url3).then(function (m) {
           return load(true).then(function () {
             return m;
           });
@@ -12843,16 +13224,46 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           }
         });
       }));
+      var sub2Name = (SUB_LANGS_2.find(function (x) {
+        return JSON.stringify(x.value) === JSON.stringify(s.subtitleLangs2 || []);
+      }) || SUB_LANGS_2[0]).label;
+      body.appendChild(row(t("Segunda opção de legenda"), t("Usada quando não há legenda no idioma principal"), t(sub2Name), function () {
+        return menu(t("Segunda opção de legenda"), SUB_LANGS_2.map(function (x) {
+          return {
+            label: t(x.label),
+            value: x.value,
+            checked: x.label === sub2Name
+          };
+        }), {
+          onPick: function onPick(v) {
+            saveSettings({
+              subtitleLangs2: v
+            });
+            render();
+          }
+        });
+      }));
       body.appendChild(row(t("Ligar legenda automaticamente"), t("Se o áudio não estiver no seu idioma"), "", function () {
         saveSettings({
           subtitlesAuto: !settings().subtitlesAuto
         });
         render();
       }, toggle(s.subtitlesAuto)));
+      var flag = function flag(title, sub, key2, on) {
+        return body.appendChild(row(title, sub, "", function () {
+          var patch = {};
+          patch[key2] = !on;
+          saveSettings(patch);
+          render();
+        }, toggle(on)));
+      };
+      flag(t("Sem legenda quando o áudio já é no seu idioma"), t("Só entram as legendas forçadas (falas em outro idioma), quando o arquivo tem"), "subsSkipNative", s.subsSkipNative !== false);
+      flag(t("Preferir a legenda embutida no arquivo"), t("Sincronia melhor que a dos addons; precisa do servidor do PC"), "preferEmbedded", s.preferEmbedded === true);
+      flag(t("Legendas ASS com o estilo original"), t("Cores, posições e fontes do arquivo; desligue se a TV engasgar"), "assStyled", s.assStyled !== false);
       var audName = (AUDIO_LANGS.find(function (x) {
         return JSON.stringify(x.value) === JSON.stringify(s.audioLangs);
       }) || AUDIO_LANGS[0]).label;
-      body.appendChild(row(t("Áudio preferido"), t("Precisa do servidor do PC para ler as faixas"), t(audName), function () {
+      body.appendChild(row(t("Áudio preferido"), t("Quando o arquivo tem mais de uma faixa de áudio"), t(audName), function () {
         return menu(t("Áudio preferido"), AUDIO_LANGS.map(function (x) {
           return {
             label: t(x.label),
@@ -13275,7 +13686,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     scroller.appendChild(grid);
     el.appendChild(scroller);
     var mode = "anime";
-    var current3 = 0;
+    var current4 = 0;
     var token = 0;
     function label(offset) {
       if (offset === 0) return t("Hoje");
@@ -13294,7 +13705,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
             mode = m.id;
             renderModes();
             focus(modes.children[i]);
-            load5();
+            load4();
           }
         }));
       });
@@ -13306,26 +13717,26 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         var d = dayStart(off);
         days.appendChild(h("div.chip", {
           focusable: true,
-          cls: off === current3 ? "active" : "",
+          cls: off === current4 ? "active" : "",
           text: label(off) + " " + ("0" + d.getDate()).slice(-2) + "/" + ("0" + (d.getMonth() + 1)).slice(-2),
           onSelect: function onSelect() {
-            current3 = off;
+            current4 = off;
             renderDays();
             focus(days.children[off + 1]);
-            load5();
+            load4();
           }
         }));
       };
       for (var o = -1; o <= 6; o++) {
         _loop5();
       }
-      days.__last = days.children[current3 + 1];
+      days.__last = days.children[current4 + 1];
     }
-    function load5() {
+    function load4() {
       var my = ++token;
       clear(grid);
       grid.appendChild(spinnerLine(t("Buscando lançamentos...")));
-      FETCH[mode](current3).then(function (list2) {
+      FETCH[mode](current4).then(function (list2) {
         if (my !== token) return;
         clear(grid);
         if (list2 === null) {
@@ -13380,7 +13791,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     }
     renderModes();
     renderDays();
-    load5();
+    load4();
     return {
       el: el,
       onShow: function onShow() {
@@ -13504,34 +13915,34 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       card2.appendChild(h("h1", {
         text: t("Servidor de torrents no PC")
       }));
-      var status2 = h("p", {
+      var status3 = h("p", {
         text: isAvailable() ? t("Servidor conectado em {url}. Torrents liberados.", {
           url: baseUrl()
         }) : t("Para tocar torrents, deixe o stremio-service aberto num PC da rede. Links de debrid funcionam sem ele.")
       });
-      card2.appendChild(status2);
+      card2.appendChild(status3);
       card2.appendChild(h("div.actions", {
         "data-group": ""
       }, [btn(t("Procurar na rede"), true, function () {
-        status2.textContent = t("Procurando o servidor na rede...");
+        status3.textContent = t("Procurando o servidor na rede...");
         scan(function (done, total) {
-          return status2.textContent = t("Procurando o servidor na rede...") + " " + Math.round(done / total * 100) + "%";
+          return status3.textContent = t("Procurando o servidor na rede...") + " " + Math.round(done / total * 100) + "%";
         }).then(function (ip) {
           if (!ip) {
-            status2.textContent = t("Nenhum servidor encontrado. Você pode configurar depois em Ajustes.");
+            status3.textContent = t("Nenhum servidor encontrado. Você pode configurar depois em Ajustes.");
             return;
           }
           saveSettings({
             serverUrl: ip
           });
           return check().then(function () {
-            status2.textContent = t("Servidor encontrado em {ip}", {
+            status3.textContent = t("Servidor encontrado em {ip}", {
               ip: ip
             }) + "!";
             toast(t("Servidor do PC conectado"));
           });
         }).catch(function () {
-          return status2.textContent = t("Não foi possível procurar. Configure depois em Ajustes.");
+          return status3.textContent = t("Não foi possível procurar. Configure depois em Ajustes.");
         });
       }), btn(isAvailable() ? t("Continuar") : t("Pular"), false, next)]));
     }
@@ -13629,9 +14040,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       if (bootEl) bootEl.style.display = "none";
       showPicker(function () {
         if (bootEl) bootEl.style.display = "";
-        start2();
+        start3();
       });
-    } else start2();
+    } else start3();
     document.addEventListener("webOSRelaunch", function () {
       check();
       devLaunch();
@@ -13640,7 +14051,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       if (!document.hidden) check();
     });
   }
-  function start2() {
+  function start3() {
     reloadProfile();
     var s = settings();
     document.body.classList.toggle("oled", !!s.oled);

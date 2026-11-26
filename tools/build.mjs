@@ -90,6 +90,13 @@ async function emit(result) {
       }
     }
   }
+  // Styled ASS subtitles (lib/asscanvas.js): JASSUB as published, loaded on demand and only by
+  // engines that can run it, so it is copied as is instead of going through Babel.
+  const jassub = path.join(root, 'node_modules', 'jassub', 'dist');
+  fs.mkdirSync(path.join(dist, 'jassub'), { recursive: true });
+  for (const f of ['jassub.umd.js', 'jassub-worker.js', 'jassub-worker.wasm', 'jassub-worker-modern.wasm', 'default.woff2', 'COPYRIGHT']) {
+    fs.copyFileSync(path.join(jassub, f), path.join(dist, 'jassub', f));
+  }
   const code = await downlevel(result.outputFiles[0].text);
   fs.writeFileSync(path.join(dist, 'app.js'), code);
   // Guarda simples: nada de sintaxe que o Chromium 38 não entende pode sobrar.

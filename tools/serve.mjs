@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const dist = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'dist');
 const port = Number(process.env.PORT || 5173);
-const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.woff2': 'font/woff2' };
+const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.woff2': 'font/woff2', '.wasm': 'application/wasm' };
 
 // Addon de teste (só para desenvolvimento): http://localhost:5173/test-addon/manifest.json
 const TEST_VIDEO = 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_5MB.mp4';
@@ -45,9 +45,13 @@ function testAddon(p, res) {
   }
   if (p === '/test-addon/teste.ass') {
     res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+    // Styled on purpose (yellow, top of the screen): with the styled renderer it looks nothing like plain text.
     return res.end(
-      '[Script Info]\nScriptType: v4.00+\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n' +
-        'Dialogue: 0,0:00:01.00,0:00:04.00,Default,,0,0,0,,{\\an8\\pos(960,80)}ASS line, {\\i1}in italics{\\i0}\n' +
+      '[Script Info]\nScriptType: v4.00+\nPlayResX: 1920\nPlayResY: 1080\n\n' +
+        '[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n' +
+        'Style: Default,Arial,72,&H0000FFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,2,8,40,40,60,1\n\n' +
+        '[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n' +
+        'Dialogue: 0,0:00:00.50,0:00:04.00,Default,,0,0,0,,ASS line, {\\i1}in italics{\\i0}\n' +
         'Dialogue: 0,0:00:05.00,0:00:09.00,Default,,0,0,0,,Second line\\Nbroken in two\n'
     );
   }
@@ -59,10 +63,43 @@ function testAddon(p, res) {
   res.end();
 }
 
+// Stand-in for the PC's stremio-service (only for development): set the server address in the
+// app's Settings to "localhost:<port>". It answers the three calls the player makes for a file's
+// built-in tracks: is the server there, which tracks, and one subtitle track as WebVTT blocks.
+function mockServer(p, res) {
+  const send = (body, type) => {
+    res.writeHead(200, { 'Content-Type': type, 'Access-Control-Allow-Origin': '*' });
+    res.end(body);
+  };
+  if (p === '/settings') return send(JSON.stringify({ values: { serverVersion: 'mock' } }), 'application/json');
+  if (p.startsWith('/tracks/')) {
+    return send(
+      JSON.stringify([
+        { id: 0, type: 'video', codec: 'h264' },
+        { id: 1, type: 'audio', lang: 'eng', label: 'English 5.1', codec: 'eac3', channels: 6 },
+        { id: 2, type: 'audio', lang: 'por', label: 'Português (Brasil)', codec: 'aac', channels: 2 },
+        { id: 3, type: 'text', lang: 'eng', label: 'Signs & Songs', codec: 'ass' },
+        { id: 4, type: 'text', lang: 'por', label: 'Português (Brasil)', codec: 'ass' },
+        { id: 5, type: 'text', lang: 'por', label: 'Forçada', codec: 'subrip' },
+        { id: 6, type: 'text', lang: 'eng', label: 'English', codec: 'subrip' },
+      ]),
+      'application/json'
+    );
+  }
+  const seg = p.match(/^\/hlsv2\/[^/]+\/subtitle(\d+)\/segment(\d+)\.vtt$/);
+  if (seg) {
+    const k = Number(seg[2]);
+    const ts = (sec) => '00:' + String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0') + '.000';
+    return send(`WEBVTT\n\n${ts((k - 1) * 10)} --> ${ts(k * 10)}\nFaixa embutida ${seg[1]}, bloco ${k}\n`, 'text/vtt; charset=utf-8');
+  }
+  return false;
+}
+
 http
   .createServer((req, res) => {
     const p = decodeURIComponent(req.url.split('?')[0]);
     if (p.startsWith('/test-addon/')) return testAddon(p, res);
+    if (mockServer(p, res) !== false) return;
     const file = path.join(dist, p === '/' ? 'index.html' : p);
     if (!file.startsWith(dist) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
       res.writeHead(404);

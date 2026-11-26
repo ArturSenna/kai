@@ -20,6 +20,8 @@ import * as watched from '../lib/watched.js';
 import * as phone from '../lib/phone.js';
 import * as lang from '../lib/lang.js';
 import * as probe from '../lib/probe.js';
+import * as trackselect from '../lib/trackselect.js';
+import * as asscanvas from '../lib/asscanvas.js';
 
 const HIDE_MS = 5000;
 const SAVE_MS = 15000;
@@ -136,8 +138,14 @@ function PlayerView(opts) {
     addonSubs = null;
     renderer.clear();
     currentSub = { kind: 'off' };
-    autoSub = { rank: Infinity, tries: 0 };
+    asscanvas.stop();
+    currentAudio = null;
+    autoSub = { order: Infinity, tries: 0, forcedOnly: '' };
     failedSubs = {};
+    embeddedAuto = false;
+    embeddedAsked = false;
+    addonSubsDone = false;
+    playedAWhile = false;
     segments = [];
     segmentsLoaded = false;
     if (typeof upNextStop === 'function') upNextStop(false);
@@ -196,6 +204,12 @@ function PlayerView(opts) {
       })
       .catch(() => {
         if (!addonSubs) addonSubs = [];
+      })
+      .then(() => {
+        if (!alive || forVideo !== video) return;
+        if (!addonSubs) addonSubs = [];
+        addonSubsDone = true;
+        considerEmbedded();
       });
   }
 
@@ -204,70 +218,170 @@ function PlayerView(opts) {
   // só são lidas se o usuário pediu um áudio preferido, e só depois de o vídeo estar rodando.
   // Languages are compared by what they mean, not how the source spells them (lib/lang.js):
   // "pob", "pt-BR" and "Portuguese (Brazil)" are one language, ahead of generic Portuguese.
+  // Which track wins is decided in lib/trackselect.js (the Smart Track Selector).
   let autoDone = { sub: false, audio: false };
-  let autoSub = { rank: Infinity, tries: 0 }; // the automatic pick so far, for this video
-  let failedSubs = {}; // add-on subtitles that wouldn't download or came empty
+  let autoSub = { order: Infinity, tries: 0, forcedOnly: '' }; // the automatic pick so far, for this video
+  let failedSubs = {}; // subtitles that wouldn't download, came empty or the server couldn't read
+  let embeddedAuto = false; // the file's own tracks were read for the automatic pick
+  let embeddedAsked = false;
+  let addonSubsDone = false;
+  let playedAWhile = false;
   const AUTO_SUB_TRIES = 4;
 
   function subKey(s) {
     return s.id || s.url;
   }
 
-  // A subtitle picked by hand is remembered for the title (series or film) and comes back on the
-  // next episodes: { lang: canonical code or 'off', addon: who provided it }.
+  // What was picked by hand is remembered per title (series or film) and comes back on the next
+  // episodes. Subtitles: { lang: canonical code or 'off', addon: who provided it }. Audio: the code.
   const SUB_CHOICES = 'subChoices';
+  const AUDIO_CHOICES = 'audioChoices';
+
+  function savedFor(key) {
+    return (store.get(key, {}) || {})[meta.id] || null;
+  }
+
+  function rememberFor(key, value) {
+    if (meta.id === 'dev') return;
+    const all = store.get(key, {}) || {};
+    delete all[meta.id];
+    all[meta.id] = value;
+    const keys = Object.keys(all);
+    if (keys.length > 200) delete all[keys[0]]; // oldest first (insertion order)
+    store.set(key, all);
+  }
 
   function savedChoice() {
-    return (store.get(SUB_CHOICES, {}) || {})[meta.id] || null;
+    return savedFor(SUB_CHOICES);
   }
 
   function rememberChoice(choice) {
-    if (meta.id === 'dev' || !choice.lang || choice.lang === 'und') return;
-    const all = store.get(SUB_CHOICES, {}) || {};
-    delete all[meta.id];
-    all[meta.id] = choice;
-    const keys = Object.keys(all);
-    if (keys.length > 200) delete all[keys[0]]; // oldest first (insertion order)
-    store.set(SUB_CHOICES, all);
+    if (choice.lang && choice.lang !== 'und') rememberFor(SUB_CHOICES, choice);
   }
 
-  // Wanted subtitle languages, most wanted first: this title's remembered choice, then Settings.
+  // ---- Audio ----
+  // The tracks as the TV's own player lists them (Samsung does), else as the PC server read them.
+  function audioTracks() {
+    const native = videoEl.audioTracks;
+    const out = [];
+    if (native && native.length) {
+      for (let i = 0; i < native.length; i++) out.push({ lang: lang.ofTrack(native[i].language, native[i].label), title: native[i].label || '', active: !!native[i].enabled });
+    } else if (embedded && embedded.audio.length) {
+      embedded.audio.forEach((tr, i) => out.push({ lang: lang.ofTrack(tr.lang, tr.label), title: tr.label || '', active: currentAudio === null ? i === 0 : currentAudio === i }));
+    }
+    return out;
+  }
+
+  // The language being heard, '' while it isn't known.
+  function audioLang() {
+    const on = audioTracks().find((a) => a.active);
+    return on && on.lang !== 'und' ? on.lang : '';
+  }
+
+  // Once per video, as soon as the track list exists: the language picked by hand for this title,
+  // then the one in Settings.
+  function autoPickAudio() {
+    const list = audioTracks();
+    if (autoDone.audio || !list.length) return;
+    autoDone.audio = true;
+    const choice = savedFor(AUDIO_CHOICES);
+    const wanted = lang.prefs(settings.audioLangs);
+    const idx = list.length > 1 ? trackselect.pickAudio(list, choice ? [choice].concat(wanted.filter((x) => x !== choice)) : wanted) : -1;
+    if (idx >= 0 && !list[idx].active) {
+      log.info('Áudio automático: faixa ' + idx + ' (' + list[idx].lang + ')');
+      selectEmbeddedAudio(idx);
+    }
+    autoPick(); // which subtitle is wanted depends on the language being heard
+  }
+
+  // The TV lists the tracks a moment after playback starts. Where it doesn't list them at all, the
+  // PC server's list is read once, 20s in (its probe would compete with a torrent still starting).
+  function scheduleAudioPick() {
+    autoPickAudio();
+    [1500, 5000].forEach((ms) => setTimeout(() => alive && autoPickAudio(), ms));
+    setTimeout(() => {
+      if (!alive || !hasPlayed || autoDone.audio || !server.isAvailable()) return;
+      if (!lang.prefs(settings.audioLangs).length && !savedFor(AUDIO_CHOICES)) return;
+      loadEmbeddedTracks().then(() => alive && autoPickAudio());
+    }, 20000);
+  }
+
+  // ---- Subtitles ----
+  // Wanted languages, most wanted first: this title's remembered choice, then Settings (first and
+  // second choice).
   function wantedSubs() {
     const choice = savedChoice();
-    const list = lang.prefs(settings.subtitleLangs);
+    const list = lang.prefs((settings.subtitleLangs || []).concat(settings.subtitleLangs2 || []));
     if (!choice || choice.lang === 'off') return list;
     return [choice.lang].concat(list.filter((x) => x !== choice.lang));
   }
 
-  function autoPick() {
-    const prefAudio = lang.prefs(settings.audioLangs);
-    if (!autoDone.audio && prefAudio.length && embedded && embedded.audio.length > 1) {
-      autoDone.audio = true;
-      const hit = lang.best(embedded.audio, prefAudio, (tr) => lang.ofTrack(tr.lang, tr.label));
-      const idx = hit ? embedded.audio.indexOf(hit.item) : -1;
-      if (idx > 0) selectEmbeddedAudio(idx);
-    }
-    if (autoDone.sub || !settings.subtitlesAuto || !addonSubs || autoSub.tries >= AUTO_SUB_TRIES) return;
-    const choice = savedChoice();
-    if (choice && choice.lang === 'off') return; // turned off by hand for this title
-    const wanted = wantedSubs();
-    const usable = addonSubs.filter((s) => !failedSubs[subKey(s)]);
-    const hit = lang.best(usable, wanted, (s) => lang.canon(s.lang));
-    // Add-ons answer one at a time: only a better match than the current pick replaces it
-    // (Brazilian Portuguese arriving after generic Portuguese).
-    if (!hit || hit.rank >= autoSub.rank) return;
-    // The remembered language again: the same add-on as last time, when it has it.
-    const sameAddon = choice && hit.rank === 0 && usable.find((s) => s.addon === choice.addon && lang.canon(s.lang) === choice.lang);
-    autoSub.rank = hit.rank;
-    selectAddonSub(sameAddon || hit.item, true);
+  // The audio is already in the viewer's language (the first choice in Settings): that language,
+  // else ''. Then only a forced track is wanted. A subtitle picked by hand for this title wins.
+  function nativeAudio() {
+    if (settings.subsSkipNative === false || savedChoice()) return '';
+    const heard = lang.base(audioLang());
+    return heard && lang.prefs(settings.subtitleLangs).map(lang.base).indexOf(heard) >= 0 ? heard : '';
   }
 
-  // Áudio preferido configurado: lê as faixas uma vez, 20s depois de o vídeo começar.
-  function scheduleAudioPick() {
-    if (!(settings.audioLangs || []).length || !server.isAvailable()) return;
-    setTimeout(() => {
-      if (alive && hasPlayed) loadEmbeddedTracks().then(() => autoPick());
-    }, 20000);
+  function subCandidates() {
+    const list = (addonSubs || []).filter((s) => !failedSubs[subKey(s)]).map((s) => ({ source: 'addon', sub: s, lang: lang.canon(s.lang), title: '' }));
+    if (embedded && embeddedAuto) {
+      embedded.subs.forEach((tr, i) => {
+        if (failedSubs['embedded:' + i]) return;
+        list.push({ source: 'embedded', index: i, lang: lang.ofTrack(tr.lang, tr.label), title: tr.label || '', forced: !!tr.forced, bitmap: /PGS|VOBSUB|DVD/i.test(tr.codec || '') });
+      });
+    }
+    return list;
+  }
+
+  function autoPick() {
+    if (autoDone.sub || !settings.subtitlesAuto || autoSub.tries >= AUTO_SUB_TRIES) return;
+    const choice = savedChoice();
+    if (choice && choice.lang === 'off') return; // turned off by hand for this title
+    const forcedOnly = nativeAudio();
+    if (forcedOnly !== autoSub.forcedOnly) {
+      // The language being heard just became known, or changed: the earlier pick no longer applies.
+      autoSub.forcedOnly = forcedOnly;
+      autoSub.order = Infinity;
+      if (currentSub.auto) subsOff();
+    }
+    const hit = trackselect.pickSub(subCandidates(), { langs: wantedSubs(), preferEmbedded: settings.preferEmbedded === true, forcedOnly: forcedOnly });
+    // Sources answer one at a time: only a better match than the current pick replaces it
+    // (Brazilian Portuguese arriving after generic Portuguese).
+    if (!hit || hit.order >= autoSub.order) {
+      considerEmbedded(); // nothing new to show: the file's own tracks may have it
+      return;
+    }
+    autoSub.order = hit.order;
+    if (hit.track.source === 'embedded') {
+      selectEmbeddedSub(hit.track.index, true);
+      return;
+    }
+    // The remembered language again: the same add-on as last time, when it has it.
+    const again = choice && hit.rank === 0 && (addonSubs || []).find((s) => !failedSubs[subKey(s)] && s.addon === choice.addon && lang.canon(s.lang) === choice.lang);
+    selectAddonSub(again || hit.track.sub, true);
+  }
+
+  // The file's own subtitles reach this TV through the PC server, and listing them is a second read
+  // of the file. So it happens only when it can change the pick: the file's tracks are preferred in
+  // Settings, or nothing is showing (no add-on had the language, or only a forced track is wanted).
+  function considerEmbedded() {
+    if (!alive || embeddedAsked || !playedAWhile || !addonSubsDone || autoDone.sub || !settings.subtitlesAuto || !server.isAvailable()) return;
+    const choice = savedChoice();
+    if (choice && choice.lang === 'off') return;
+    if (!wantedSubs().length || !(settings.preferEmbedded === true || currentSub.kind === 'off')) return;
+    embeddedAsked = true;
+    const forUrl = mediaUrl;
+    server.streamProgress(mediaUrl).then((p) => {
+      // A torrent still downloading: the read would fight the download for the same pieces.
+      if (!alive || forUrl !== mediaUrl || (p !== null && p < 0.999)) return;
+      loadEmbeddedTracks().then((tracks) => {
+        if (!alive || !tracks || forUrl !== mediaUrl) return;
+        embeddedAuto = true;
+        autoPick();
+      });
+    });
   }
 
   // ---------- Eventos do vídeo ----------
@@ -286,7 +400,18 @@ function PlayerView(opts) {
   });
   videoEl.addEventListener('playing', () => {
     if (!hasPlayed) {
-      scheduleAudioPick();
+      const forVideo = video;
+      if (audioAfterReopen !== null) {
+        // A stalled video was reopened: the TV went back to the file's default audio track.
+        const idx = audioAfterReopen;
+        audioAfterReopen = null;
+        setTimeout(() => alive && forVideo === video && selectEmbeddedAudio(idx), 1500);
+      } else scheduleAudioPick();
+      setTimeout(() => {
+        if (!alive || forVideo !== video) return;
+        playedAWhile = true;
+        considerEmbedded();
+      }, 3000);
       // Diagnostics: what the TV exposes for this file (tracks show up a little after the start).
       setTimeout(() => alive && probe.media(videoEl), 6000);
     }
@@ -413,13 +538,15 @@ function PlayerView(opts) {
   function setSubDelay(v) {
     v = Math.round(Math.max(-30, Math.min(30, v)) * 100) / 100;
     renderer.setOffset(v);
+    asscanvas.setOffset(v);
     rememberDelay(v);
     return v;
   }
 
   function nudgeSubs(dir) {
     if (currentSub.kind === 'off') return toast(t('Ligue uma legenda primeiro.'));
-    if (currentSub.kind === 'embedded') return toast(t('O ajuste funciona com legendas de addons (OpenSubtitles etc.).'), 4000);
+    // Built-in tracks drawn by the TV itself can't be shifted; the ones the server extracts can.
+    if (currentSub.kind === 'embedded' && !currentSub.extracted) return toast(t('O ajuste funciona com legendas de addons (OpenSubtitles etc.).'), 4000);
     const v = setSubDelay(renderer.offset() + dir * SUB_STEP);
     toast(t('Atraso da legenda: {n}s', { n: (v > 0 ? '+' : '') + v.toFixed(2) }) + '  ·  ' + (v < 0 ? t('Legenda aparece antes') : v > 0 ? t('Legenda aparece depois') : t('Sem ajuste')), 1800);
   }
@@ -628,6 +755,7 @@ function PlayerView(opts) {
     }
   }
 
+  let audioAfterReopen = null; // audio track to put back once a reopened video plays again
   function reopenAt(pos) {
     showSpinner(true);
     toast(t('Reconectando ao vídeo...'));
@@ -644,6 +772,7 @@ function PlayerView(opts) {
     setTimeout(() => {
       if (!alive) return;
       hasPlayed = false;
+      audioAfterReopen = currentAudio;
       videoEl.autoplay = true;
       videoEl.src = src;
       nativeOffDone = false;
@@ -834,20 +963,33 @@ function PlayerView(opts) {
   // Legenda embutida: se o arquivo já está 100% no PC, o servidor extrai a faixa (WebVTT, blocos
   // de 10s) e o app desenha no estilo Kai, sem os códigos ASS crus ({\an8}) do player da TV.
   // Com o torrent ainda baixando, não extrai: o ffmpeg leria o arquivo e roubaria a prioridade do download.
-  function selectEmbeddedSub(index) {
+  // On Samsung the TV's player can't turn a built-in track on (no Luna), so the server always
+  // extracts it there. auto = picked by the app, not from the menu.
+  function selectEmbeddedSub(index, auto) {
     renderer.clear();
+    asscanvas.stop();
     server.streamProgress(mediaUrl).then((p) => {
       if (!alive) return;
-      if (p !== null && p >= 0.999) extractedSub(index);
+      if ((p !== null && p >= 0.999) || !hasLuna()) extractedSub(index, auto);
       else nativeEmbeddedSub(index);
     });
   }
 
-  function extractedSub(index) {
+  function extractedSub(index, auto) {
     nativeSubsOff();
-    const cs = { kind: 'embedded', index: index, extracted: true, sid: 'kai' + Math.random().toString(36).slice(2), segs: {}, cues: [], busy: false };
+    const cs = { kind: 'embedded', index: index, extracted: true, auto: !!auto, sid: 'kai' + Math.random().toString(36).slice(2), segs: {}, cues: [], busy: false, fails: 0 };
     currentSub = cs;
+    renderer.setOffset(savedDelay());
     ensureSegments();
+  }
+
+  // The server couldn't read the track (a picture-based one, or the server is gone).
+  function embeddedFailed(cs) {
+    failedSubs['embedded:' + cs.index] = true;
+    subsOff();
+    if (!cs.auto) return toast(t('O servidor do PC não conseguiu ler esta legenda.'));
+    autoSub = { order: Infinity, tries: autoSub.tries + 1, forcedOnly: autoSub.forcedOnly };
+    autoPick();
   }
 
   function ensureSegments() {
@@ -862,6 +1004,7 @@ function PlayerView(opts) {
     getText(url, { timeout: 30000, quiet: true })
       .then((txt) => {
         if (currentSub !== cs) return;
+        cs.fails = 0;
         const seen = {};
         cs.cues.forEach((c) => (seen[c.start + '|' + c.text] = true));
         subs.parse(txt).forEach((c) => {
@@ -871,7 +1014,11 @@ function PlayerView(opts) {
         renderer.set(cs.cues);
         renderer.update(videoEl.currentTime);
       })
-      .catch(() => delete cs.segs[k])
+      .catch(() => {
+        delete cs.segs[k];
+        // Give up after a few failures in a row instead of asking again four times a second.
+        if (currentSub === cs && ++cs.fails >= 3) embeddedFailed(cs);
+      })
       .then(() => (cs.busy = false));
   }
 
@@ -898,31 +1045,54 @@ function PlayerView(opts) {
     }
   }
 
+  function subsOff() {
+    disableEmbeddedSubs();
+    asscanvas.stop();
+    renderer.clear();
+    currentSub = { kind: 'off' };
+  }
+
   // silent = the automatic pick: no toast, and a subtitle that fails makes way for the next match.
   function selectAddonSub(s, silent) {
     disableEmbeddedSubs();
     const key = subKey(s);
-    currentSub = { kind: 'addon', id: key };
+    currentSub = { kind: 'addon', id: key, auto: !!silent };
     renderer.setOffset(savedDelay());
     subs
-      .load(s.url, server.subtitlesProxy(s.url))
+      .loadFile(s.url, server.subtitlesProxy(s.url))
       .then(
-        (cues) => {
+        (file) => {
           if (!alive || currentSub.id !== key) return;
-          if (!cues.length) return subFailed(s, silent, t('Esta legenda está vazia ou em um formato que o app não lê.'));
-          renderer.set(cues);
+          if (!file.cues.length) return subFailed(s, silent, t('Esta legenda está vazia ou em um formato que o app não lê.'));
+          showSubFile(file);
           if (!silent) toast(t('Legenda: {lang}', { lang: langName(s.lang) }));
         },
         () => alive && currentSub.id === key && subFailed(s, silent, t('Não foi possível baixar a legenda.'))
       );
   }
 
+  // An ASS/SSA file is drawn with its own fonts, colours and positions when the TV can run the
+  // renderer (lib/asscanvas.js). If that fails, and for every other format, the app draws the text.
+  function showSubFile(file) {
+    asscanvas.stop();
+    if (!file.ass || settings.assStyled === false || !asscanvas.supported()) return renderer.set(file.cues);
+    const cs = currentSub;
+    renderer.clear();
+    asscanvas.start(videoEl, file.ass, {
+      offset: renderer.offset(),
+      onFail: () => {
+        if (!alive || currentSub !== cs) return;
+        renderer.set(file.cues);
+        renderer.update(videoEl.currentTime);
+      },
+    });
+  }
+
   function subFailed(s, silent, text) {
     failedSubs[subKey(s)] = true;
     if (!silent) return toast(text);
-    renderer.clear();
-    currentSub = { kind: 'off' };
-    autoSub = { rank: Infinity, tries: autoSub.tries + 1 };
+    subsOff();
+    autoSub = { order: Infinity, tries: autoSub.tries + 1, forcedOnly: autoSub.forcedOnly };
     autoPick();
     if (currentSub.kind === 'off') toast(text); // nothing else to try
   }
@@ -943,11 +1113,11 @@ function PlayerView(opts) {
     let list = [];
     if (native && native.length) {
       for (let i = 0; i < native.length; i++) {
-        list.push({ label: langName(native[i].language) + (native[i].label ? ' · ' + native[i].label : ''), value: i, checked: native[i].enabled });
+        list.push({ label: langName(lang.ofTrack(native[i].language, native[i].label)) + (native[i].label ? ' · ' + native[i].label : ''), value: i, checked: native[i].enabled });
       }
     } else if (embedded && embedded.audio.length) {
       list = embedded.audio.map((tr, i) => ({
-        label: langName(tr.lang) + (tr.label ? ' · ' + tr.label : ''),
+        label: langName(lang.ofTrack(tr.lang, tr.label)) + (tr.label ? ' · ' + tr.label : ''),
         sub: [tr.codec, tr.channels ? t('{n} canais', { n: tr.channels }) : ''].filter(Boolean).join(' · '),
         value: i,
         checked: currentAudio === null ? i === 0 : currentAudio === i,
@@ -955,7 +1125,13 @@ function PlayerView(opts) {
     }
     menu(t('Áudio'), list, {
       empty: server.isAvailable() ? t('Só uma faixa de áudio.') : t('Para listar as faixas, conecte o servidor do PC em Ajustes.'),
-      onPick: (i) => selectEmbeddedAudio(i),
+      onPick: (i) => {
+        const picked = audioTracks()[i];
+        if (picked && picked.lang && picked.lang !== 'und') rememberFor(AUDIO_CHOICES, picked.lang);
+        selectEmbeddedAudio(i);
+        // A dub in the viewer's language needs no subtitles; the original language does.
+        setTimeout(() => alive && autoPick(), 500);
+      },
     });
   }
 
@@ -968,7 +1144,7 @@ function PlayerView(opts) {
     if (embedded && embedded.subs.length) {
       embedded.subs.forEach((tr, i) =>
         /PGS|VOBSUB|DVD/i.test(tr.codec || '') ? null : opts2.push({
-          label: langName(tr.lang) + (tr.label ? ' · ' + tr.label : ''),
+          label: langName(lang.ofTrack(tr.lang, tr.label)) + (tr.label ? ' · ' + tr.label : ''),
           sub: t('Embutida no arquivo') + (tr.codec ? ' · ' + tr.codec : ''),
           value: { kind: 'embedded', index: i },
           checked: currentSub.kind === 'embedded' && currentSub.index === i,
@@ -1000,9 +1176,7 @@ function PlayerView(opts) {
       onPick: (v) => {
         if (v.kind === 'off' || v.kind === 'embedded' || v.kind === 'addon') autoDone.sub = true;
         if (v.kind === 'off') {
-          disableEmbeddedSubs();
-          renderer.clear();
-          currentSub = { kind: 'off' };
+          subsOff();
           rememberChoice({ lang: 'off' });
         } else if (v.kind === 'embedded') {
           const tr = embedded.subs[v.index];
@@ -1223,6 +1397,7 @@ function PlayerView(opts) {
       clearTimeout(hideTimer);
       clearTimeout(seekCommitTimer);
       disableEmbeddedSubs();
+      asscanvas.stop();
       try {
         videoEl.pause();
         videoEl.removeAttribute('src');

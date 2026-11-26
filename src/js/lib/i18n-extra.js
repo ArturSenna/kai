@@ -6,6 +6,17 @@ export const EN_EXTRA = {
   'Diagnóstico de reprodução': 'Playback diagnostics',
   'O que esta TV expõe (faixas de áudio e legenda). Toque um vídeo antes de abrir.': 'What this TV exposes (audio and subtitle tracks). Play a video before opening.',
   'Nenhum vídeo tocado nesta sessão.': 'No video played in this session.',
+  'Nenhuma': 'None',
+  'Segunda opção de legenda': 'Second-choice subtitle language',
+  'Usada quando não há legenda no idioma principal': 'Used when there are no subtitles in the main language',
+  'Sem legenda quando o áudio já é no seu idioma': 'No subtitles when the audio is already in your language',
+  'Só entram as legendas forçadas (falas em outro idioma), quando o arquivo tem': 'Only forced subtitles (lines in another language) come on, when the file has them',
+  'Preferir a legenda embutida no arquivo': "Prefer the file's built-in subtitles",
+  'Sincronia melhor que a dos addons; precisa do servidor do PC': 'Better timing than add-on subtitles; needs the PC server',
+  'Legendas ASS com o estilo original': 'ASS subtitles with their original styling',
+  'Cores, posições e fontes do arquivo; desligue se a TV engasgar': "The file's colours, positions and fonts; turn off if the TV struggles",
+  'Quando o arquivo tem mais de uma faixa de áudio': 'When the file has more than one audio track',
+  'O servidor do PC não conseguiu ler esta legenda.': "The PC server couldn't read this subtitle.",
 };
 
 export const AR_EXTRA = {
@@ -14,4 +25,15 @@ export const AR_EXTRA = {
   'Diagnóstico de reprodução': 'تشخيص التشغيل',
   'O que esta TV expõe (faixas de áudio e legenda). Toque um vídeo antes de abrir.': 'ما يتيحه هذا التلفاز (مسارات الصوت والترجمة). شغّل فيديو قبل الفتح.',
   'Nenhum vídeo tocado nesta sessão.': 'لم يُشغَّل أي فيديو في هذه الجلسة.',
+  'Nenhuma': 'لا شيء',
+  'Segunda opção de legenda': 'لغة الترجمة البديلة',
+  'Usada quando não há legenda no idioma principal': 'تُستخدم عند عدم توفر ترجمة باللغة الأساسية',
+  'Sem legenda quando o áudio já é no seu idioma': 'بدون ترجمة عندما يكون الصوت بلغتك',
+  'Só entram as legendas forçadas (falas em outro idioma), quando o arquivo tem': 'تظهر فقط الترجمات الإجبارية (الحوار بلغة أخرى) إن وُجدت في الملف',
+  'Preferir a legenda embutida no arquivo': 'تفضيل الترجمة المضمّنة في الملف',
+  'Sincronia melhor que a dos addons; precisa do servidor do PC': 'توقيت أدق من ترجمات الإضافات؛ يتطلب خادم الكمبيوتر',
+  'Legendas ASS com o estilo original': 'ترجمات ASS بتنسيقها الأصلي',
+  'Cores, posições e fontes do arquivo; desligue se a TV engasgar': 'ألوان الملف ومواضعه وخطوطه؛ أوقفها إذا تعثّر التلفاز',
+  'Quando o arquivo tem mais de uma faixa de áudio': 'عندما يحتوي الملف على أكثر من مسار صوتي',
+  'O servidor do PC não conseguiu ler esta legenda.': 'تعذّر على خادم الكمبيوتر قراءة هذه الترجمة.',
 };
