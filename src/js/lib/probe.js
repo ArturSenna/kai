@@ -5,6 +5,7 @@ import * as asscanvas from './asscanvas.js';
 
 // Rows are { label, sub } so they fit a menu line on the TV (long lines are cut off there).
 let lastMedia = null; // rows about the last video played
+let lastStream = null; // rows about how its stream held up (stalls, reconnects), kept by the player
 
 function yn(x) {
   return x ? 'yes' : 'no';
@@ -76,7 +77,12 @@ export function media(videoEl) {
   );
 }
 
-// Rows for the Settings screen; media is null until a video has played in this session.
+// The player's record of the last video's stream: how often it ran out of data and what was done.
+export function stream(rows) {
+  lastStream = rows;
+}
+
+// Rows for the Settings screen; media and stream are null until a video has played in this session.
 export function report() {
-  return loadWebapis().then(() => ({ environment: environment(), media: lastMedia }));
+  return loadWebapis().then(() => ({ environment: environment(), media: lastMedia, stream: lastStream }));
 }

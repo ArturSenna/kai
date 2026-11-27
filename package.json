@@ -1,6 +1,6 @@
 {
   "name": "stremio-kai-tizen",
-  "version": "1.2.0-fork.5",
+  "version": "1.2.0-fork.6",
   "private": true,
   "description": "ArturSenna's fork of ITzAkai/kai (Stremio Kai for Samsung Tizen TVs): Brazilian Portuguese subtitles, smart audio and subtitle track selection, styled ASS subtitles",
   "license": "GPL-3.0",

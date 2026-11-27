@@ -19,6 +19,9 @@ export const EN_EXTRA = {
   'O servidor do PC não conseguiu ler esta legenda.': "The PC server couldn't read this subtitle.",
   'Reinicie a TV (segure o botão de ligar) e abra o app de novo': 'Restart the TV (hold the power button) and open the app again',
   'Carregando legenda...': 'Loading subtitle...',
+  'Deixar a legenda embutida pronta de antemão': 'Keep the built-in subtitles ready in advance',
+  'O PC baixa o arquivo junto com a TV; desligue se o vídeo engasgar': 'The PC downloads the file alongside the TV; turn off if the video stutters',
+  'Esta fonte não está acompanhando o vídeo. Experimente uma mais leve.': "This source isn't keeping up with the video. Try a lighter one.",
 };
 
 export const AR_EXTRA = {
@@ -40,4 +43,7 @@ export const AR_EXTRA = {
   'O servidor do PC não conseguiu ler esta legenda.': 'تعذّر على خادم الكمبيوتر قراءة هذه الترجمة.',
   'Reinicie a TV (segure o botão de ligar) e abra o app de novo': 'أعد تشغيل التلفاز (اضغط مطولًا على زر التشغيل) ثم افتح التطبيق مجددًا',
   'Carregando legenda...': 'جارٍ تحميل الترجمة...',
+  'Deixar a legenda embutida pronta de antemão': 'تجهيز الترجمة المضمّنة مسبقًا',
+  'O PC baixa o arquivo junto com a TV; desligue se o vídeo engasgar': 'ينزّل الكمبيوتر الملف بالتزامن مع التلفاز؛ أوقفها إذا تقطّع الفيديو',
+  'Esta fonte não está acompanhando o vídeo. Experimente uma mais leve.': 'هذا المصدر لا يواكب الفيديو. جرّب مصدرًا أخف.',
 };

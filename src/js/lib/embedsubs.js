@@ -26,6 +26,7 @@ export function Loader(o) {
   let fails = 0;
   let failed = false;
   let stopped = false;
+  let restAfter = false; // rest() came in the middle of a block: let go once that block is in
 
   function blockAt(time) {
     return Math.floor(Math.max(0, time) / BLOCK) + 1;
@@ -57,10 +58,12 @@ export function Loader(o) {
           });
           cues.sort((a, b) => a.start - b.start);
           busy = false;
+          if (restAfter) rest();
           if (!stopped) o.onChange();
         },
         () => {
           busy = false;
+          if (restAfter) return rest(); // the line was busy with the video: not the server's fault
           if (stopped || ++fails < MAX_FAILS) return;
           failed = true;
           release();
@@ -69,9 +72,17 @@ export function Loader(o) {
       );
   }
 
+  // Lets the server go for now; want() starts it again. A block on its way is waited for, so that
+  // cutting it short is not taken for the server failing to read the track.
+  function rest() {
+    restAfter = busy;
+    if (!busy) release();
+  }
+
   return {
     // Call often with the playhead (seconds): fetches what is missing, one block at a time.
     want: (time) => {
+      restAfter = false;
       if (stopped || failed || busy) return;
       const n = blockAt(time);
       let missing = 0;
@@ -85,6 +96,10 @@ export function Loader(o) {
     covers: (time) => !!have[blockAt(time)],
     cues: () => cues,
     failed: () => failed,
+    // The video itself is short of data: the server stops reading the file until want() is called again.
+    rest: rest,
+    // The server is reading the file for this track right now.
+    reading: () => reading,
     stop: () => {
       stopped = true;
       release();

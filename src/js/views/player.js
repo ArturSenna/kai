@@ -24,6 +24,7 @@ import * as trackselect from '../lib/trackselect.js';
 import * as asscanvas from '../lib/asscanvas.js';
 import * as relay from '../lib/relay.js';
 import * as embedsubs from '../lib/embedsubs.js';
+import * as streamwatch from '../lib/streamwatch.js';
 
 const HIDE_MS = 5000;
 const SAVE_MS = 15000;
@@ -99,6 +100,7 @@ function PlayerView(opts) {
   let controlsOn = false;
   let hideTimer = null;
   let ticker = null;
+  let ticks = 0;
   let saveTimer = null;
   let watchTimer = null;
   let statusTimer = null;
@@ -149,6 +151,9 @@ function PlayerView(opts) {
     pendingEmbedded = null;
     preloadIndex = null;
     embeddedAuto = false;
+    watch = streamwatch.Watch();
+    ahead = { n: 0, sum: 0, min: Infinity, max: 0 };
+    toldSlow = false;
     segments = [];
     segmentsLoaded = false;
     if (typeof upNextStop === 'function') upNextStop(false);
@@ -396,7 +401,7 @@ function PlayerView(opts) {
     if (embedded && embeddedAuto && settings.subtitlesAuto && !(choice && choice.lang === 'off')) {
       const own = subCandidates().filter((c) => c.source === 'embedded');
       const hit = trackselect.pickSub(own, { langs: wantedSubs(), preferEmbedded: true, forcedOnly: nativeAudio() });
-      if (hit) preloadIndex = hit.track.index;
+      if (hit && settings.embeddedPreload !== false) preloadIndex = hit.track.index;
     }
     if (preloadIndex !== null && hasPlayed) embLoader(preloadIndex);
     pruneEmbLoaders();
@@ -418,6 +423,7 @@ function PlayerView(opts) {
   });
   videoEl.addEventListener('playing', () => {
     if (!hasPlayed) {
+      watch.disrupted(Date.now()); // a start or a reopen: its first seconds are not judged
       const forVideo = video;
       if (audioAfterReopen !== null) {
         // A stalled video was reopened: the TV went back to the file's default audio track.
@@ -440,7 +446,10 @@ function PlayerView(opts) {
     showControls();
     saveProgress();
   });
-  videoEl.addEventListener('waiting', () => showSpinner(true));
+  videoEl.addEventListener('waiting', () => {
+    showSpinner(true);
+    if (moving()) onStall(watch.waiting(Date.now(), videoEl.currentTime, pcReading()));
+  });
   videoEl.addEventListener('canplay', () => showSpinner(false));
   videoEl.addEventListener('timeupdate', () => {
     const now = Date.now();
@@ -697,6 +706,7 @@ function PlayerView(opts) {
   let gaveUp = false;
   let autoResume = false;
   videoEl.addEventListener('seeked', () => {
+    watch.disrupted(Date.now());
     if (autoResume) {
       autoResume = false;
       const p = videoEl.play();
@@ -769,8 +779,72 @@ function PlayerView(opts) {
     }
   }
 
+  // ---- The stream not keeping up (lib/streamwatch.js) ----
+  let watch = streamwatch.Watch();
+  let ahead = { n: 0, sum: 0, min: Infinity, max: 0 }; // seconds of video the TV holds past the playhead
+  let toldSlow = false;
+
+  // The video should be moving right now.
+  function moving() {
+    return alive && hasPlayed && !!mediaUrl && !videoEl.paused && !videoEl.seeking && seekTarget === null && !videoEl.ended;
+  }
+
+  // The PC is reading this file for a built-in subtitle track.
+  function pcReading() {
+    return Object.keys(embLoaders).some((i) => embLoaders[i].reading());
+  }
+
+  function onStall(what) {
+    if (!what) return;
+    diag('sem-dados:' + what + (pcReading() ? ':pc-lendo' : ''));
+    noteStream();
+    // A torrent coming through the PC is as fast as its peers: reopening changes nothing there.
+    if (what === 'reconnect' && viaServer) what = 'slow';
+    if (what === 'reconnect') reopenAt(videoEl.currentTime);
+    else if (what === 'slow' && !toldSlow) {
+      toldSlow = true;
+      toast(t('Esta fonte não está acompanhando o vídeo. Experimente uma mais leve.'), 7000);
+    }
+  }
+
+  function sampleAhead() {
+    try {
+      const b = videoEl.buffered;
+      const now = videoEl.currentTime;
+      for (let i = 0; i < b.length; i++) {
+        if (b.start(i) <= now + 0.5 && b.end(i) >= now) {
+          const a = b.end(i) - now;
+          ahead.n++;
+          ahead.sum += a;
+          ahead.min = Math.min(ahead.min, a);
+          ahead.max = Math.max(ahead.max, a);
+          return;
+        }
+      }
+    } catch (e) {
+      /* this TV doesn't say */
+    }
+  }
+
+  // What happened to this video's stream, for Settings → Playback diagnostics.
+  function noteStream() {
+    const s = watch.summary(Date.now());
+    const rows = [
+      {
+        label: 'Stalls: ' + s.stalls + (s.stalls ? ' · ' + Math.round(s.stalledMs / 1000) + ' s in all' : ''),
+        sub: s.stalls ? 'first at ' + fmtTime(s.firstAt) + ' · last at ' + fmtTime(s.lastAt) : '',
+      },
+    ];
+    if (s.stalls) rows.push({ label: 'Reconnects: ' + s.reconnects, sub: 'PC reading the file at ' + s.pcBusy + ' of ' + s.stalls + ' stalls' });
+    rows.push({ label: 'TV buffer ahead: ' + (ahead.n ? Math.round(ahead.sum / ahead.n) + ' s (' + Math.round(ahead.min) + '–' + Math.round(ahead.max) + ')' : 'not reported') });
+    const preload = settings.embeddedPreload === false ? 'off' : s.quiet ? 'paused for this video' : preloadIndex !== null ? 'on' : 'no track to load';
+    rows.push({ label: 'Subtitle pre-load: ' + preload });
+    probe.stream(rows);
+  }
+
   let audioAfterReopen = null; // audio track to put back once a reopened video plays again
   function reopenAt(pos) {
+    watch.disrupted(Date.now());
     showSpinner(true);
     toast(t('Reconectando ao vídeo...'));
     pendingStart = Math.max(0, pos - 1) * 1000;
@@ -829,6 +903,7 @@ function PlayerView(opts) {
     showSpinner(true);
     message('');
     log.info('Transcodificando', url);
+    watch.disrupted(Date.now()); // the PC takes a while to start converting: not a stall
     videoEl.src = url;
     videoEl.load();
     videoEl.play();
@@ -956,6 +1031,7 @@ function PlayerView(opts) {
     if (native && native.length > index) {
       for (let i = 0; i < native.length; i++) native[i].enabled = i === index;
       currentAudio = index;
+      watch.disrupted(Date.now()); // the TV may pause to switch
       return;
     }
     const id = mediaId();
@@ -1033,7 +1109,8 @@ function PlayerView(opts) {
   // never left without subtitles.
   function extractedSub(index, auto) {
     const loader = embLoader(index);
-    if (hasPlayed) loader.want(videoEl.currentTime); // before that, the TV's own connection comes first
+    // Before the video plays, and while it is short of data, the TV's own connection comes first.
+    if (hasPlayed && watch.pcMayRead(Date.now(), true)) loader.want(videoEl.currentTime);
     if (auto && currentSub.kind !== 'off' && !loader.covers(videoEl.currentTime)) {
       pendingEmbedded = { index: index };
       return;
@@ -1454,7 +1531,18 @@ function PlayerView(opts) {
           checkSkip();
           if (!nativeOffDone && !(currentSub.kind === 'embedded' && !currentSub.extracted)) nativeSubsOff();
           const now = videoEl.currentTime;
-          if (hasPlayed) Object.keys(embLoaders).forEach((i) => embLoaders[i].want(now));
+          const nowMs = Date.now();
+          onStall(watch.tick(nowMs, now, moving(), pcReading()));
+          // The PC reads the file for subtitles only while the video itself has all it needs.
+          Object.keys(embLoaders).forEach((i) => {
+            const shown = !!currentSub.extracted && currentSub.index === Number(i);
+            if (hasPlayed && watch.pcMayRead(nowMs, shown)) embLoaders[i].want(now);
+            else embLoaders[i].rest();
+          });
+          if (++ticks % 20 === 0 && hasPlayed) {
+            if (moving()) sampleAhead();
+            noteStream();
+          }
           if (pendingEmbedded && embLoaders[pendingEmbedded.index] && embLoaders[pendingEmbedded.index].covers(now)) showExtracted(pendingEmbedded.index, true);
           updateSubLoading();
         }, 250);

@@ -21,6 +21,9 @@ features to Tizen, fully controlled with the Samsung remote.
 >   Windows-1252 `.srt` files keep their accents.
 > - Sources whose only sound is **DTS or TrueHD** (silent on Samsung TVs) are marked and left for
 >   last by Smart Choice.
+> - **A stream that stops keeping up** (the video stalling every few seconds) is reopened where it
+>   was, and the PC stops reading the file for subtitles while the TV is short of data. Settings →
+>   Playback diagnostics shows how often the last video stalled.
 
 > **Unofficial.** Not affiliated with Stremio, Stremio Kai or Samsung. The app hosts no
 > content: it only shows what the add-ons on **your** Stremio account provide.

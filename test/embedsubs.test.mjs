@@ -129,3 +129,45 @@ test('stop() releases the server and silences late answers', async () => {
   r.loader.want(0);
   assert.equal(r.urls().filter((u) => /block/.test(u)).length, 1);
 });
+
+test('rest: the server stops reading at once when idle, and want() starts it again where it left off', async () => {
+  const r = rig();
+  r.loader.want(0);
+  await r.answer('1');
+  assert.equal(r.loader.reading(), true);
+  r.loader.rest();
+  r.loader.rest(); // asked again every tick: one stop only
+  assert.equal(r.loader.reading(), false);
+  assert.deepEqual(r.urls(), ['s1/block1', 's1/stop']);
+  r.loader.want(5);
+  assert.deepEqual(r.urls(), ['s1/block1', 's1/stop', 's2/block2']);
+  assert.deepEqual(r.events, ['change']);
+});
+
+test('rest in the middle of a block waits for it, and never counts as the server failing', async () => {
+  const r = rig();
+  r.loader.want(0);
+  r.loader.rest(); // block 1 is on its way
+  assert.deepEqual(r.urls(), ['s1/block1']);
+  await r.answer('1');
+  assert.deepEqual(r.urls(), ['s1/block1', 's1/stop']);
+  assert.equal(r.loader.covers(3), true);
+  // The same, many times over, with blocks that fail: still not a failed track.
+  for (let i = 0; i < 5; i++) {
+    r.loader.want(0);
+    r.loader.rest();
+    await r.refuse();
+  }
+  assert.equal(r.loader.failed(), false);
+  assert.equal(r.events.indexOf('fail'), -1);
+});
+
+test('rest taken back before the block is in: the server keeps reading', async () => {
+  const r = rig();
+  r.loader.want(0);
+  r.loader.rest();
+  r.loader.want(0); // the video is fine again
+  await r.answer('1');
+  assert.equal(r.loader.reading(), true);
+  assert.deepEqual(r.urls(), ['s1/block1']);
+});

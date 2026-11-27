@@ -5660,7 +5660,10 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     "Quando o arquivo tem mais de uma faixa de áudio": "When the file has more than one audio track",
     "O servidor do PC não conseguiu ler esta legenda.": "The PC server couldn't read this subtitle.",
     "Reinicie a TV (segure o botão de ligar) e abra o app de novo": "Restart the TV (hold the power button) and open the app again",
-    "Carregando legenda...": "Loading subtitle..."
+    "Carregando legenda...": "Loading subtitle...",
+    "Deixar a legenda embutida pronta de antemão": "Keep the built-in subtitles ready in advance",
+    "O PC baixa o arquivo junto com a TV; desligue se o vídeo engasgar": "The PC downloads the file alongside the TV; turn off if the video stutters",
+    "Esta fonte não está acompanhando o vídeo. Experimente uma mais leve.": "This source isn't keeping up with the video. Try a lighter one."
   };
   var AR_EXTRA = {
     "Português (Brasil)": "البرتغالية (البرازيل)",
@@ -5680,7 +5683,10 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     "Quando o arquivo tem mais de uma faixa de áudio": "عندما يحتوي الملف على أكثر من مسار صوتي",
     "O servidor do PC não conseguiu ler esta legenda.": "تعذّر على خادم الكمبيوتر قراءة هذه الترجمة.",
     "Reinicie a TV (segure o botão de ligar) e abra o app de novo": "أعد تشغيل التلفاز (اضغط مطولًا على زر التشغيل) ثم افتح التطبيق مجددًا",
-    "Carregando legenda...": "جارٍ تحميل الترجمة..."
+    "Carregando legenda...": "جارٍ تحميل الترجمة...",
+    "Deixar a legenda embutida pronta de antemão": "تجهيز الترجمة المضمّنة مسبقًا",
+    "O PC baixa o arquivo junto com a TV; desligue se o vídeo engasgar": "ينزّل الكمبيوتر الملف بالتزامن مع التلفاز؛ أوقفها إذا تقطّع الفيديو",
+    "Esta fonte não está acompanhando o vídeo. Experimente uma mais leve.": "هذا المصدر لا يواكب الفيديو. جرّب مصدرًا أخف."
   };
 
   // src/js/lib/i18n.js
@@ -7087,22 +7093,22 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       }, opts));
     });
   }
-  function needsServer(stream) {
-    if (typeof stream.url === "string") {
-      if (stream.url.indexOf("magnet:") === 0) return true;
-      return !!(stream.behaviorHints && stream.behaviorHints.proxyHeaders);
+  function needsServer(stream2) {
+    if (typeof stream2.url === "string") {
+      if (stream2.url.indexOf("magnet:") === 0) return true;
+      return !!(stream2.behaviorHints && stream2.behaviorHints.proxyHeaders);
     }
-    return typeof stream.infoHash === "string";
+    return typeof stream2.infoHash === "string";
   }
-  function isPlayableType(stream) {
-    return typeof stream.url === "string" || typeof stream.infoHash === "string";
+  function isPlayableType(stream2) {
+    return typeof stream2.url === "string" || typeof stream2.infoHash === "string";
   }
-  function toPlayable(stream, seriesInfo) {
+  function toPlayable(stream2, seriesInfo) {
     var base2 = baseUrl();
-    if (typeof stream.url === "string") {
-      if (stream.url.indexOf("magnet:") === 0) {
+    if (typeof stream2.url === "string") {
+      if (stream2.url.indexOf("magnet:") === 0) {
         if (!base2) return Promise.reject(new Error(t("Este link é torrent: configure o servidor do PC")));
-        var mg = parseMagnet(stream.url);
+        var mg = parseMagnet(stream2.url);
         if (!mg) return Promise.reject(new Error(t("Magnet inválido")));
         return createTorrent(base2, mg.infoHash, null, mg.sources, seriesInfo).then(function (u) {
           return {
@@ -7111,21 +7117,21 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           };
         });
       }
-      var ph = stream.behaviorHints && stream.behaviorHints.proxyHeaders;
+      var ph = stream2.behaviorHints && stream2.behaviorHints.proxyHeaders;
       if (ph && base2) {
         return Promise.resolve({
-          url: proxyUrl(base2, stream.url, ph.request, ph.response),
+          url: proxyUrl(base2, stream2.url, ph.request, ph.response),
           viaServer: true
         });
       }
       return Promise.resolve({
-        url: stream.url,
+        url: stream2.url,
         viaServer: false
       });
     }
-    if (typeof stream.infoHash === "string") {
+    if (typeof stream2.infoHash === "string") {
       if (!base2) return Promise.reject(new Error(t("Este link é torrent: configure o servidor do PC")));
-      return createTorrent(base2, stream.infoHash.toLowerCase(), stream.fileIdx, stream.sources || [], seriesInfo).then(function (u) {
+      return createTorrent(base2, stream2.infoHash.toLowerCase(), stream2.fileIdx, stream2.sources || [], seriesInfo).then(function (u) {
         return {
           url: u,
           viaServer: true
@@ -9098,6 +9104,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
 
   // src/js/lib/probe.js
   var lastMedia = null;
+  var lastStream = null;
   function yn(x) {
     return x ? "yes" : "no";
   }
@@ -9164,11 +9171,15 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       return r.label + (r.sub ? " (" + r.sub + ")" : "");
     }).join(" ; "));
   }
+  function stream(rows) {
+    lastStream = rows;
+  }
   function report() {
     return loadWebapis().then(function () {
       return {
         environment: environment(),
-        media: lastMedia
+        media: lastMedia,
+        stream: lastStream
       };
     });
   }
@@ -9242,24 +9253,25 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     var seen = {};
     var _cues = [];
     var busy = false;
-    var reading = false;
+    var _reading = false;
     var last2 = 0;
     var fails = 0;
     var _failed = false;
     var stopped = false;
+    var restAfter = false;
     function blockAt(time) {
       return Math.floor(Math.max(0, time) / BLOCK) + 1;
     }
     function release() {
-      if (!reading) return;
-      reading = false;
+      if (!_reading) return;
+      _reading = false;
       last2 = 0;
       o.getText(o.stopUrl(session2)).catch(function () {});
       session2 = o.newSession();
     }
     function fetchBlock(k) {
       busy = true;
-      reading = true;
+      _reading = true;
       o.getText(o.blockUrl(session2, k)).then(function (text) {
         have[k] = true;
         last2 = k;
@@ -9274,25 +9286,32 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           return a.start - b.start;
         });
         busy = false;
+        if (restAfter) rest();
         if (!stopped) o.onChange();
       }, function () {
         busy = false;
+        if (restAfter) return rest();
         if (stopped || ++fails < MAX_FAILS) return;
         _failed = true;
         release();
         o.onFail();
       });
     }
+    function rest() {
+      restAfter = busy;
+      if (!busy) release();
+    }
     return {
       // Call often with the playhead (seconds): fetches what is missing, one block at a time.
       want: function want(time) {
+        restAfter = false;
         if (stopped || _failed || busy) return;
         var n = blockAt(time);
         var missing2 = 0;
         for (var k = n; k <= n + AHEAD_MAX && !missing2; k++) if (!have[k]) missing2 = k;
         if (!missing2) return release();
-        if (!reading && missing2 > n + AHEAD_MIN) return;
-        if (reading && last2 && missing2 !== last2 + 1) release();
+        if (!_reading && missing2 > n + AHEAD_MIN) return;
+        if (_reading && last2 && missing2 !== last2 + 1) release();
         fetchBlock(missing2);
       },
       // The text for this moment is in (an empty block counts: nobody speaks).
@@ -9305,9 +9324,138 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       failed: function failed() {
         return _failed;
       },
+      // The video itself is short of data: the server stops reading the file until want() is called again.
+      rest: rest,
+      // The server is reading the file for this track right now.
+      reading: function reading() {
+        return _reading;
+      },
       stop: function stop() {
         stopped = true;
         release();
+      }
+    };
+  }
+
+  // src/js/lib/streamwatch.js
+  var SETTLE_MS = 8e3;
+  var FREEZE_MS = 1500;
+  var WINDOW_MS = 9e4;
+  var THRASH = 4;
+  var RECONNECT_GAP_MS = 18e4;
+  var MAX_RECONNECTS = 2;
+  var PC_HOLD_MS = 6e4;
+  var PC_SHOWN_HOLD_MS = 1e4;
+  var PC_QUIET_WINDOW_MS = 6e5;
+  var PC_QUIET_AFTER = 3;
+  function Watch() {
+    var settledAt = -Infinity;
+    var lastPos = -1;
+    var lastMove = 0;
+    var inStall = false;
+    var counted = false;
+    var stallStart = 0;
+    var lastStallEnd = -Infinity;
+    var recent2 = [];
+    var lately = [];
+    var reconnects = 0;
+    var lastReconnect = -Infinity;
+    var told = false;
+    var quiet = false;
+    var sum = {
+      stalls: 0,
+      stalledMs: 0,
+      firstAt: null,
+      lastAt: null,
+      reconnects: 0,
+      pcBusy: 0
+    };
+    function begin(now, pos, pcReading) {
+      if (inStall) return "";
+      inStall = true;
+      counted = now - settledAt >= SETTLE_MS;
+      if (!counted) return "";
+      stallStart = now;
+      sum.stalls++;
+      if (sum.firstAt === null) sum.firstAt = pos;
+      sum.lastAt = pos;
+      if (pcReading) sum.pcBusy++;
+      recent2 = recent2.filter(function (t2) {
+        return now - t2 <= WINDOW_MS;
+      }).concat(now);
+      lately = lately.filter(function (t2) {
+        return now - t2 <= PC_QUIET_WINDOW_MS;
+      }).concat(now);
+      if (lately.length >= PC_QUIET_AFTER) quiet = true;
+      if (recent2.length < THRASH) return "stall";
+      if (reconnects < MAX_RECONNECTS && now - lastReconnect >= RECONNECT_GAP_MS) {
+        reconnects++;
+        sum.reconnects = reconnects;
+        lastReconnect = now;
+        recent2 = [];
+        return "reconnect";
+      }
+      if (!told) {
+        told = true;
+        return "slow";
+      }
+      return "stall";
+    }
+    function end(now) {
+      if (!inStall) return;
+      inStall = false;
+      if (!counted) return;
+      sum.stalledMs += now - stallStart;
+      lastStallEnd = now;
+    }
+    return {
+      // Something that makes the video wait for a good reason: start, seek, reopen, audio switch.
+      disrupted: function disrupted(now) {
+        settledAt = now;
+      },
+      // Call a few times a second. pos: the playhead (s). active: the video should be moving
+      // (started, not paused, not seeking, not over). Returns '', 'stall', 'reconnect' or 'slow'.
+      tick: function tick(now, pos, active, pcReading) {
+        if (!active) {
+          end(now);
+          lastPos = pos;
+          lastMove = now;
+          return "";
+        }
+        if (Math.abs(pos - lastPos) > 0.05) {
+          lastPos = pos;
+          lastMove = now;
+          end(now);
+          return "";
+        }
+        if (!inStall && now - lastMove >= FREEZE_MS) return begin(now, pos, pcReading);
+        return "";
+      },
+      // The video's own "waiting" event, while it should be moving. Same answers as tick().
+      // The playhead as it is now is where it stopped: what it covered since the last tick() is not
+      // taken for the video moving again (the same stall would be counted twice).
+      waiting: function waiting(now, pos, pcReading) {
+        lastPos = pos;
+        lastMove = now;
+        return begin(now, pos, pcReading);
+      },
+      // May the PC read the file now? shown: for the subtitle that is on screen.
+      pcMayRead: function pcMayRead(now, shown) {
+        if (inStall && counted) return false;
+        if (shown) return now - lastStallEnd >= PC_SHOWN_HOLD_MS;
+        return !quiet && now - lastStallEnd >= PC_HOLD_MS;
+      },
+      // For the diagnostics screen. Positions are in seconds of video.
+      summary: function summary(now) {
+        return {
+          stalls: sum.stalls,
+          stalledMs: sum.stalledMs + (inStall && counted ? now - stallStart : 0),
+          firstAt: sum.firstAt,
+          lastAt: sum.lastAt,
+          reconnects: sum.reconnects,
+          pcBusy: sum.pcBusy,
+          quiet: quiet
+        };
       }
     };
   }
@@ -9358,7 +9506,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   function PlayerView(opts) {
     var meta = opts.meta;
     var video = opts.video;
-    var stream = opts.stream;
+    var stream2 = opts.stream;
     var settings2 = settings();
     var videoEl = h("video", {
       preload: "auto"
@@ -9457,6 +9605,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     var controlsOn = false;
     var hideTimer = null;
     var ticker = null;
+    var ticks = 0;
     var saveTimer = null;
     var watchTimer = null;
     var statusTimer = null;
@@ -9519,13 +9668,21 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       pendingEmbedded = null;
       preloadIndex = null;
       embeddedAuto = false;
+      watch = Watch();
+      ahead = {
+        n: 0,
+        sum: 0,
+        min: Infinity,
+        max: 0
+      };
+      toldSlow = false;
       segments = [];
       segmentsLoaded = false;
       if (typeof upNextStop === "function") upNextStop(false);
       upNextCancelled = false;
       nativeOffDone = false;
       hideSkip();
-      toPlayable(stream, seriesInfo()).then(function (res) {
+      toPlayable(stream2, seriesInfo()).then(function (res) {
         if (!alive) return;
         mediaUrl = res.url;
         viaServer = res.viaServer;
@@ -9760,7 +9917,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           preferEmbedded: true,
           forcedOnly: nativeAudio()
         });
-        if (hit) preloadIndex = hit.track.index;
+        if (hit && settings2.embeddedPreload !== false) preloadIndex = hit.track.index;
       }
       if (preloadIndex !== null && hasPlayed) embLoader(preloadIndex);
       pruneEmbLoaders();
@@ -9778,6 +9935,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     });
     videoEl.addEventListener("playing", function () {
       if (!hasPlayed) {
+        watch.disrupted(Date.now());
         var forVideo = video;
         if (audioAfterReopen !== null) {
           var idx = audioAfterReopen;
@@ -9803,7 +9961,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       saveProgress2();
     });
     videoEl.addEventListener("waiting", function () {
-      return showSpinner(true);
+      showSpinner(true);
+      if (moving()) onStall(watch.waiting(Date.now(), videoEl.currentTime, pcReading()));
     });
     videoEl.addEventListener("canplay", function () {
       return showSpinner(false);
@@ -9932,7 +10091,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       log.warn("Erro de vídeo", err && err.code, mediaUrl);
       if (!alive) return;
       if (!hasPlayed && opts.fallbacks && opts.fallbacks.length) {
-        stream = opts.fallbacks.shift();
+        stream2 = opts.fallbacks.shift();
         toast(t("Essa fonte não tocou. Tentando outra..."));
         triedTranscode = false;
         autoDone = {
@@ -10041,6 +10200,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     var gaveUp = false;
     var autoResume = false;
     videoEl.addEventListener("seeked", function () {
+      watch.disrupted(Date.now());
       if (autoResume) {
         autoResume = false;
         var p = videoEl.play();
@@ -10114,8 +10274,70 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         reopenAt(pos);
       }
     }
+    var watch = Watch();
+    var ahead = {
+      n: 0,
+      sum: 0,
+      min: Infinity,
+      max: 0
+    };
+    var toldSlow = false;
+    function moving() {
+      return alive && hasPlayed && !!mediaUrl && !videoEl.paused && !videoEl.seeking && seekTarget === null && !videoEl.ended;
+    }
+    function pcReading() {
+      return Object.keys(embLoaders).some(function (i) {
+        return embLoaders[i].reading();
+      });
+    }
+    function onStall(what) {
+      if (!what) return;
+      diag("sem-dados:" + what + (pcReading() ? ":pc-lendo" : ""));
+      noteStream();
+      if (what === "reconnect" && viaServer) what = "slow";
+      if (what === "reconnect") reopenAt(videoEl.currentTime);else if (what === "slow" && !toldSlow) {
+        toldSlow = true;
+        toast(t("Esta fonte não está acompanhando o vídeo. Experimente uma mais leve."), 7e3);
+      }
+    }
+    function sampleAhead() {
+      try {
+        var b = videoEl.buffered;
+        var now = videoEl.currentTime;
+        for (var i = 0; i < b.length; i++) {
+          if (b.start(i) <= now + 0.5 && b.end(i) >= now) {
+            var a = b.end(i) - now;
+            ahead.n++;
+            ahead.sum += a;
+            ahead.min = Math.min(ahead.min, a);
+            ahead.max = Math.max(ahead.max, a);
+            return;
+          }
+        }
+      } catch (e) {}
+    }
+    function noteStream() {
+      var s = watch.summary(Date.now());
+      var rows = [{
+        label: "Stalls: " + s.stalls + (s.stalls ? " · " + Math.round(s.stalledMs / 1e3) + " s in all" : ""),
+        sub: s.stalls ? "first at " + fmtTime(s.firstAt) + " · last at " + fmtTime(s.lastAt) : ""
+      }];
+      if (s.stalls) rows.push({
+        label: "Reconnects: " + s.reconnects,
+        sub: "PC reading the file at " + s.pcBusy + " of " + s.stalls + " stalls"
+      });
+      rows.push({
+        label: "TV buffer ahead: " + (ahead.n ? Math.round(ahead.sum / ahead.n) + " s (" + Math.round(ahead.min) + "–" + Math.round(ahead.max) + ")" : "not reported")
+      });
+      var preload = settings2.embeddedPreload === false ? "off" : s.quiet ? "paused for this video" : preloadIndex !== null ? "on" : "no track to load";
+      rows.push({
+        label: "Subtitle pre-load: " + preload
+      });
+      stream(rows);
+    }
     var audioAfterReopen = null;
     function reopenAt(pos) {
+      watch.disrupted(Date.now());
       showSpinner(true);
       toast(t("Reconectando ao vídeo..."));
       pendingStart = Math.max(0, pos - 1) * 1e3;
@@ -10184,6 +10406,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       showSpinner(true);
       message("");
       log.info("Transcodificando", url3);
+      watch.disrupted(Date.now());
       videoEl.src = url3;
       videoEl.load();
       videoEl.play();
@@ -10293,6 +10516,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       if (native && native.length > index) {
         for (var i = 0; i < native.length; i++) native[i].enabled = i === index;
         currentAudio = index;
+        watch.disrupted(Date.now());
         return;
       }
       var id = mediaId();
@@ -10377,7 +10601,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     }
     function extractedSub(index, auto) {
       var loader = embLoader(index);
-      if (hasPlayed) loader.want(videoEl.currentTime);
+      if (hasPlayed && watch.pcMayRead(Date.now(), true)) loader.want(videoEl.currentTime);
       if (auto && currentSub.kind !== "off" && !loader.covers(videoEl.currentTime)) {
         pendingEmbedded = {
           index: index
@@ -10740,17 +10964,17 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           label: ((s.name || s.addon || "") + "").replace(/\n/g, " "),
           sub: ((s.title || s.description || "") + "").replace(/\n/g, " · "),
           value: i,
-          checked: s === stream
+          checked: s === stream2
         };
       });
       menu(t("Fontes"), list2, {
         onPick: function onPick(i) {
           var s = opts.streams[i];
-          if (!s || s === stream) return;
+          if (!s || s === stream2) return;
           if (needsServer(s) && !isAvailable()) return toast(t("Essa fonte precisa do servidor do PC."));
           saveProgress2();
           pendingStart = videoEl.currentTime * 1e3;
-          stream = s;
+          stream2 = s;
           triedTranscode = false;
           autoDone = {
             sub: false,
@@ -10764,7 +10988,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       var nv = nextVideo();
       if (!nv) return;
       saveProgress2();
-      var group = stream.behaviorHints && stream.behaviorHints.bingeGroup;
+      var group = stream2.behaviorHints && stream2.behaviorHints.bingeGroup;
       showSpinner(true);
       message(t("Procurando o próximo episódio..."));
       fetchStreams(meta.type, nv.id).then(function (list2) {
@@ -10774,7 +10998,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         }) : null;
         if (match && (!needsServer(match) || isAvailable())) {
           video = nv;
-          stream = match;
+          stream2 = match;
           opts.streams = list2;
           pendingStart = 0;
           triedTranscode = false;
@@ -10886,9 +11110,16 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
             checkSkip();
             if (!nativeOffDone && !(currentSub.kind === "embedded" && !currentSub.extracted)) nativeSubsOff();
             var now = videoEl.currentTime;
-            if (hasPlayed) Object.keys(embLoaders).forEach(function (i) {
-              return embLoaders[i].want(now);
+            var nowMs = Date.now();
+            onStall(watch.tick(nowMs, now, moving(), pcReading()));
+            Object.keys(embLoaders).forEach(function (i) {
+              var shown = !!currentSub.extracted && currentSub.index === Number(i);
+              if (hasPlayed && watch.pcMayRead(nowMs, shown)) embLoaders[i].want(now);else embLoaders[i].rest();
             });
+            if (++ticks % 20 === 0 && hasPlayed) {
+              if (moving()) sampleAhead();
+              noteStream();
+            }
             if (pendingEmbedded && embLoaders[pendingEmbedded.index] && embLoaders[pendingEmbedded.index].covers(now)) showExtracted(pendingEmbedded.index, true);
             updateSubLoading();
           }, 250);
@@ -11768,14 +11999,14 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         text: (s.title || s.description || "").trim()
       }), h("div.s-tags", null, tags)])]);
     }
-    function play(video, stream, all2, fallbacks) {
+    function play(video, stream2, all2, fallbacks) {
       var li = libraryItem(meta.id);
       var resumeMs = li && li.state && li.state.video_id === video.id ? li.state.timeOffset : 0;
       var start4 = function start4(ms) {
         return openPlayer({
           meta: meta,
           video: video,
-          stream: stream,
+          stream: stream2,
           streams: all2,
           startTime: ms,
           isSeries: isSeries(),
@@ -12748,7 +12979,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   var REPO = "ArturSenna/kai";
   var REPO_URL = "https://github.com/" + REPO;
   var VERSION = "1.2.0";
-  var BUILD = "2026-11-26T03:41:21.506Z";
+  var BUILD = "2026-11-27T17:40:38.006Z";
   var RAW = "https://raw.githubusercontent.com/" + REPO + "/main/";
   var PURGE = "https://purge.jsdelivr.net/gh/" + REPO + "/";
   var FILES = ["package.json", "dist/index.html", "dist/loader.js", "dist/app.js", "dist/app.css", "dist/remote-service.js", "dist/build.json", "dist/jassub/jassub-worker.js"];
@@ -13504,6 +13735,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       };
       flag(t("Sem legenda quando o áudio já é no seu idioma"), t("Só entram as legendas forçadas (falas em outro idioma), quando o arquivo tem"), "subsSkipNative", s.subsSkipNative !== false);
       flag(t("Preferir a legenda embutida no arquivo"), t("Sincronia melhor que a dos addons; precisa do servidor do PC"), "preferEmbedded", s.preferEmbedded === true);
+      flag(t("Deixar a legenda embutida pronta de antemão"), t("O PC baixa o arquivo junto com a TV; desligue se o vídeo engasgar"), "embeddedPreload", s.embeddedPreload !== false);
       flag(t("Legendas ASS com o estilo original"), t("Cores, posições e fontes do arquivo; desligue se a TV engasgar"), "assStyled", s.assStyled !== false);
       var audName = (AUDIO_LANGS.find(function (x) {
         return JSON.stringify(x.value) === JSON.stringify(s.audioLangs);
@@ -13694,7 +13926,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       })]), logInput]));
       body.appendChild(row(t("Diagnóstico de reprodução"), t("O que esta TV expõe (faixas de áudio e legenda). Toque um vídeo antes de abrir."), "", function () {
         return report().then(function (r) {
-          return menu(t("Diagnóstico de reprodução"), r.environment.concat(r.media || [{
+          return menu(t("Diagnóstico de reprodução"),
+          // How the last stream held up comes first: it is what gets read out when a video stutters.
+          (r.stream || []).concat(r.environment, r.media || [{
             label: t("Nenhum vídeo tocado nesta sessão.")
           }]), {
             center: true
