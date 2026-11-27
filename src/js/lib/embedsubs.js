@@ -94,6 +94,15 @@ export function Loader(o) {
     },
     // The text for this moment is in (an empty block counts: nobody speaks).
     covers: (time) => !!have[blockAt(time)],
+    // The unbroken stretch of text that is in around this moment: { from, to } in seconds, or null.
+    covered: (time) => {
+      let a = blockAt(time);
+      if (!have[a]) return null;
+      let b = a;
+      while (have[a - 1]) a--;
+      while (have[b + 1]) b++;
+      return { from: (a - 1) * BLOCK, to: b * BLOCK };
+    },
     cues: () => cues,
     failed: () => failed,
     // The video itself is short of data: the server stops reading the file until want() is called again.

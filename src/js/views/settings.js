@@ -422,6 +422,7 @@ export function SettingsView() {
     flag(t('Sem legenda quando o áudio já é no seu idioma'), t('Só entram as legendas forçadas (falas em outro idioma), quando o arquivo tem'), 'subsSkipNative', s.subsSkipNative !== false);
     flag(t('Preferir a legenda embutida no arquivo'), t('Sincronia melhor que a dos addons; precisa do servidor do PC'), 'preferEmbedded', s.preferEmbedded === true);
     flag(t('Deixar a legenda embutida pronta de antemão'), t('O PC baixa o arquivo junto com a TV; desligue se o vídeo engasgar'), 'embeddedPreload', s.embeddedPreload !== false);
+    flag(t('Testar a sincronia das legendas'), t('Marca as legendas de addons que acompanham o arquivo; o PC lê alguns minutos dele'), 'subSyncCheck', s.subSyncCheck !== false);
     flag(t('Legendas ASS com o estilo original'), t('Cores, posições e fontes do arquivo; desligue se a TV engasgar'), 'assStyled', s.assStyled !== false);
     const audName = (AUDIO_LANGS.find((x) => JSON.stringify(x.value) === JSON.stringify(s.audioLangs)) || AUDIO_LANGS[0]).label;
     body.appendChild(

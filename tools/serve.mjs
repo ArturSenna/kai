@@ -12,6 +12,14 @@ const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; ch
 // TEST_VIDEO=<url> swaps the first test source, e.g. for an MKV with several audio and subtitle tracks.
 const TEST_VIDEO = process.env.TEST_VIDEO || 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_5MB.mp4';
 const TEST_LONG = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'; // ~10 min (HLS)
+// TEST_SUBS=<folder> lists every .srt in it as an add-on subtitle (language from the name:
+// "anything.pob.srt" or "anything.pob.123.srt"), e.g. real ones to try the sync test against.
+const TEST_SUBS = process.env.TEST_SUBS ? path.resolve(process.env.TEST_SUBS) : '';
+const testSubs = () =>
+  (TEST_SUBS ? fs.readdirSync(TEST_SUBS) : [])
+    .filter((f) => f.endsWith('.srt'))
+    .sort()
+    .map((f) => ({ file: f, lang: (f.match(/\.([a-z]{2,3}(?:-[A-Za-z]{2})?)(?:\.[^.]+)?\.srt$/) || [])[1] || 'und' }));
 function testAddon(p, res) {
   const json = (o) => {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
@@ -32,13 +40,23 @@ function testAddon(p, res) {
     // Generic Portuguese first, so picking the Brazilian one proves the ranking; the Brazilian
     // file is Windows-1252 and labelled "pt-BR" (not OpenSubtitles' "pob"); plus an ASS file.
     const base = 'http://localhost:' + port + '/test-addon/';
+    // The folder's subtitles first, in name order: the first one in a wanted language is the one
+    // the app starts with.
     return json({
-      subtitles: [
-        { id: 'teste-pt', lang: 'por', url: base + 'teste.srt' },
-        { id: 'teste-ptbr', lang: 'pt-BR', url: base + 'teste-ptbr.srt' },
-        { id: 'teste-ass', lang: 'eng', url: base + 'teste.ass' },
-      ],
+      subtitles: testSubs()
+        .map((x) => ({ id: 'subs-' + x.file, lang: x.lang, url: base + 'subs/' + encodeURIComponent(x.file) }))
+        .concat([
+          { id: 'teste-pt', lang: 'por', url: base + 'teste.srt' },
+          { id: 'teste-ptbr', lang: 'pt-BR', url: base + 'teste-ptbr.srt' },
+          { id: 'teste-ass', lang: 'eng', url: base + 'teste.ass' },
+        ]),
     });
+  }
+  if (p.startsWith('/test-addon/subs/')) {
+    const hit = testSubs().find((x) => x.file === p.slice('/test-addon/subs/'.length));
+    if (!hit) return json({});
+    res.writeHead(200, { 'Content-Type': 'application/octet-stream', 'Access-Control-Allow-Origin': '*' });
+    return res.end(fs.readFileSync(path.join(TEST_SUBS, hit.file)));
   }
   if (p === '/test-addon/teste-ptbr.srt') {
     res.writeHead(200, { 'Content-Type': 'application/octet-stream', 'Access-Control-Allow-Origin': '*' });

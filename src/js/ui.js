@@ -25,7 +25,7 @@ export function menu(title, options, opts) {
         'div.opt',
         {
           focusable: true,
-          cls: opt.checked ? 'checked' : '',
+          cls: (opt.checked ? 'checked ' : '') + (opt.cls || ''),
           'data-autofocus': opt.checked ? '' : null,
           onSelect: () => {
             close();

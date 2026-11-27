@@ -875,11 +875,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       };
       var getterFor = function getterFor(TYPE) {
         return function (it) {
-          var state3;
-          if (!isObject(it) || (state3 = get2(it)).type !== TYPE) {
+          var state4;
+          if (!isObject(it) || (state4 = get2(it)).type !== TYPE) {
             throw new TypeError2("Incompatible receiver, " + TYPE + " required");
           }
-          return state3;
+          return state4;
         };
       };
       if (NATIVE_WEAK_MAP || shared.state) {
@@ -946,7 +946,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       var defineProperty = Object.defineProperty;
       var stringSlice = uncurryThis("".slice);
       var replace = uncurryThis("".replace);
-      var join = uncurryThis([].join);
+      var join2 = uncurryThis([].join);
       var CONFIGURABLE_LENGTH = DESCRIPTORS && !fails(function () {
         return defineProperty(function () {}, "length", {
           value: 8
@@ -977,9 +977,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
             });
           } else if (value.prototype) value.prototype = void 0;
         } catch (error) {}
-        var state3 = enforceInternalState(value);
-        if (!hasOwn(state3, "source")) {
-          state3.source = join(TEMPLATE, typeof name == "string" ? name : "");
+        var state4 = enforceInternalState(value);
+        if (!hasOwn(state4, "source")) {
+          state4.source = join2(TEMPLATE, typeof name == "string" ? name : "");
         }
         return value;
       };
@@ -2047,13 +2047,13 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           index: 0
         });
       }, function next() {
-        var state3 = getInternalState(this);
-        var string = state3.string;
-        var index = state3.index;
+        var state4 = getInternalState(this);
+        var string = state4.string;
+        var index = state4.index;
         var point;
         if (index >= string.length) return createIterResultObject(void 0, true);
         point = charAt(string, index);
-        state3.index += point.length;
+        state4.index += point.length;
         return createIterResultObject(point, false);
       });
     }
@@ -3686,13 +3686,13 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
             }
             return ascii.substring(0, ascii.length - 1);
           };
-          _this.renderTo2dContext = function (context, cellSize) {
+          _this.renderTo2dContext = function (context2, cellSize) {
             cellSize = cellSize || 2;
             var length = _this.getModuleCount();
             for (var row = 0; row < length; row++) {
               for (var col = 0; col < length; col++) {
-                context.fillStyle = _this.isDark(row, col) ? "black" : "white";
-                context.fillRect(row * cellSize, col * cellSize, cellSize, cellSize);
+                context2.fillStyle = _this.isDark(row, col) ? "black" : "white";
+                context2.fillRect(row * cellSize, col * cellSize, cellSize, cellSize);
               }
             }
           };
@@ -4470,14 +4470,14 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
               } else if (c.match(/^\s$/)) {
                 continue;
               }
-              _buffer = _buffer << 6 | decode2(c.charCodeAt(0));
+              _buffer = _buffer << 6 | decode3(c.charCodeAt(0));
               _buflen += 6;
             }
             var n = _buffer >>> _buflen - 8 & 255;
             _buflen -= 8;
             return n;
           };
-          var decode2 = function decode2(c) {
+          var decode3 = function decode3(c) {
             if (65 <= c && c <= 90) {
               return c - 65;
             } else if (97 <= c && c <= 122) {
@@ -4711,7 +4711,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   function redact(text) {
     return text.replace(/((?:realdebrid|alldebrid|premiumize|debridlink|easydebrid|offcloud|torbox|putio|apikey|api_key|token|authKey)(?:=|%3D|:|\/))[A-Za-z0-9._-]{8,}/gi, "$1***");
   }
-  function send(level, args) {
+  function send(level2, args) {
     var raw = Array.prototype.map.call(args, function (a) {
       if (a instanceof Error) return a.message + (a.stack ? "\n" + a.stack : "");
       if (_typeof(a) === "object") {
@@ -4725,12 +4725,12 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     }).join(" ");
     var text = redact(raw);
     try {
-      (console[level] || console.log).call(console, "[kai] " + text);
+      (console[level2] || console.log).call(console, "[kai] " + text);
     } catch (e) {}
     if (!remoteUrl) return;
     buffer.push({
       t: Date.now(),
-      level: level,
+      level: level2,
       text: text
     });
     if (buffer.length > 200) buffer.shift();
@@ -5663,7 +5663,15 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     "Carregando legenda...": "Loading subtitle...",
     "Deixar a legenda embutida pronta de antemão": "Keep the built-in subtitles ready in advance",
     "O PC baixa o arquivo junto com a TV; desligue se o vídeo engasgar": "The PC downloads the file alongside the TV; turn off if the video stutters",
-    "Esta fonte não está acompanhando o vídeo. Experimente uma mais leve.": "This source isn't keeping up with the video. Try a lighter one."
+    "Esta fonte não está acompanhando o vídeo. Experimente uma mais leve.": "This source isn't keeping up with the video. Try a lighter one.",
+    "Testar a sincronia das legendas": "Test subtitle timing",
+    "Marca as legendas de addons que acompanham o arquivo; o PC lê alguns minutos dele": "Marks the add-on subtitles that are in sync with the file; the PC reads a few minutes of it",
+    "Acompanha este arquivo": "In sync with this file",
+    "Acompanha este arquivo com ajuste de {n}s": "In sync with this file once shifted {n}s",
+    "Fora de sincronia com este arquivo": "Out of sync with this file",
+    "Testando a sincronia...": "Testing the timing...",
+    "Legenda ajustada em {n}s para acompanhar este arquivo.": "Subtitle shifted {n}s to match this file.",
+    "Legenda trocada por uma que acompanha este arquivo.": "Subtitle replaced by one that is in sync with this file."
   };
   var AR_EXTRA = {
     "Português (Brasil)": "البرتغالية (البرازيل)",
@@ -5686,7 +5694,15 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     "Carregando legenda...": "جارٍ تحميل الترجمة...",
     "Deixar a legenda embutida pronta de antemão": "تجهيز الترجمة المضمّنة مسبقًا",
     "O PC baixa o arquivo junto com a TV; desligue se o vídeo engasgar": "ينزّل الكمبيوتر الملف بالتزامن مع التلفاز؛ أوقفها إذا تقطّع الفيديو",
-    "Esta fonte não está acompanhando o vídeo. Experimente uma mais leve.": "هذا المصدر لا يواكب الفيديو. جرّب مصدرًا أخف."
+    "Esta fonte não está acompanhando o vídeo. Experimente uma mais leve.": "هذا المصدر لا يواكب الفيديو. جرّب مصدرًا أخف.",
+    "Testar a sincronia das legendas": "اختبار توقيت الترجمات",
+    "Marca as legendas de addons que acompanham o arquivo; o PC lê alguns minutos dele": "يميّز ترجمات الإضافات المتزامنة مع الملف؛ يقرأ الكمبيوتر بضع دقائق منه",
+    "Acompanha este arquivo": "متزامنة مع هذا الملف",
+    "Acompanha este arquivo com ajuste de {n}s": "متزامنة مع هذا الملف بعد إزاحة {n} ث",
+    "Fora de sincronia com este arquivo": "غير متزامنة مع هذا الملف",
+    "Testando a sincronia...": "جارٍ اختبار التوقيت...",
+    "Legenda ajustada em {n}s para acompanhar este arquivo.": "أُزيحت الترجمة {n} ث لتتوافق مع هذا الملف.",
+    "Legenda trocada por uma que acompanha este arquivo.": "استُبدلت الترجمة بأخرى متزامنة مع هذا الملف."
   };
 
   // src/js/lib/i18n.js
@@ -7554,7 +7570,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     options.forEach(function (opt) {
       list2.appendChild(h("div.opt", {
         focusable: true,
-        cls: opt.checked ? "checked" : "",
+        cls: (opt.checked ? "checked " : "") + (opt.cls || ""),
         "data-autofocus": opt.checked ? "" : null,
         onSelect: function onSelect() {
           close();
@@ -8809,11 +8825,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     el.dispatchEvent(ev);
     if (submit) fireKey(ENTER);
   }
-  function nowPlaying(state3) {
+  function nowPlaying(state4) {
     var x = new XMLHttpRequest();
     x.open("POST", BASE + "/api/state");
     x.onerror = function () {};
-    x.send(JSON.stringify(state3 || null));
+    x.send(JSON.stringify(state4 || null));
   }
   function browse(data) {
     var x = new XMLHttpRequest();
@@ -9154,10 +9170,10 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     }];
     for (var i = 0; i < tracks2.length && i < 12; i++) {
       var tr = tracks2[i];
-      var state3 = name === "audioTracks" ? tr.enabled ? "on" : "off" : tr.mode + (tr.cues ? " · " + tr.cues.length + " cues" : "");
+      var state4 = name === "audioTracks" ? tr.enabled ? "on" : "off" : tr.mode + (tr.cues ? " · " + tr.cues.length + " cues" : "");
       out.push({
         label: "#" + i + " " + ([tr.language, tr.label].filter(Boolean).join(" · ") || "(no language or title)"),
-        sub: [tr.kind, state3].filter(Boolean).join(" · ")
+        sub: [tr.kind, state4].filter(Boolean).join(" · ")
       });
     }
     return out;
@@ -9318,6 +9334,18 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       covers: function covers(time) {
         return !!have[blockAt(time)];
       },
+      // The unbroken stretch of text that is in around this moment: { from, to } in seconds, or null.
+      covered: function covered(time) {
+        var a = blockAt(time);
+        if (!have[a]) return null;
+        var b = a;
+        while (have[a - 1]) a--;
+        while (have[b + 1]) b++;
+        return {
+          from: (a - 1) * BLOCK,
+          to: b * BLOCK
+        };
+      },
       cues: function cues() {
         return _cues;
       },
@@ -9458,6 +9486,735 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         };
       }
     };
+  }
+
+  // src/js/lib/subsync.js
+  var STEP = 0.1;
+  var FRAME = 0.02;
+  var MAX_SHIFT = 60;
+  var PER = Math.round(STEP / FRAME);
+  var SMOOTH = Math.round(10 / STEP);
+  var NEAR = Math.round(2 / STEP);
+  var VOICE_RATE = 8e3;
+  function timeline(cues, from, to) {
+    var n = Math.max(0, Math.round((to - from) / STEP));
+    var out = new Float32Array(n);
+    for (var c = 0; c < cues.length; c++) {
+      var s = cues[c].start - from;
+      var e = cues[c].end - from;
+      if (!(e > s) || e <= 0 || s >= n * STEP) continue;
+      var a = Math.max(0, Math.floor(s / STEP));
+      var b = Math.min(n - 1, Math.floor(e / STEP));
+      for (var i = a; i <= b; i++) {
+        var part = Math.min(e, (i + 1) * STEP) - Math.max(s, i * STEP);
+        if (part > 0) out[i] = Math.min(1, out[i] + part / STEP);
+      }
+    }
+    return out;
+  }
+  function cuesWithin(cues, from, to) {
+    var n = 0;
+    for (var c = 0; c < cues.length; c++) if (cues[c].start >= from && cues[c].start < to) n++;
+    return n;
+  }
+  function energies(left, right, rate) {
+    var q = Math.max(1, Math.round(rate / VOICE_RATE));
+    var frame = Math.max(1, Math.round(FRAME * rate / q));
+    var frames = Math.floor(left.length / q / frame);
+    var mid = new Float32Array(frames);
+    var side = new Float32Array(frames);
+    var pm = 0;
+    var ps = 0;
+    var at = 0;
+    for (var f = 0; f < frames; f++) {
+      var em = 0;
+      var es = 0;
+      for (var k = 0; k < frame; k++) {
+        var l = 0;
+        var r = 0;
+        for (var j = 0; j < q; j++, at++) {
+          l += left[at];
+          r += right ? right[at] : left[at];
+        }
+        var m = (l + r) / (2 * q);
+        var s = (l - r) / (2 * q);
+        var hm = m - 0.95 * pm;
+        var hs = s - 0.95 * ps;
+        pm = m;
+        ps = s;
+        em += hm * hm;
+        es += hs * hs;
+      }
+      mid[f] = em / frame;
+      side[f] = es / frame;
+    }
+    return {
+      mid: mid,
+      side: side
+    };
+  }
+  function dB(x) {
+    return 10 * Math.log(x + 1e-9) * Math.LOG10E;
+  }
+  function standard(a) {
+    var s = 0;
+    var s2 = 0;
+    for (var i = 0; i < a.length; i++) {
+      s += a[i];
+      s2 += a[i] * a[i];
+    }
+    var mean = a.length ? s / a.length : 0;
+    var sd = Math.sqrt(Math.max(0, (a.length ? s2 / a.length : 0) - mean * mean));
+    var out = new Float32Array(a.length);
+    if (sd > 1e-6) for (var _i = 0; _i < a.length; _i++) out[_i] = (a[_i] - mean) / sd;
+    return out;
+  }
+  function speech(mid, side) {
+    var frames = mid.length;
+    var n = Math.floor(frames / PER);
+    var loud = new Float32Array(frames);
+    for (var f = 0; f < frames; f++) loud[f] = dB(mid[f]);
+    var wobble = new Float32Array(n);
+    var centre = new Float32Array(n);
+    for (var b = 0; b < n; b++) {
+      var em = 0;
+      var es = 0;
+      for (var k = 0; k < PER; k++) {
+        em += mid[b * PER + k];
+        es += side[b * PER + k];
+      }
+      centre[b] = Math.min(30, dB(em / PER) - dB(es / PER));
+      var a = Math.max(0, b * PER - 10);
+      var z = Math.min(frames, b * PER + PER + 10);
+      var s = 0;
+      var s2 = 0;
+      for (var _f = a; _f < z; _f++) {
+        s += loud[_f];
+        s2 += loud[_f] * loud[_f];
+      }
+      wobble[b] = Math.sqrt(Math.max(0, s2 / (z - a) - s / (z - a) * (s / (z - a))));
+    }
+    var w = standard(wobble);
+    var c = standard(centre);
+    for (var _b = 0; _b < n; _b++) w[_b] += c[_b];
+    return w;
+  }
+  function level(a) {
+    var out = new Float32Array(a.length);
+    var pre = new Float64Array(a.length + 1);
+    for (var i = 0; i < a.length; i++) pre[i + 1] = pre[i] + a[i];
+    for (var _i2 = 0; _i2 < a.length; _i2++) {
+      var lo = Math.max(0, _i2 - SMOOTH);
+      var hi = Math.min(a.length, _i2 + SMOOTH + 1);
+      out[_i2] = a[_i2] - (pre[hi] - pre[lo]) / (hi - lo);
+    }
+    return out;
+  }
+  function Match(ref, from, cues, maxShift) {
+    var L = Math.round((maxShift === void 0 ? MAX_SHIFT : maxShift) / STEP);
+    var n = ref.length;
+    var x = level(ref);
+    var pad = L + SMOOTH;
+    var y = level(timeline(cues, from - pad * STEP, from + (n + pad) * STEP));
+    var sx = 0;
+    var sxx = 0;
+    for (var i = 0; i < n; i++) {
+      sx += x[i];
+      sxx += x[i] * x[i];
+    }
+    var vx = n ? sxx / n - sx / n * (sx / n) : 0;
+    var py = new Float64Array(y.length + 1);
+    var pyy = new Float64Array(y.length + 1);
+    for (var _i3 = 0; _i3 < y.length; _i3++) {
+      py[_i3 + 1] = py[_i3] + y[_i3];
+      pyy[_i3 + 1] = pyy[_i3] + y[_i3] * y[_i3];
+    }
+    var fit = new Float32Array(2 * L + 1);
+    var next = -L;
+    function one(lag) {
+      var o = pad - lag;
+      var sxy = 0;
+      for (var _i4 = 0; _i4 < n; _i4++) sxy += x[_i4] * y[o + _i4];
+      var sy = py[o + n] - py[o];
+      var syy = pyy[o + n] - pyy[o];
+      var vy = syy / n - sy / n * (sy / n);
+      if (!(vx > 1e-9) || !(vy > 1e-9)) return 0;
+      return (sxy / n - sx / n * (sy / n)) / Math.sqrt(vx * vy);
+    }
+    return {
+      step: function step(count) {
+        for (var k = 0; k < count && next <= L; k++, next++) fit[next + L] = n ? one(next) : 0;
+        return next > L;
+      },
+      result: function result() {
+        var best = 0;
+        for (var _i5 = 1; _i5 < fit.length; _i5++) if (fit[_i5] > fit[best]) best = _i5;
+        var s = 0;
+        var s2 = 0;
+        var m = 0;
+        for (var _i6 = 0; _i6 < fit.length; _i6++) {
+          if (Math.abs(_i6 - best) <= NEAR) continue;
+          s += fit[_i6];
+          s2 += fit[_i6] * fit[_i6];
+          m++;
+        }
+        var mean = m ? s / m : 0;
+        var sd = Math.sqrt(Math.max(1e-12, (m ? s2 / m : 0) - mean * mean));
+        var fine = 0;
+        if (best > 0 && best < fit.length - 1) {
+          var a = fit[best - 1];
+          var b = fit[best];
+          var c = fit[best + 1];
+          var d = a - 2 * b + c;
+          if (d < 0) fine = Math.max(-0.5, Math.min(0.5, 0.5 * (a - c) / d));
+        }
+        var shift = (best - L + fine) * STEP;
+        return {
+          shift: Math.round(shift * 20) / 20,
+          r: fit[best],
+          z: (fit[best] - mean) / sd,
+          edge: best === 0 || best === fit.length - 1,
+          lines: cuesWithin(cues, from - shift, from + n * STEP - shift)
+        };
+      }
+    };
+  }
+  var RULES = {
+    track: {
+      sure: 6.5,
+      no: 5,
+      fit: 0.3,
+      inTime: 0.6
+    },
+    sound: {
+      sure: 6.2,
+      no: 4.5,
+      fit: 0.2,
+      inTime: 0.9
+    }
+  };
+  var MIN_LINES = 10;
+  function verdict(res, via) {
+    var rule = RULES[via];
+    if (res.lines < MIN_LINES) return {
+      state: "unsure",
+      shift: 0
+    };
+    if (res.z >= rule.sure && res.r >= rule.fit && !res.edge) {
+      return Math.abs(res.shift) <= rule.inTime ? {
+        state: "ok",
+        shift: 0
+      } : {
+        state: "shift",
+        shift: res.shift
+      };
+    }
+    return {
+      state: res.z < rule.no || res.edge ? "bad" : "unsure",
+      shift: 0
+    };
+  }
+
+  // src/js/lib/synccheck.js
+  var TRACK_SPAN = 180;
+  var TRACK_LINES = 12;
+  var TRACK_SPAN_MAX = 600;
+  var TRACK_LINES_MIN = 10;
+  var TRACK_GIVE_UP = 1800;
+  var SOUND_SPAN = 360;
+  var SOUND_ROUNDS = 2;
+  var MAX_CANDIDATES = 8;
+  var BUDGET_MS = 6;
+  function Checker(o) {
+    var clock = o.clock || Date.now;
+    var known = o.known || {};
+    var phase = "idle";
+    var via = "";
+    var started2 = false;
+    var at = 0;
+    var ref = null;
+    var refFrom = 0;
+    var refTo = 0;
+    var trackWant = 0;
+    var sampler = null;
+    var sound = null;
+    var rounds = 0;
+    var settled = false;
+    var heardOut = false;
+    var why = "";
+    var raw = {};
+    var out = {};
+    var job = null;
+    function pending3() {
+      return o.candidates().slice(0, MAX_CANDIDATES).filter(function (c) {
+        return !raw[c.key] && !known[c.key];
+      });
+    }
+    function answerFor(key2) {
+      var x = raw[key2];
+      if (!x || x.error) return {
+        state: "unsure",
+        shift: 0,
+        via: via
+      };
+      var v = verdict(x.res, via);
+      v.via = via;
+      return v;
+    }
+    function anyFits() {
+      return Object.keys(raw).some(function (k) {
+        var s = answerFor(k).state;
+        return s === "ok" || s === "shift";
+      });
+    }
+    function publish() {
+      var fits = anyFits();
+      Object.keys(raw).forEach(function (key2) {
+        var v = answerFor(key2);
+        if (via === "sound" && v.state === "bad" && !(heardOut && fits)) v.state = "unsure";
+        var last2 = out[key2];
+        if (last2 && last2.state === v.state && last2.shift === v.shift) return;
+        out[key2] = v;
+        o.onResult(key2, v);
+      });
+    }
+    function useSound(s) {
+      if (sound && Math.abs(s.from - sound.to) < 0.05) {
+        var mid = new Float32Array(sound.mid.length + s.mid.length);
+        var side = new Float32Array(sound.side.length + s.side.length);
+        mid.set(sound.mid, 0);
+        mid.set(s.mid, sound.mid.length);
+        side.set(sound.side, 0);
+        side.set(s.side, sound.side.length);
+        sound = {
+          from: sound.from,
+          to: s.to,
+          mid: mid,
+          side: side
+        };
+      } else sound = s;
+      rounds++;
+      sampler = null;
+      ref = speech(sound.mid, sound.side);
+      refFrom = sound.from;
+      refTo = sound.to;
+      raw = {};
+      job = null;
+      settled = false;
+      heardOut = false;
+      phase = "score";
+    }
+    function soundFailed(reason) {
+      sampler = null;
+      why = reason === "decode" ? "this device can't decode the sound" : "the PC server didn't hand out the sound";
+      if (!rounds) {
+        phase = "off";
+        return;
+      }
+      phase = "score";
+      settled = heardOut = true;
+      publish();
+    }
+    function widest(tr, now) {
+      var a = tr.covered(at);
+      var b = tr.covered(now);
+      if (!a) return b;
+      if (!b) return a;
+      return b.to - b.from > a.to - a.from ? b : a;
+    }
+    function reference(allowed, now) {
+      if (via !== "sound") {
+        var tr = o.track();
+        if (tr && !tr.failed()) {
+          via = "track";
+          var cov = widest(tr, now);
+          trackWant = cov ? Math.max(at, cov.to - 60) : at;
+          if (!cov) return;
+          var to = cov.to;
+          var from = Math.max(cov.from, to - TRACK_SPAN_MAX);
+          var lines = cuesWithin(tr.cues(), from, to);
+          if (to - from >= TRACK_SPAN && lines >= TRACK_LINES || to - from >= TRACK_SPAN_MAX - 1 && lines >= TRACK_LINES_MIN) {
+            ref = timeline(tr.cues(), from, to);
+            refFrom = from;
+            refTo = to;
+            phase = "score";
+            return;
+          }
+          if (to - cov.from < TRACK_GIVE_UP) return;
+        }
+        via = "sound";
+      }
+      if (!sampler) {
+        sampler = o.sound(sound ? sound.to : at, SOUND_SPAN, useSound, soundFailed);
+        if (!sampler) {
+          why = "this device can't decode sound";
+          phase = rounds ? "score" : "off";
+          if (rounds) {
+            settled = heardOut = true;
+            publish();
+          }
+          return;
+        }
+      }
+      if (allowed) sampler.go();else sampler.rest();
+    }
+    function score(list2) {
+      if (!job) {
+        var c = list2[0];
+        if (!c) return settle();
+        var mine = job = {
+          key: c.key,
+          match: null
+        };
+        c.cues().then(function (cues) {
+          if (job === mine) mine.match = Match(ref, refFrom, cues);
+        }, function () {
+          if (job !== mine) return;
+          raw[mine.key] = {
+            error: true
+          };
+          job = null;
+        });
+        return;
+      }
+      if (!job.match) return;
+      var t0 = clock();
+      var done = false;
+      while (!done && clock() - t0 < BUDGET_MS) done = job.match.step(25);
+      if (!done) return;
+      raw[job.key] = {
+        res: job.match.result()
+      };
+      job = null;
+      publish();
+    }
+    function settle() {
+      if (settled) return;
+      var scored = Object.keys(raw).some(function (k) {
+        return !raw[k].error;
+      });
+      if (via === "sound" && scored && !anyFits() && rounds < SOUND_ROUNDS) {
+        phase = "ref";
+        return;
+      }
+      settled = heardOut = true;
+      publish();
+    }
+    return {
+      // The video has been playing for a moment, at `time` seconds: from here on tick() may work.
+      start: function start(time) {
+        if (started2) return;
+        started2 = true;
+        at = Math.floor(Math.max(0, time) / 10) * 10;
+        trackWant = at;
+      },
+      // Call a few times a second. allowed: the PC may read the file now. now: the playhead (s).
+      tick: function tick(allowed, now) {
+        if (!started2 || phase === "off") return;
+        if (phase === "ref") return reference(allowed, now);
+        var list2 = pending3();
+        if (phase === "idle") {
+          if (!list2.length) return;
+          phase = "ref";
+          return reference(allowed, now);
+        }
+        if (list2.length) settled = false;
+        score(list2);
+      },
+      // The built-in track is needed (the player keeps it loading), and from where in the film.
+      needsTrack: function needsTrack() {
+        return started2 && phase === "ref" && via === "track";
+      },
+      wantAt: function wantAt() {
+        return trackWant;
+      },
+      // A subtitle on the list that has no answer yet.
+      waiting: function waiting(key2) {
+        return started2 && phase !== "off" && !out[key2] && !known[key2] && pending3().some(function (c) {
+          return c.key === key2;
+        });
+      },
+      // The PC is reading the file for this right now.
+      pcReading: function pcReading() {
+        return !!sampler && sampler.reading();
+      },
+      // For the diagnostics screen.
+      summary: function summary() {
+        var count = {
+          ok: 0,
+          shift: 0,
+          bad: 0,
+          unsure: 0
+        };
+        Object.keys(out).forEach(function (k) {
+          return count[out[k].state]++;
+        });
+        return {
+          phase: phase,
+          via: via,
+          from: refFrom,
+          to: refTo,
+          loading: sampler ? sampler.progress() : 0,
+          tested: Object.keys(out).length,
+          count: count,
+          why: why
+        };
+      },
+      stop: function stop() {
+        phase = "off";
+        job = null;
+        if (sampler) sampler.stop();
+        sampler = null;
+      }
+    };
+  }
+
+  // src/js/lib/soundsample.js
+  var MAX_FAILS2 = 3;
+  function parsePlaylist(text) {
+    var lines = String(text || "").split(/\r?\n/);
+    var out = {
+      init: "",
+      parts: []
+    };
+    var at = 0;
+    var dur = null;
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i].trim();
+      if (!line) continue;
+      var map = line.match(/^#EXT-X-MAP:.*URI="([^"]+)"/);
+      if (map) out.init = map[1];
+      var inf = line.match(/^#EXTINF:([\d.]+)/);
+      if (inf) dur = parseFloat(inf[1]);
+      if (line.charAt(0) === "#" || dur === null) continue;
+      out.parts.push({
+        uri: line,
+        start: at,
+        end: at + dur
+      });
+      at += dur;
+      dur = null;
+    }
+    return out;
+  }
+  function join(a, b) {
+    var out = new Uint8Array(a.byteLength + b.byteLength);
+    out.set(new Uint8Array(a), 0);
+    out.set(new Uint8Array(b), a.byteLength);
+    return out.buffer;
+  }
+  function Sampler(o) {
+    var session2 = o.newSession();
+    var list2 = null;
+    var init2 = null;
+    var next = 0;
+    var from = 0;
+    var to = 0;
+    var mid = null;
+    var side = null;
+    var filled = null;
+    var busy = false;
+    var _reading2 = false;
+    var fails = 0;
+    var over = false;
+    var restAfter = false;
+    function release() {
+      if (!_reading2) return;
+      _reading2 = false;
+      o.getText(o.stopUrl(session2)).catch(function () {});
+      session2 = o.newSession();
+    }
+    function rest() {
+      restAfter = busy;
+      if (!busy) release();
+    }
+    function fail(reason) {
+      if (over) return;
+      over = true;
+      release();
+      o.onFail(reason);
+    }
+    function refused(reason) {
+      busy = false;
+      if (over) return;
+      if (restAfter) return rest();
+      if (++fails >= MAX_FAILS2) fail(reason);
+    }
+    function finish() {
+      for (var i = 1; i < filled.length; i++) {
+        if (filled[i]) continue;
+        mid[i] = mid[i - 1];
+        side[i] = side[i - 1];
+      }
+      over = true;
+      release();
+      o.onDone({
+        from: from,
+        to: to,
+        mid: mid,
+        side: side
+      });
+    }
+    function keep(part, sound) {
+      var e = energies(sound.left, sound.right, sound.rate);
+      var at = Math.round((part.start - from) / FRAME);
+      var count = Math.min(e.mid.length, Math.round((part.end - part.start) / FRAME) + 1, mid.length - at);
+      for (var i = 0; i < count; i++) {
+        mid[at + i] = e.mid[i];
+        side[at + i] = e.side[i];
+        filled[at + i] = 1;
+      }
+    }
+    function readList(text) {
+      var pl = parsePlaylist(text);
+      var want = pl.parts.filter(function (p) {
+        return p.end > o.from && p.start < o.from + o.seconds;
+      });
+      if (!pl.init || !want.length) return fail("server");
+      list2 = want;
+      init2 = pl.init;
+      from = want[0].start;
+      to = want[want.length - 1].end;
+      var frames = Math.round((to - from) / FRAME);
+      mid = new Float32Array(frames);
+      side = new Float32Array(frames);
+      filled = new Uint8Array(frames);
+    }
+    function decoded(part, sound) {
+      busy = false;
+      if (over) return;
+      fails = 0;
+      keep(part, sound);
+      next++;
+      if (next >= list2.length) return finish();
+      if (restAfter) rest();
+    }
+    function ask(url3, how, then) {
+      busy = true;
+      how(url3).then(function (answer) {
+        if (over) return busy = false;
+        then(answer);
+      }, function () {
+        return refused("server");
+      });
+    }
+    return {
+      // Call often while the PC may read the file: takes the next step, one request at a time.
+      go: function go() {
+        restAfter = false;
+        if (over || busy) return;
+        if (!list2) {
+          return ask(o.listUrl(session2), o.getText, function (text) {
+            busy = false;
+            fails = 0;
+            readList(text);
+          });
+        }
+        _reading2 = true;
+        if (typeof init2 === "string") {
+          return ask(o.fileUrl(session2, init2), o.getBytes, function (bytes) {
+            busy = false;
+            fails = 0;
+            init2 = bytes;
+            if (restAfter) rest();
+          });
+        }
+        var part = list2[next];
+        ask(o.fileUrl(session2, part.uri), o.getBytes, function (bytes) {
+          o.decode(join(init2, bytes)).then(function (sound) {
+            return decoded(part, sound);
+          },
+          // The first piece of all tells whether this device can decode them at all.
+          function () {
+            return next === 0 ? (busy = false, fail("decode")) : refused("decode");
+          });
+        });
+      },
+      // The video itself is short of data: the server stops reading the file until go() is called again.
+      rest: rest,
+      // The server is reading the file for this right now.
+      reading: function reading() {
+        return _reading2;
+      },
+      // How far along, 0..1.
+      progress: function progress() {
+        return list2 ? next / list2.length : 0;
+      },
+      stop: function stop() {
+        over = true;
+        release();
+      }
+    };
+  }
+
+  // src/js/lib/audiodecode.js
+  var RATES = [8e3, 16e3, 22050, 44100, 48e3];
+  var TIMEOUT_MS = 15e3;
+  var ctx = null;
+  var state3 = "not tried";
+  function context() {
+    if (ctx) return ctx;
+    var Ctor = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    if (!Ctor) return null;
+    for (var i = 0; i < RATES.length && !ctx; i++) {
+      try {
+        ctx = new Ctor(2, RATES[i], RATES[i]);
+      } catch (e) {}
+    }
+    return ctx;
+  }
+  function supported2() {
+    if (context()) return true;
+    state3 = "no decoder";
+    return false;
+  }
+  function status3() {
+    return state3;
+  }
+  function decode2(bytes) {
+    return new Promise(function (resolve, reject) {
+      var c = context();
+      if (!c) {
+        state3 = "no decoder";
+        return reject(new Error(state3));
+      }
+      var settled = false;
+      var no = function no(e) {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        if (state3 !== "ok") state3 = "failed: " + (e && (e.name || e.message) || "the engine refused the sound");
+        reject(new Error(state3));
+      };
+      var timer = setTimeout(function () {
+        return no({
+          message: "no answer"
+        });
+      }, TIMEOUT_MS);
+      var yes = function yes(buf) {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        if (!buf || !buf.length) {
+          settled = false;
+          return no({
+            message: "empty"
+          });
+        }
+        state3 = "ok";
+        resolve({
+          left: buf.getChannelData(0),
+          right: buf.numberOfChannels > 1 ? buf.getChannelData(1) : null,
+          rate: buf.sampleRate
+        });
+      };
+      try {
+        var p = c.decodeAudioData(bytes, yes, no);
+        if (p && p.catch) p.catch(no);
+      } catch (e) {
+        no(e);
+      }
+    });
   }
 
   // src/js/views/player.js
@@ -9665,6 +10422,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       };
       failedSubs = {};
       stopEmbLoaders();
+      resetSyncCheck();
       pendingEmbedded = null;
       preloadIndex = null;
       embeddedAuto = false;
@@ -9835,13 +10593,16 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     function subCandidates() {
       var list2 = (addonSubs || []).filter(function (s) {
         return !failedSubs[subKey(s)];
-      }).map(function (s) {
+      }).map(function (s, i) {
         return {
           source: "addon",
           sub: s,
           lang: canon(s.lang),
-          title: ""
+          title: "",
+          i: i
         };
+      }).sort(function (a, b) {
+        return syncRank(a.sub) - syncRank(b.sub) || a.i - b.i;
       });
       if (embedded && embeddedAuto) {
         embedded.subs.forEach(function (tr, i) {
@@ -9885,7 +10646,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         return;
       }
       var again = choice && hit.rank === 0 && (addonSubs || []).find(function (s) {
-        return !failedSubs[subKey(s)] && s.addon === choice.addon && canon(s.lang) === choice.lang;
+        return !failedSubs[subKey(s)] && s.addon === choice.addon && canon(s.lang) === choice.lang && syncRank(s) <= syncRank(hit.track.sub);
       });
       selectAddonSub(again || hit.track.sub, true);
     }
@@ -10071,12 +10832,19 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       if (keys.length > 200) delete all2[keys[0]];
       set(SUB_DELAYS, all2);
     }
-    function setSubDelay(v) {
-      v = Math.round(Math.max(-30, Math.min(30, v)) * 100) / 100;
+    function autoShift() {
+      var r = currentSub.kind === "addon" ? syncResults[currentSub.id] : null;
+      return r && r.state === "shift" ? r.shift : 0;
+    }
+    function applyDelay() {
+      var v = Math.round((savedDelay() + autoShift()) * 100) / 100;
       renderer.setOffset(v);
       setOffset(v);
-      rememberDelay(v);
       return v;
+    }
+    function setSubDelay(v) {
+      rememberDelay(Math.round(Math.max(-30, Math.min(30, v - autoShift())) * 100) / 100);
+      return applyDelay();
     }
     function nudgeSubs(dir) {
       if (currentSub.kind === "off") return toast(t("Ligue uma legenda primeiro."));
@@ -10288,7 +11056,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     function pcReading() {
       return Object.keys(embLoaders).some(function (i) {
         return embLoaders[i].reading();
-      });
+      }) || !!checker && checker.pcReading();
     }
     function onStall(what) {
       if (!what) return;
@@ -10333,6 +11101,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       rows.push({
         label: "Subtitle pre-load: " + preload
       });
+      rows.push(syncRow());
       stream(rows);
     }
     var audioAfterReopen = null;
@@ -10592,7 +11361,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       embLoaders = {};
     }
     function pruneEmbLoaders() {
-      var keep = [preloadIndex, currentSub.extracted ? currentSub.index : null, pendingEmbedded ? pendingEmbedded.index : null];
+      var keep = [preloadIndex, currentSub.extracted ? currentSub.index : null, pendingEmbedded ? pendingEmbedded.index : null, syncHeld ? syncTrackIndex : null];
       Object.keys(embLoaders).forEach(function (i) {
         if (keep.indexOf(Number(i)) >= 0) return;
         embLoaders[i].stop();
@@ -10621,7 +11390,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         extracted: true,
         auto: !!auto
       };
-      renderer.setOffset(savedDelay());
+      applyDelay();
       renderer.set(embLoader(index).cues());
       renderer.update(videoEl.currentTime);
       pruneEmbLoaders();
@@ -10659,6 +11428,291 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       if (on === subLoadOn) return;
       subLoadOn = on;
       subLoadEl.classList.toggle("show", on);
+    }
+    var SYNC_SEEN = "subSync";
+    var SYNC_AFTER_TICKS = 80;
+    var checker = null;
+    var syncResults = {};
+    var syncTrackIndex = null;
+    var syncHeld = false;
+    var subFiles = {};
+    var playedTicks = 0;
+    function syncOn() {
+      return settings2.subSyncCheck !== false;
+    }
+    function fileIdent() {
+      var bh = stream2.behaviorHints || {};
+      var name = bh.filename || bh.videoHash || "";
+      if (!name && typeof stream2.infoHash === "string") name = stream2.infoHash + ":" + stream2.fileIdx;
+      if (!name && typeof stream2.url === "string") {
+        var last2 = stream2.url.split(/[?#]/)[0].split("/").pop() || "";
+        if (/\.(mkv|mp4|m4v|avi|ts|webm|mov)$/i.test(last2)) name = last2;
+      }
+      return name ? video.id + "|" + name : "";
+    }
+    function seenSync() {
+      var id = fileIdent();
+      return Object.assign({}, id && (get(SYNC_SEEN, {}) || {})[id] || {});
+    }
+    function rememberSync(key2, v) {
+      var id = fileIdent();
+      if (!id || meta.id === "dev" || v.state === "unsure") return;
+      var all2 = get(SYNC_SEEN, {}) || {};
+      var mine = all2[id] || {};
+      delete all2[id];
+      mine[key2] = {
+        state: v.state,
+        shift: v.shift
+      };
+      all2[id] = mine;
+      var keys = Object.keys(all2);
+      if (keys.length > 40) delete all2[keys[0]];
+      set(SYNC_SEEN, all2);
+    }
+    function resetSyncCheck() {
+      if (checker) checker.stop();
+      checker = null;
+      syncResults = syncOn() ? seenSync() : {};
+      syncTrackIndex = null;
+      syncHeld = false;
+      subFiles = {};
+      playedTicks = 0;
+    }
+    function subFile(s) {
+      var key2 = subKey(s);
+      if (!subFiles[key2]) {
+        var p = loadFile(s.url, subtitlesProxy(s.url));
+        subFiles[key2] = p;
+        p.catch(function () {
+          if (subFiles[key2] === p) delete subFiles[key2];
+        });
+      }
+      return subFiles[key2];
+    }
+    function syncRank(s) {
+      var r = syncResults[subKey(s)];
+      return !r ? 2 : r.state === "ok" ? 0 : r.state === "shift" ? 1 : r.state === "bad" ? 3 : 2;
+    }
+    function signed(v) {
+      return (v > 0 ? "+" : "") + v.toFixed(2).replace(/0$/, "");
+    }
+    function syncTag(s) {
+      var key2 = subKey(s);
+      var r = syncResults[key2];
+      if (r && r.state === "ok") return {
+        text: "✓ " + t("Acompanha este arquivo"),
+        cls: "fits"
+      };
+      if (r && r.state === "shift") return {
+        text: "✓ " + t("Acompanha este arquivo com ajuste de {n}s", {
+          n: signed(r.shift)
+        }),
+        cls: "fits"
+      };
+      if (r && r.state === "bad") return {
+        text: "✗ " + t("Fora de sincronia com este arquivo"),
+        cls: "misfit"
+      };
+      if (checker && checker.waiting(key2)) return {
+        text: t("Testando a sincronia..."),
+        cls: ""
+      };
+      return {
+        text: "",
+        cls: ""
+      };
+    }
+    function syncCandidates() {
+      var pref = wantedSubs();
+      var list2 = [];
+      (addonSubs || []).forEach(function (s, i) {
+        var key2 = subKey(s);
+        if (failedSubs[key2]) return;
+        var shown = currentSub.kind === "addon" && currentSub.id === key2;
+        var place = pref.indexOf(canon(s.lang));
+        if (!shown && place < 0) return;
+        list2.push({
+          key: key2,
+          at: shown ? -1 : place,
+          i: i,
+          cues: function cues() {
+            return subFile(s).then(function (f) {
+              return f.cues;
+            });
+          }
+        });
+      });
+      return list2.sort(function (a, b) {
+        return a.at - b.at || a.i - b.i;
+      });
+    }
+    function syncTrack() {
+      if (!embedded || !embeddedAuto) return null;
+      if (syncTrackIndex === null || failedSubs["embedded:" + syncTrackIndex]) {
+        var heard = base(audioLang());
+        var loading = function loading(c) {
+          return embLoaders[c.index] ? 0 : 1;
+        };
+        var spoken = function spoken(c) {
+          return heard && base(c.lang) === heard ? 0 : 1;
+        };
+        var own = subCandidates().filter(function (c) {
+          return c.source === "embedded" && pickSub([c], {
+            langs: [c.lang]
+          });
+        }).sort(function (a, b) {
+          return loading(a) - loading(b) || spoken(a) - spoken(b) || a.index - b.index;
+        });
+        syncTrackIndex = own.length ? own[0].index : null;
+      }
+      if (syncTrackIndex === null) return null;
+      var index = syncTrackIndex;
+      var loader = embLoader(index);
+      syncHeld = true;
+      return {
+        covered: loader.covered,
+        cues: loader.cues,
+        failed: function failed() {
+          return !!failedSubs["embedded:" + index] || loader.failed();
+        }
+      };
+    }
+    function heldForSync(i) {
+      return syncHeld && !!checker && i === syncTrackIndex && i !== preloadIndex && !(currentSub.extracted && currentSub.index === i) && !(pendingEmbedded && pendingEmbedded.index === i);
+    }
+    function syncSound(from, seconds, _onDone, _onFail) {
+      if (!supported2()) return null;
+      var forUrl = mediaUrl;
+      var heard = currentAudio;
+      var native = videoEl.audioTracks;
+      if (heard === null && native) {
+        for (var i = 0; i < native.length && heard === null; i++) if (native[i].enabled) heard = i;
+      }
+      if (heard === null || !embedded || heard >= embedded.audio.length) heard = 0;
+      var base2 = baseUrl() + "hlsv2/";
+      var query = "?mediaURL=" + encodeURIComponent(mediaUrl) + "&audioCodecs=aac&maxAudioChannels=2";
+      return Sampler({
+        from: from,
+        seconds: seconds,
+        newSession: function newSession() {
+          return "kai" + Math.random().toString(36).slice(2);
+        },
+        listUrl: function listUrl(sid) {
+          return through(base2 + sid + "/audio" + heard + ".m3u8" + query, 3e4);
+        },
+        fileUrl: function fileUrl(sid, uri) {
+          return through(base2 + sid + "/" + uri, 45e3);
+        },
+        stopUrl: function stopUrl(sid) {
+          return through(base2 + sid + "/destroy", 8e3);
+        },
+        getText: function getText(url3) {
+          return _getText(url3, {
+            timeout: 3e4,
+            quiet: true
+          });
+        },
+        getBytes: function getBytes(url3) {
+          return getBuffer(url3, {
+            timeout: 45e3,
+            quiet: true
+          });
+        },
+        decode: decode2,
+        onDone: function onDone(sound) {
+          return alive && forUrl === mediaUrl && _onDone(sound);
+        },
+        onFail: function onFail(reason) {
+          return alive && forUrl === mediaUrl && _onFail(reason);
+        }
+      });
+    }
+    function onSyncResult(key2, v) {
+      syncResults[key2] = v;
+      rememberSync(key2, v);
+      log.info("Sincronia de legenda: " + v.state + (v.state === "shift" ? " " + signed(v.shift) + "s" : "") + " (" + v.via + ")");
+      if (currentSub.kind !== "addon") return;
+      if (currentSub.id === key2) {
+        if (v.state === "shift" && savedDelay()) rememberDelay(0);
+        var before = renderer.offset();
+        if (applyDelay() !== before && v.state === "shift") toast(t("Legenda ajustada em {n}s para acompanhar este arquivo.", {
+          n: signed(v.shift)
+        }), 5e3);
+      }
+      replaceMisfit();
+    }
+    function replaceMisfit() {
+      if (currentSub.kind !== "addon" || !currentSub.auto) return;
+      var mine = syncResults[currentSub.id];
+      var cur = (addonSubs || []).find(function (s) {
+        return subKey(s) === currentSub.id;
+      });
+      if (!mine || mine.state !== "bad" || !cur) return;
+      var fits = (addonSubs || []).map(function (s, i) {
+        return {
+          s: s,
+          i: i,
+          fit: syncRank(s)
+        };
+      }).filter(function (x) {
+        return x.fit < 2 && !failedSubs[subKey(x.s)] && canon(x.s.lang) === canon(cur.lang);
+      }).sort(function (a, b) {
+        return a.fit - b.fit || a.i - b.i;
+      });
+      if (fits.length) selectAddonSub(fits[0].s, true);else {
+        var mineLang = canon(cur.lang);
+        if ((addonSubs || []).some(function (s) {
+          return canon(s.lang) === mineLang && checker && checker.waiting(subKey(s));
+        })) return;
+        var wanted = wantedSubs();
+        var own = subCandidates().filter(function (c) {
+          return c.source === "embedded" && wanted.indexOf(c.lang) >= 0 && base(c.lang) === base(mineLang) && pickSub([c], {
+            langs: [c.lang]
+          });
+        });
+        if (!own.length) return;
+        selectEmbeddedSub(own[0].index, true);
+      }
+      toast(t("Legenda trocada por uma que acompanha este arquivo."), 5e3);
+    }
+    function tickSyncCheck(nowMs, now) {
+      if (!syncOn()) return;
+      if (moving()) playedTicks++;
+      if (!checker) {
+        if (playedTicks < SYNC_AFTER_TICKS || !embeddedAuto || addonSubs === null || !isAvailable()) return;
+        checker = Checker({
+          candidates: syncCandidates,
+          track: syncTrack,
+          sound: syncSound,
+          known: seenSync(),
+          onResult: onSyncResult
+        });
+        var d = videoEl.duration;
+        checker.start(isFinite(d) && d > 900 ? Math.min(now, d - 780) : now);
+      }
+      checker.tick(hasPlayed && watch.pcMayRead(nowMs, false), now);
+      if (syncHeld && !checker.needsTrack()) {
+        syncHeld = false;
+        pruneEmbLoaders();
+      }
+    }
+    function syncRow() {
+      var decoder = " · sound decoder: " + status3();
+      if (!syncOn()) return {
+        label: "Subtitle sync test: off"
+      };
+      if (!checker) return {
+        label: "Subtitle sync test: not started",
+        sub: (embeddedAuto ? "waiting" : "no track list from the PC server") + decoder
+      };
+      var s = checker.summary();
+      var how = s.via === "track" ? "built-in track #" + syncTrackIndex : "the sound";
+      var state4 = "nothing to test";
+      if (s.phase === "off") state4 = "stopped" + (s.why ? ": " + s.why : "");else if (s.phase === "ref") state4 = "reading " + how + (s.via === "sound" ? " " + Math.round(s.loading * 100) + "%" : "");else if (s.phase === "score") state4 = "against " + how + ", " + fmtTime(s.from) + "–" + fmtTime(s.to);
+      return {
+        label: "Subtitle sync test: " + state4,
+        sub: s.tested + " tested · " + s.count.ok + " in time · " + s.count.shift + " shifted · " + s.count.bad + " off · " + s.count.unsure + " unsure" + decoder
+      };
     }
     function nativeEmbeddedSub(index) {
       var id = mediaId();
@@ -10717,8 +11771,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         loading: !silent
       };
       updateSubLoading();
-      renderer.setOffset(savedDelay());
-      loadFile(s.url, subtitlesProxy(s.url)).then(function (file) {
+      applyDelay();
+      subFile(s).then(function (file) {
         if (!alive || currentSub.id !== key2) return;
         currentSub.loading = false;
         updateSubLoading();
@@ -10821,7 +11875,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         return i < 0 ? 99 : i;
       };
       var byPlace = function byPlace(a, b) {
-        return a.at - b.at || a.i - b.i;
+        return a.at - b.at || (a.fit || 0) - (b.fit || 0) || a.i - b.i;
       };
       var own = (embedded && embedded.subs || []).map(function (tr, i) {
         return {
@@ -10836,7 +11890,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         return {
           sub: sub,
           i: i,
-          at: place(canon(sub.lang))
+          at: place(canon(sub.lang)),
+          fit: syncRank(sub)
         };
       }).sort(byPlace).slice(0, 60);
       var ownOption = function ownOption(x) {
@@ -10851,9 +11906,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         };
       };
       var addonOption = function addonOption(x) {
+        var tag = syncTag(x.sub);
         return {
           label: langName(x.sub.lang),
-          sub: x.sub.addon || "Addon",
+          sub: (x.sub.addon || "Addon") + (tag.text ? "  ·  " + tag.text : ""),
+          cls: tag.cls,
           value: {
             kind: "addon",
             sub: x.sub
@@ -11114,8 +12171,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
             onStall(watch.tick(nowMs, now, moving(), pcReading()));
             Object.keys(embLoaders).forEach(function (i) {
               var shown = !!currentSub.extracted && currentSub.index === Number(i);
-              if (hasPlayed && watch.pcMayRead(nowMs, shown)) embLoaders[i].want(now);else embLoaders[i].rest();
+              if (hasPlayed && watch.pcMayRead(nowMs, shown)) embLoaders[i].want(heldForSync(Number(i)) ? checker.wantAt() : now);else embLoaders[i].rest();
             });
+            tickSyncCheck(nowMs, now);
             if (++ticks % 20 === 0 && hasPlayed) {
               if (moving()) sampleAhead();
               noteStream();
@@ -11151,6 +12209,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         disableEmbeddedSubs();
         stop();
         stopEmbLoaders();
+        if (checker) checker.stop();
         try {
           videoEl.pause();
           videoEl.removeAttribute("src");
@@ -11871,7 +12930,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         stopSmart();
         play(video, best, all2, list3.slice(1, 1 + SMART_FALLBACKS));
       }
-      function status3() {
+      function status4() {
         if (smartActive) {
           sub.textContent = t("Escolha inteligente: procurando a melhor fonte...") + "  ·  " + t("aperte uma seta para escolher você");
           barFill.style.width = Math.round((srcs.length - pendingCount) / srcs.length * 100) + "%";
@@ -11899,7 +12958,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           return g.el.style.display = filter === "all" || filter === g.addon.transportUrl ? "" : "none";
         });
         list2.scrollTop = 0;
-        status3();
+        status4();
         var first = firstVisibleItem();
         if (first) focus(first);
       }
@@ -11928,11 +12987,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           }
         });
       }
-      status3();
+      status4();
       (serverOk ? Promise.resolve() : check().then(function (r) {
         return serverOk = r.ok;
       })).then(function () {
-        status3();
+        status4();
         return fetchStreams(meta.type, video.id, function (addon, streams) {
           if (!alive || streamsVideo !== video) return;
           pendingCount--;
@@ -11961,7 +13020,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
               text: t("Nenhuma fonte encontrada.")
             }));
           }
-          status3();
+          status4();
           decideSmart(false);
         });
       }).catch(function () {});
@@ -12198,12 +13257,12 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       "data-scroll-y": ""
     });
     var grid = h("div.grid");
-    var status3 = h("div.grid-status");
+    var status4 = h("div.grid-status");
     scroller.appendChild(h("div.row-title.catalog-title", {
       text: catalogTitle(entry)
     }));
     scroller.appendChild(grid);
-    scroller.appendChild(status3);
+    scroller.appendChild(status4);
     el.appendChild(scroller);
     var paging = canPage(entry);
     var seen = {};
@@ -12229,8 +13288,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     function more() {
       if (loading || done) return;
       loading = true;
-      clear(status3);
-      status3.appendChild(spinnerLine(t("Carregando...")));
+      clear(status4);
+      status4.appendChild(spinnerLine(t("Carregando...")));
       var before = count;
       fetchCatalog(entry, count ? {
         skip: count
@@ -12241,8 +13300,8 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
         done = true;
       }).then(function () {
         loading = false;
-        clear(status3);
-        if (!count) status3.appendChild(h("div.hint", {
+        clear(status4);
+        if (!count) status4.appendChild(h("div.hint", {
           text: t("Nada por aqui.")
         }));
       });
@@ -12979,7 +14038,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   var REPO = "ArturSenna/kai";
   var REPO_URL = "https://github.com/" + REPO;
   var VERSION = "1.2.0";
-  var BUILD = "2026-11-27T17:40:38.006Z";
+  var BUILD = "2026-11-27T22:57:48.836Z";
   var RAW = "https://raw.githubusercontent.com/" + REPO + "/main/";
   var PURGE = "https://purge.jsdelivr.net/gh/" + REPO + "/";
   var FILES = ["package.json", "dist/index.html", "dist/loader.js", "dist/app.js", "dist/app.css", "dist/remote-service.js", "dist/build.json", "dist/jassub/jassub-worker.js"];
@@ -13736,6 +14795,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       flag(t("Sem legenda quando o áudio já é no seu idioma"), t("Só entram as legendas forçadas (falas em outro idioma), quando o arquivo tem"), "subsSkipNative", s.subsSkipNative !== false);
       flag(t("Preferir a legenda embutida no arquivo"), t("Sincronia melhor que a dos addons; precisa do servidor do PC"), "preferEmbedded", s.preferEmbedded === true);
       flag(t("Deixar a legenda embutida pronta de antemão"), t("O PC baixa o arquivo junto com a TV; desligue se o vídeo engasgar"), "embeddedPreload", s.embeddedPreload !== false);
+      flag(t("Testar a sincronia das legendas"), t("Marca as legendas de addons que acompanham o arquivo; o PC lê alguns minutos dele"), "subSyncCheck", s.subSyncCheck !== false);
       flag(t("Legendas ASS com o estilo original"), t("Cores, posições e fontes do arquivo; desligue se a TV engasgar"), "assStyled", s.assStyled !== false);
       var audName = (AUDIO_LANGS.find(function (x) {
         return JSON.stringify(x.value) === JSON.stringify(s.audioLangs);
@@ -14394,34 +15454,34 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       card2.appendChild(h("h1", {
         text: t("Servidor de torrents no PC")
       }));
-      var status3 = h("p", {
+      var status4 = h("p", {
         text: isAvailable() ? t("Servidor conectado em {url}. Torrents liberados.", {
           url: baseUrl()
         }) : t("Para tocar torrents, deixe o stremio-service aberto num PC da rede. Links de debrid funcionam sem ele.")
       });
-      card2.appendChild(status3);
+      card2.appendChild(status4);
       card2.appendChild(h("div.actions", {
         "data-group": ""
       }, [btn(t("Procurar na rede"), true, function () {
-        status3.textContent = t("Procurando o servidor na rede...");
+        status4.textContent = t("Procurando o servidor na rede...");
         scan(function (done, total) {
-          return status3.textContent = t("Procurando o servidor na rede...") + " " + Math.round(done / total * 100) + "%";
+          return status4.textContent = t("Procurando o servidor na rede...") + " " + Math.round(done / total * 100) + "%";
         }).then(function (ip) {
           if (!ip) {
-            status3.textContent = t("Nenhum servidor encontrado. Você pode configurar depois em Ajustes.");
+            status4.textContent = t("Nenhum servidor encontrado. Você pode configurar depois em Ajustes.");
             return;
           }
           saveSettings({
             serverUrl: ip
           });
           return check().then(function () {
-            status3.textContent = t("Servidor encontrado em {ip}", {
+            status4.textContent = t("Servidor encontrado em {ip}", {
               ip: ip
             }) + "!";
             toast(t("Servidor do PC conectado"));
           });
         }).catch(function () {
-          return status3.textContent = t("Não foi possível procurar. Configure depois em Ajustes.");
+          return status4.textContent = t("Não foi possível procurar. Configure depois em Ajustes.");
         });
       }), btn(isAvailable() ? t("Continuar") : t("Pular"), false, next)]));
     }

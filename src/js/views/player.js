@@ -7,7 +7,7 @@ import * as subs from '../lib/subs.js';
 import * as substyle from '../lib/substyle.js';
 import * as store from '../lib/store.js';
 import { log } from '../lib/log.js';
-import { getText } from '../lib/http.js';
+import { getText, getBuffer } from '../lib/http.js';
 import * as server from '../api/server.js';
 import * as addons from '../api/addons.js';
 import * as stremio from '../api/stremio.js';
@@ -25,6 +25,9 @@ import * as asscanvas from '../lib/asscanvas.js';
 import * as relay from '../lib/relay.js';
 import * as embedsubs from '../lib/embedsubs.js';
 import * as streamwatch from '../lib/streamwatch.js';
+import * as synccheck from '../lib/synccheck.js';
+import * as soundsample from '../lib/soundsample.js';
+import * as audiodecode from '../lib/audiodecode.js';
 
 const HIDE_MS = 5000;
 const SAVE_MS = 15000;
@@ -148,6 +151,7 @@ function PlayerView(opts) {
     autoSub = { order: Infinity, tries: 0, forcedOnly: '' };
     failedSubs = {};
     stopEmbLoaders();
+    resetSyncCheck();
     pendingEmbedded = null;
     preloadIndex = null;
     embeddedAuto = false;
@@ -327,7 +331,12 @@ function PlayerView(opts) {
   }
 
   function subCandidates() {
-    const list = (addonSubs || []).filter((s) => !failedSubs[subKey(s)]).map((s) => ({ source: 'addon', sub: s, lang: lang.canon(s.lang), title: '' }));
+    // Among an add-on's subtitles in one language, those tested and found in time with this file
+    // come first, those found not to follow it last (see "keep time with this file" below).
+    const list = (addonSubs || [])
+      .filter((s) => !failedSubs[subKey(s)])
+      .map((s, i) => ({ source: 'addon', sub: s, lang: lang.canon(s.lang), title: '', i: i }))
+      .sort((a, b) => syncRank(a.sub) - syncRank(b.sub) || a.i - b.i);
     if (embedded && embeddedAuto) {
       embedded.subs.forEach((tr, i) => {
         if (failedSubs['embedded:' + i]) return;
@@ -364,7 +373,10 @@ function PlayerView(opts) {
       return;
     }
     // The remembered language again: the same add-on as last time, when it has it.
-    const again = choice && hit.rank === 0 && (addonSubs || []).find((s) => !failedSubs[subKey(s)] && s.addon === choice.addon && lang.canon(s.lang) === choice.lang);
+    const again =
+      choice &&
+      hit.rank === 0 &&
+      (addonSubs || []).find((s) => !failedSubs[subKey(s)] && s.addon === choice.addon && lang.canon(s.lang) === choice.lang && syncRank(s) <= syncRank(hit.track.sub));
     selectAddonSub(again || hit.track.sub, true);
   }
 
@@ -558,12 +570,24 @@ function PlayerView(opts) {
     store.set(SUB_DELAYS, all);
   }
 
-  function setSubDelay(v) {
-    v = Math.round(Math.max(-30, Math.min(30, v)) * 100) / 100;
+  // How far the subtitle on screen is moved: what was set by hand for this video, plus what the
+  // sync test measured for this very subtitle on this file (0 when it is in time, or not tested).
+  function autoShift() {
+    const r = currentSub.kind === 'addon' ? syncResults[currentSub.id] : null;
+    return r && r.state === 'shift' ? r.shift : 0;
+  }
+
+  function applyDelay() {
+    const v = Math.round((savedDelay() + autoShift()) * 100) / 100;
     renderer.setOffset(v);
     asscanvas.setOffset(v);
-    rememberDelay(v);
     return v;
+  }
+
+  // v: the whole delay wanted; what goes beyond the measured part is remembered as set by hand.
+  function setSubDelay(v) {
+    rememberDelay(Math.round(Math.max(-30, Math.min(30, v - autoShift())) * 100) / 100);
+    return applyDelay();
   }
 
   function nudgeSubs(dir) {
@@ -791,7 +815,7 @@ function PlayerView(opts) {
 
   // The PC is reading this file for a built-in subtitle track.
   function pcReading() {
-    return Object.keys(embLoaders).some((i) => embLoaders[i].reading());
+    return Object.keys(embLoaders).some((i) => embLoaders[i].reading()) || (!!checker && checker.pcReading());
   }
 
   function onStall(what) {
@@ -839,6 +863,7 @@ function PlayerView(opts) {
     rows.push({ label: 'TV buffer ahead: ' + (ahead.n ? Math.round(ahead.sum / ahead.n) + ' s (' + Math.round(ahead.min) + '–' + Math.round(ahead.max) + ')' : 'not reported') });
     const preload = settings.embeddedPreload === false ? 'off' : s.quiet ? 'paused for this video' : preloadIndex !== null ? 'on' : 'no track to load';
     rows.push({ label: 'Subtitle pre-load: ' + preload });
+    rows.push(syncRow());
     probe.stream(rows);
   }
 
@@ -1095,7 +1120,7 @@ function PlayerView(opts) {
   // Stops it for the tracks nobody needs: all but the one on screen, the one about to take over
   // and the one in the wanted language.
   function pruneEmbLoaders() {
-    const keep = [preloadIndex, currentSub.extracted ? currentSub.index : null, pendingEmbedded ? pendingEmbedded.index : null];
+    const keep = [preloadIndex, currentSub.extracted ? currentSub.index : null, pendingEmbedded ? pendingEmbedded.index : null, syncHeld ? syncTrackIndex : null];
     Object.keys(embLoaders).forEach((i) => {
       if (keep.indexOf(Number(i)) >= 0) return;
       embLoaders[i].stop();
@@ -1124,7 +1149,7 @@ function PlayerView(opts) {
     nativeSubsOff();
     asscanvas.stop();
     currentSub = { kind: 'embedded', index: index, extracted: true, auto: !!auto };
-    renderer.setOffset(savedDelay());
+    applyDelay();
     renderer.set(embLoader(index).cues());
     renderer.update(videoEl.currentTime);
     pruneEmbLoaders();
@@ -1169,6 +1194,245 @@ function PlayerView(opts) {
     subLoadEl.classList.toggle('show', on);
   }
 
+  // ---- Which add-on subtitles keep time with this file (lib/synccheck.js) ----
+  // An add-on's subtitle was timed for some copy of the film, not always this one. Once the video
+  // plays, the ones in the wanted languages are tested in the background: against a built-in text
+  // track when the file has one, else against a few minutes of its sound, both read through the PC
+  // server. The Subtitles menu marks what was found; a subtitle that is off by a fixed amount is
+  // moved by that much while it is on screen; and a subtitle the app picked itself gives way to
+  // one in the same language that follows the file, when it doesn't.
+  const SYNC_SEEN = 'subSync';
+  const SYNC_AFTER_TICKS = 80; // 20 s of playing first: the TV's own stream settles before the PC reads
+  let checker = null;
+  let syncResults = {}; // subtitle key -> { state: 'ok' | 'shift' | 'bad' | 'unsure', shift }
+  let syncTrackIndex = null; // the built-in track the subtitles are compared with
+  let syncHeld = false; // ...kept loading for that
+  let subFiles = {}; // subtitle key -> its file, downloaded once (a Promise)
+  let playedTicks = 0;
+
+  function syncOn() {
+    return settings.subSyncCheck !== false;
+  }
+
+  // What tells one copy of a film from another, for remembering the answers: the file's name.
+  // (Never the whole address: stream links carry account keys.)
+  function fileIdent() {
+    const bh = stream.behaviorHints || {};
+    let name = bh.filename || bh.videoHash || '';
+    if (!name && typeof stream.infoHash === 'string') name = stream.infoHash + ':' + stream.fileIdx;
+    if (!name && typeof stream.url === 'string') {
+      const last = stream.url.split(/[?#]/)[0].split('/').pop() || '';
+      if (/\.(mkv|mp4|m4v|avi|ts|webm|mov)$/i.test(last)) name = last;
+    }
+    return name ? video.id + '|' + name : '';
+  }
+
+  function seenSync() {
+    const id = fileIdent();
+    return Object.assign({}, (id && (store.get(SYNC_SEEN, {}) || {})[id]) || {});
+  }
+
+  function rememberSync(key, v) {
+    const id = fileIdent();
+    if (!id || meta.id === 'dev' || v.state === 'unsure') return;
+    const all = store.get(SYNC_SEEN, {}) || {};
+    const mine = all[id] || {};
+    delete all[id];
+    mine[key] = { state: v.state, shift: v.shift };
+    all[id] = mine;
+    const keys = Object.keys(all);
+    if (keys.length > 40) delete all[keys[0]]; // oldest first (insertion order)
+    store.set(SYNC_SEEN, all);
+  }
+
+  function resetSyncCheck() {
+    if (checker) checker.stop();
+    checker = null;
+    syncResults = syncOn() ? seenSync() : {};
+    syncTrackIndex = null;
+    syncHeld = false;
+    subFiles = {};
+    playedTicks = 0;
+  }
+
+  // A subtitle's file, downloaded once: the test and the screen share it.
+  function subFile(s) {
+    const key = subKey(s);
+    if (!subFiles[key]) {
+      const p = subs.loadFile(s.url, server.subtitlesProxy(s.url));
+      subFiles[key] = p;
+      p.catch(() => {
+        if (subFiles[key] === p) delete subFiles[key];
+      });
+    }
+    return subFiles[key];
+  }
+
+  // 0: in time · 1: in time once shifted · 2: not known · 3: doesn't follow this file
+  function syncRank(s) {
+    const r = syncResults[subKey(s)];
+    return !r ? 2 : r.state === 'ok' ? 0 : r.state === 'shift' ? 1 : r.state === 'bad' ? 3 : 2;
+  }
+
+  function signed(v) {
+    return (v > 0 ? '+' : '') + v.toFixed(2).replace(/0$/, '');
+  }
+
+  // What the Subtitles menu says about an add-on subtitle.
+  function syncTag(s) {
+    const key = subKey(s);
+    const r = syncResults[key];
+    if (r && r.state === 'ok') return { text: '✓ ' + t('Acompanha este arquivo'), cls: 'fits' };
+    if (r && r.state === 'shift') return { text: '✓ ' + t('Acompanha este arquivo com ajuste de {n}s', { n: signed(r.shift) }), cls: 'fits' };
+    if (r && r.state === 'bad') return { text: '✗ ' + t('Fora de sincronia com este arquivo'), cls: 'misfit' };
+    if (checker && checker.waiting(key)) return { text: t('Testando a sincronia...'), cls: '' };
+    return { text: '', cls: '' };
+  }
+
+  // The add-on subtitles worth testing: the one on screen, then those in the wanted languages.
+  function syncCandidates() {
+    const pref = wantedSubs();
+    const list = [];
+    (addonSubs || []).forEach((s, i) => {
+      const key = subKey(s);
+      if (failedSubs[key]) return;
+      const shown = currentSub.kind === 'addon' && currentSub.id === key;
+      const place = pref.indexOf(lang.canon(s.lang));
+      if (!shown && place < 0) return;
+      list.push({ key: key, at: shown ? -1 : place, i: i, cues: () => subFile(s).then((f) => f.cues) });
+    });
+    return list.sort((a, b) => a.at - b.at || a.i - b.i);
+  }
+
+  // The built-in track they are compared with: a full text track (no signs-and-songs, no forced
+  // one), the one the player is loading anyway when there is one, else the one in the language
+  // being heard. Any language will do: the lines come and go where people speak.
+  function syncTrack() {
+    if (!embedded || !embeddedAuto) return null;
+    if (syncTrackIndex === null || failedSubs['embedded:' + syncTrackIndex]) {
+      const heard = lang.base(audioLang());
+      const loading = (c) => (embLoaders[c.index] ? 0 : 1);
+      const spoken = (c) => (heard && lang.base(c.lang) === heard ? 0 : 1);
+      const own = subCandidates()
+        .filter((c) => c.source === 'embedded' && trackselect.pickSub([c], { langs: [c.lang] }))
+        .sort((a, b) => loading(a) - loading(b) || spoken(a) - spoken(b) || a.index - b.index);
+      syncTrackIndex = own.length ? own[0].index : null;
+    }
+    if (syncTrackIndex === null) return null;
+    const index = syncTrackIndex;
+    const loader = embLoader(index);
+    syncHeld = true;
+    return { covered: loader.covered, cues: loader.cues, failed: () => !!failedSubs['embedded:' + index] || loader.failed() };
+  }
+
+  // The track held only to compare subtitles with is read where the test began, not at the playhead.
+  function heldForSync(i) {
+    return syncHeld && !!checker && i === syncTrackIndex && i !== preloadIndex && !(currentSub.extracted && currentSub.index === i) && !(pendingEmbedded && pendingEmbedded.index === i);
+  }
+
+  // A stretch of the file's sound, from the PC server (lib/soundsample.js): the track being heard.
+  function syncSound(from, seconds, onDone, onFail) {
+    if (!audiodecode.supported()) return null;
+    const forUrl = mediaUrl;
+    let heard = currentAudio;
+    const native = videoEl.audioTracks;
+    if (heard === null && native) for (let i = 0; i < native.length && heard === null; i++) if (native[i].enabled) heard = i;
+    if (heard === null || !embedded || heard >= embedded.audio.length) heard = 0;
+    const base = server.baseUrl() + 'hlsv2/';
+    const query = '?mediaURL=' + encodeURIComponent(mediaUrl) + '&audioCodecs=aac&maxAudioChannels=2';
+    return soundsample.Sampler({
+      from: from,
+      seconds: seconds,
+      newSession: () => 'kai' + Math.random().toString(36).slice(2),
+      listUrl: (sid) => relay.through(base + sid + '/audio' + heard + '.m3u8' + query, 30000),
+      fileUrl: (sid, uri) => relay.through(base + sid + '/' + uri, 45000),
+      stopUrl: (sid) => relay.through(base + sid + '/destroy', 8000),
+      getText: (url) => getText(url, { timeout: 30000, quiet: true }),
+      getBytes: (url) => getBuffer(url, { timeout: 45000, quiet: true }),
+      decode: audiodecode.decode,
+      onDone: (sound) => alive && forUrl === mediaUrl && onDone(sound),
+      onFail: (reason) => alive && forUrl === mediaUrl && onFail(reason),
+    });
+  }
+
+  function onSyncResult(key, v) {
+    syncResults[key] = v;
+    rememberSync(key, v);
+    log.info('Sincronia de legenda: ' + v.state + (v.state === 'shift' ? ' ' + signed(v.shift) + 's' : '') + ' (' + v.via + ')');
+    if (currentSub.kind !== 'addon') return;
+    if (currentSub.id === key) {
+      // A delay set by hand before this answer came was an attempt at the same correction: the
+      // measured one takes its place instead of adding to it.
+      if (v.state === 'shift' && savedDelay()) rememberDelay(0);
+      const before = renderer.offset();
+      if (applyDelay() !== before && v.state === 'shift') toast(t('Legenda ajustada em {n}s para acompanhar este arquivo.', { n: signed(v.shift) }), 5000);
+    }
+    replaceMisfit();
+  }
+
+  // The subtitle the app picked doesn't follow this file, and another in the same language does:
+  // an add-on's that was found in time, else the file's own track (in time by nature).
+  function replaceMisfit() {
+    if (currentSub.kind !== 'addon' || !currentSub.auto) return;
+    const mine = syncResults[currentSub.id];
+    const cur = (addonSubs || []).find((s) => subKey(s) === currentSub.id);
+    if (!mine || mine.state !== 'bad' || !cur) return;
+    const fits = (addonSubs || [])
+      .map((s, i) => ({ s: s, i: i, fit: syncRank(s) }))
+      .filter((x) => x.fit < 2 && !failedSubs[subKey(x.s)] && lang.canon(x.s.lang) === lang.canon(cur.lang))
+      .sort((a, b) => a.fit - b.fit || a.i - b.i);
+    if (fits.length) selectAddonSub(fits[0].s, true);
+    else {
+      // Not while an add-on's subtitle in that language is still being tested: it may fit.
+      const mineLang = lang.canon(cur.lang);
+      if ((addonSubs || []).some((s) => lang.canon(s.lang) === mineLang && checker && checker.waiting(subKey(s)))) return;
+      const wanted = wantedSubs();
+      const own = subCandidates().filter(
+        (c) => c.source === 'embedded' && wanted.indexOf(c.lang) >= 0 && lang.base(c.lang) === lang.base(mineLang) && trackselect.pickSub([c], { langs: [c.lang] })
+      );
+      if (!own.length) return;
+      selectEmbeddedSub(own[0].index, true);
+    }
+    toast(t('Legenda trocada por uma que acompanha este arquivo.'), 5000);
+  }
+
+  // From the player's clock, four times a second.
+  function tickSyncCheck(nowMs, now) {
+    if (!syncOn()) return;
+    if (moving()) playedTicks++;
+    if (!checker) {
+      // Needs the file's track list (so: the PC server, and a file that is all there) and the
+      // add-ons' answers.
+      if (playedTicks < SYNC_AFTER_TICKS || !embeddedAuto || addonSubs === null || !server.isAvailable()) return;
+      checker = synccheck.Checker({ candidates: syncCandidates, track: syncTrack, sound: syncSound, known: seenSync(), onResult: onSyncResult });
+      // Near the end there is too little left to compare with: an earlier stretch does as well.
+      const d = videoEl.duration;
+      checker.start(isFinite(d) && d > 900 ? Math.min(now, d - 780) : now);
+    }
+    checker.tick(hasPlayed && watch.pcMayRead(nowMs, false), now);
+    if (syncHeld && !checker.needsTrack()) {
+      syncHeld = false;
+      pruneEmbLoaders();
+    }
+  }
+
+  // For Settings → Playback diagnostics.
+  function syncRow() {
+    const decoder = ' · sound decoder: ' + audiodecode.status();
+    if (!syncOn()) return { label: 'Subtitle sync test: off' };
+    if (!checker) return { label: 'Subtitle sync test: not started', sub: (embeddedAuto ? 'waiting' : "no track list from the PC server") + decoder };
+    const s = checker.summary();
+    const how = s.via === 'track' ? 'built-in track #' + syncTrackIndex : 'the sound';
+    let state = 'nothing to test';
+    if (s.phase === 'off') state = 'stopped' + (s.why ? ': ' + s.why : '');
+    else if (s.phase === 'ref') state = 'reading ' + how + (s.via === 'sound' ? ' ' + Math.round(s.loading * 100) + '%' : '');
+    else if (s.phase === 'score') state = 'against ' + how + ', ' + fmtTime(s.from) + '–' + fmtTime(s.to);
+    return {
+      label: 'Subtitle sync test: ' + state,
+      sub: s.tested + ' tested · ' + s.count.ok + ' in time · ' + s.count.shift + ' shifted · ' + s.count.bad + ' off · ' + s.count.unsure + ' unsure' + decoder,
+    };
+  }
+
   function nativeEmbeddedSub(index) {
     const id = mediaId();
     if (!id || !hasLuna()) {
@@ -1206,9 +1470,8 @@ function PlayerView(opts) {
     const key = subKey(s);
     currentSub = { kind: 'addon', id: key, auto: !!silent, loading: !silent };
     updateSubLoading();
-    renderer.setOffset(savedDelay());
-    subs
-      .loadFile(s.url, server.subtitlesProxy(s.url))
+    applyDelay();
+    subFile(s)
       .then(
         (file) => {
           if (!alive || currentSub.id !== key) return;
@@ -1302,24 +1565,30 @@ function PlayerView(opts) {
       const i = pref.indexOf(code);
       return i < 0 ? 99 : i;
     };
-    const byPlace = (a, b) => a.at - b.at || a.i - b.i;
+    // ...and inside a language, add-on subtitles found in time with this file before the untested,
+    // those found not to follow it last.
+    const byPlace = (a, b) => a.at - b.at || (a.fit || 0) - (b.fit || 0) || a.i - b.i;
     const own = ((embedded && embedded.subs) || [])
       .map((tr, i) => ({ tr: tr, i: i, at: place(lang.ofTrack(tr.lang, tr.label)) }))
       .filter((x) => !/PGS|VOBSUB|DVD/i.test(x.tr.codec || ''))
       .sort(byPlace);
-    const others = (addonSubs || []).map((sub, i) => ({ sub: sub, i: i, at: place(lang.canon(sub.lang)) })).sort(byPlace).slice(0, 60);
+    const others = (addonSubs || []).map((sub, i) => ({ sub: sub, i: i, at: place(lang.canon(sub.lang)), fit: syncRank(sub) })).sort(byPlace).slice(0, 60);
     const ownOption = (x) => ({
       label: langName(lang.ofTrack(x.tr.lang, x.tr.label)) + (x.tr.label ? ' · ' + x.tr.label : ''),
       sub: t('Embutida no arquivo') + (x.tr.codec ? ' · ' + x.tr.codec : ''),
       value: { kind: 'embedded', index: x.i },
       checked: currentSub.kind === 'embedded' && currentSub.index === x.i,
     });
-    const addonOption = (x) => ({
-      label: langName(x.sub.lang),
-      sub: x.sub.addon || 'Addon',
-      value: { kind: 'addon', sub: x.sub },
-      checked: currentSub.kind === 'addon' && currentSub.id === (x.sub.id || x.sub.url),
-    });
+    const addonOption = (x) => {
+      const tag = syncTag(x.sub);
+      return {
+        label: langName(x.sub.lang),
+        sub: (x.sub.addon || 'Addon') + (tag.text ? '  ·  ' + tag.text : ''),
+        cls: tag.cls,
+        value: { kind: 'addon', sub: x.sub },
+        checked: currentSub.kind === 'addon' && currentSub.id === (x.sub.id || x.sub.url),
+      };
+    };
     const wanted = (x) => x.at < 99;
     const rest = (x) => x.at === 99;
     own.filter(wanted).forEach((x) => opts2.push(ownOption(x)));
@@ -1536,9 +1805,10 @@ function PlayerView(opts) {
           // The PC reads the file for subtitles only while the video itself has all it needs.
           Object.keys(embLoaders).forEach((i) => {
             const shown = !!currentSub.extracted && currentSub.index === Number(i);
-            if (hasPlayed && watch.pcMayRead(nowMs, shown)) embLoaders[i].want(now);
+            if (hasPlayed && watch.pcMayRead(nowMs, shown)) embLoaders[i].want(heldForSync(Number(i)) ? checker.wantAt() : now);
             else embLoaders[i].rest();
           });
+          tickSyncCheck(nowMs, now);
           if (++ticks % 20 === 0 && hasPlayed) {
             if (moving()) sampleAhead();
             noteStream();
@@ -1573,6 +1843,7 @@ function PlayerView(opts) {
       disableEmbeddedSubs();
       asscanvas.stop();
       stopEmbLoaders(); // or the PC would go on downloading the film after it is closed
+      if (checker) checker.stop();
       try {
         videoEl.pause();
         videoEl.removeAttribute('src');

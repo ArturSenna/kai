@@ -21,6 +21,11 @@ features to Tizen, fully controlled with the Samsung remote.
 >   Windows-1252 `.srt` files keep their accents.
 > - Sources whose only sound is **DTS or TrueHD** (silent on Samsung TVs) are marked and left for
 >   last by Smart Choice.
+> - **Subtitles tested against the file**: with stremio-service on a PC, add-on subtitles in your
+>   languages are compared in the background with one of the file's built-in subtitle tracks, or
+>   with a few minutes of its sound when it has none. The Subtitles menu marks the ones that are
+>   in sync and the ones that aren't; one that is off by a fixed amount is shifted by itself, and a
+>   subtitle the app picked gives way to one that fits (Settings → Test subtitle timing).
 > - **A stream that stops keeping up** (the video stalling every few seconds) is reopened where it
 >   was, and the PC stops reading the file for subtitles while the TV is short of data. Settings →
 >   Playback diagnostics shows how often the last video stalled.

@@ -171,3 +171,24 @@ test('rest taken back before the block is in: the server keeps reading', async (
   assert.equal(r.loader.reading(), true);
   assert.deepEqual(r.urls(), ['s1/block1']);
 });
+
+test('covered() gives the unbroken stretch of text around a moment', async () => {
+  const r = rig();
+  assert.equal(r.loader.covered(605), null);
+  r.loader.want(605); // block 61: 600-610 s
+  await r.answer('601');
+  assert.deepEqual(r.loader.covered(605), { from: 600, to: 610 });
+  r.loader.want(605);
+  await r.answer('');
+  r.loader.want(605);
+  await r.answer('625');
+  assert.deepEqual(r.loader.covered(600), { from: 600, to: 630 });
+  assert.deepEqual(r.loader.covered(629), { from: 600, to: 630 });
+  assert.equal(r.loader.covered(630), null);
+  assert.equal(r.loader.covered(599), null);
+  // After a jump, the stretch around the new place is its own.
+  r.loader.want(2000);
+  await r.answer('2001');
+  assert.deepEqual(r.loader.covered(2005), { from: 2000, to: 2010 });
+  assert.deepEqual(r.loader.covered(605), { from: 600, to: 630 });
+});

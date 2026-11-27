@@ -22,6 +22,14 @@ export const EN_EXTRA = {
   'Deixar a legenda embutida pronta de antemão': 'Keep the built-in subtitles ready in advance',
   'O PC baixa o arquivo junto com a TV; desligue se o vídeo engasgar': 'The PC downloads the file alongside the TV; turn off if the video stutters',
   'Esta fonte não está acompanhando o vídeo. Experimente uma mais leve.': "This source isn't keeping up with the video. Try a lighter one.",
+  'Testar a sincronia das legendas': 'Test subtitle timing',
+  'Marca as legendas de addons que acompanham o arquivo; o PC lê alguns minutos dele': 'Marks the add-on subtitles that are in sync with the file; the PC reads a few minutes of it',
+  'Acompanha este arquivo': 'In sync with this file',
+  'Acompanha este arquivo com ajuste de {n}s': 'In sync with this file once shifted {n}s',
+  'Fora de sincronia com este arquivo': 'Out of sync with this file',
+  'Testando a sincronia...': 'Testing the timing...',
+  'Legenda ajustada em {n}s para acompanhar este arquivo.': 'Subtitle shifted {n}s to match this file.',
+  'Legenda trocada por uma que acompanha este arquivo.': 'Subtitle replaced by one that is in sync with this file.',
 };
 
 export const AR_EXTRA = {
@@ -46,4 +54,12 @@ export const AR_EXTRA = {
   'Deixar a legenda embutida pronta de antemão': 'تجهيز الترجمة المضمّنة مسبقًا',
   'O PC baixa o arquivo junto com a TV; desligue se o vídeo engasgar': 'ينزّل الكمبيوتر الملف بالتزامن مع التلفاز؛ أوقفها إذا تقطّع الفيديو',
   'Esta fonte não está acompanhando o vídeo. Experimente uma mais leve.': 'هذا المصدر لا يواكب الفيديو. جرّب مصدرًا أخف.',
+  'Testar a sincronia das legendas': 'اختبار توقيت الترجمات',
+  'Marca as legendas de addons que acompanham o arquivo; o PC lê alguns minutos dele': 'يميّز ترجمات الإضافات المتزامنة مع الملف؛ يقرأ الكمبيوتر بضع دقائق منه',
+  'Acompanha este arquivo': 'متزامنة مع هذا الملف',
+  'Acompanha este arquivo com ajuste de {n}s': 'متزامنة مع هذا الملف بعد إزاحة {n} ث',
+  'Fora de sincronia com este arquivo': 'غير متزامنة مع هذا الملف',
+  'Testando a sincronia...': 'جارٍ اختبار التوقيت...',
+  'Legenda ajustada em {n}s para acompanhar este arquivo.': 'أُزيحت الترجمة {n} ث لتتوافق مع هذا الملف.',
+  'Legenda trocada por uma que acompanha este arquivo.': 'استُبدلت الترجمة بأخرى متزامنة مع هذا الملف.',
 };
