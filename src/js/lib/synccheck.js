@@ -7,8 +7,9 @@
 // Either way the PC reads part of the file next to the TV's own stream, so this only moves when
 // the player says the PC may read (tick(allowed)), and stops asking once it has what it needs.
 // Answers per subtitle: 'ok' (in time), 'shift' (in time once moved by `shift` seconds), 'bad'
-// (doesn't follow this file), 'unsure'. The sound alone never condemns a subtitle: a scene carried
-// by music hides the voices, so "no fit" only counts there when another subtitle did fit.
+// (doesn't follow this file), 'unsure'; each with `conf`, how likely it fits (lib/subsync.js).
+// The sound alone never condemns a subtitle: a scene carried by music hides the voices, so
+// "no fit" only counts there when another subtitle did fit.
 // No DOM, no network and no clock of its own (all passed in), so it runs under `npm test`.
 import { timeline, speech, cuesWithin, Match, verdict } from './subsync.js';
 
@@ -29,7 +30,7 @@ const BUDGET_MS = 6; // arithmetic per tick: the screen must not wait on this
 // o.sound(from, seconds, onDone, onFail) -> a lib/soundsample.js Sampler, or null when this
 //   device can't decode sound
 // o.known: answers from an earlier viewing of the same file, { key: { state, shift } }: not tested again
-// o.onResult(key, { state, shift, via }): a new or changed answer
+// o.onResult(key, { state, shift, conf, via }): a new or changed answer
 // o.clock() -> ms (optional)
 export function Checker(o) {
   const clock = o.clock || Date.now;
@@ -61,7 +62,7 @@ export function Checker(o) {
 
   function answerFor(key) {
     const x = raw[key];
-    if (!x || x.error) return { state: 'unsure', shift: 0, via: via };
+    if (!x || x.error) return { state: 'unsure', shift: 0, conf: null, via: via };
     const v = verdict(x.res, via);
     v.via = via;
     return v;
@@ -81,7 +82,7 @@ export function Checker(o) {
       // Against the sound, "no fit" means something only once all are in and another one fitted.
       if (via === 'sound' && v.state === 'bad' && !(heardOut && fits)) v.state = 'unsure';
       const last = out[key];
-      if (last && last.state === v.state && last.shift === v.shift) return;
+      if (last && last.state === v.state && last.shift === v.shift && last.conf === v.conf) return;
       out[key] = v;
       o.onResult(key, v);
     });
@@ -236,6 +237,8 @@ export function Checker(o) {
     waiting: (key) => started && phase !== 'off' && !out[key] && !known[key] && pending().some((c) => c.key === key),
     // The PC is reading the file for this right now.
     pcReading: () => !!sampler && sampler.reading(),
+    // Nothing more will come: every subtitle on the list has its last answer, or the test stopped.
+    done: () => phase === 'off' || (started && phase === 'idle' && !pending().length) || (phase === 'score' && settled && !pending().length),
     // For the diagnostics screen.
     summary: () => {
       const count = { ok: 0, shift: 0, bad: 0, unsure: 0 };

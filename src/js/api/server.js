@@ -195,6 +195,8 @@ export function toPlayable(stream, seriesInfo) {
   return Promise.reject(new Error(t('Tipo de link não suportado na TV')));
 }
 
+const MATROSKA = /^(MPEG4\/ISO|MPEGH\/ISO|TEXT\/|HDMV\/|VOBSUB|VP8$|VP9$|AV1$|MS\/VFW)/i;
+
 // Faixas embutidas (áudio/legenda) do arquivo, lidas pelo servidor com ffprobe.
 export function tracks(mediaUrl) {
   const base = baseUrl();
@@ -203,7 +205,15 @@ export function tracks(mediaUrl) {
     .ready()
     .then(() => getJSON(relay.through(base + 'tracks/' + encodeURIComponent(mediaUrl), 20000), { timeout: 20000, quiet: true }))
     .then((list) => {
-      const arr = Array.isArray(list) ? list : [];
+      const arr = (Array.isArray(list) ? list : []).filter(Boolean);
+      // An MKV leaves out the language of a track when it is English (the format's default), and
+      // the server then says null. Its codec names give an MKV away (Matroska ids: "MPEG4/ISO/AVC",
+      // "TEXT/UTF8"; an MP4 says "AVC1").
+      if (arr.some((tk) => MATROSKA.test(tk.codec || ''))) {
+        arr.forEach((tk) => {
+          if (!tk.lang) tk.lang = 'eng';
+        });
+      }
       return {
         audio: arr.filter((tk) => tk && tk.type === 'audio'),
         subs: arr.filter((tk) => tk && tk.type === 'text'),

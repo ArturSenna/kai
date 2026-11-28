@@ -243,27 +243,49 @@ export function match(ref, from, cues, maxShift) {
 // Measured on two films with their real add-on subtitles (44 files, some timed for another copy)
 // and with subtitles that don't belong (another film's, the right lines moved far away), over
 // stretches of 3 to 10 minutes:
-//   - against a built-in track the right shift stands far above the rest: z of 9 and more, fit of
-//     0.6 and more, against z under 5 for the ones that don't belong;
+//   - against a built-in track the right shift stands far above the rest: z of 7 and more, fit of
+//     0.54 and more, against z under 5 for the ones that don't belong; and the shift it finds is
+//     the right one to within 0.1 s (19 times in 20; never more than 0.5 s off);
 //   - against the sound it is fainter: z of 6.4 to 13 where people talk a lot, against 5.9 at most
 //     for the ones that don't belong; where music carries the scene, the right subtitle may not
 //     stand out at all (z of 3 to 5). So the sound can say "yes", but a "no" from it means little
-//     by itself (see lib/synccheck.js), and the moment a line starts is only known to about half
-//     a second, hence the wider "in time" band.
+//     by itself (see lib/synccheck.js). The shift it finds is within 0.2 s of the built-in track's
+//     timing on one film and 0.6-0.7 s off it on the other (on every subtitle alike, the file's
+//     own included): finer than that, the sound can't tell a late subtitle from a slow speaker.
+// inTime: how far off a subtitle may be and still count as in time. Beyond it, the subtitle is
+// moved by what was measured.
 export const RULES = {
-  track: { sure: 6.5, no: 5, fit: 0.3, inTime: 0.6 },
-  sound: { sure: 6.2, no: 4.5, fit: 0.2, inTime: 0.9 },
+  track: { sure: 6.5, no: 5, fit: 0.3, inTime: 0.2, mid: 5.2, spread: 0.45 },
+  sound: { sure: 6.2, no: 4.5, fit: 0.2, inTime: 0.75, mid: 5.3, spread: 0.45 },
 };
 export const MIN_LINES = 10; // fewer lines than this in the stretch say nothing either way
 
+// How likely the subtitle follows this file at the shift found, 0..1. From the same measurements:
+// how far the best shift stands out (z) on a curve that is even (1/2) between the highest z seen
+// for a subtitle that doesn't belong and the lowest for one that does, kept down when the fit
+// itself is poor (a flat comparison can make a tiny fit stand out), when few lines were compared,
+// and when the best shift is at the end of the reach.
+export function confidence(res, via) {
+  const rule = RULES[via];
+  let p = 1 / (1 + Math.exp(-(res.z - rule.mid) / rule.spread));
+  p *= Math.max(0, Math.min(1, (res.r - rule.fit / 2) / (rule.fit / 2)));
+  if (res.lines < MIN_LINES) p = Math.min(p, 0.5);
+  else if (res.lines < 15) p *= 0.85 + (0.15 * (res.lines - MIN_LINES)) / 5;
+  if (res.edge) p = Math.min(p, 0.2);
+  return p;
+}
+
 // 'ok': in time with the file · 'shift': in time once moved by `shift` seconds ·
 // 'bad': no shift within reach makes it fit · 'unsure': not enough to go on.
+// conf: confidence() of the comparison, so how sure "it fits" is (for 'bad': 1 - conf is how sure
+// "it doesn't" is).
 export function verdict(res, via) {
   const rule = RULES[via];
-  if (res.lines < MIN_LINES) return { state: 'unsure', shift: 0 };
+  const conf = Math.round(confidence(res, via) * 100) / 100;
+  if (res.lines < MIN_LINES) return { state: 'unsure', shift: 0, conf: conf };
   if (res.z >= rule.sure && res.r >= rule.fit && !res.edge) {
-    return Math.abs(res.shift) <= rule.inTime ? { state: 'ok', shift: 0 } : { state: 'shift', shift: res.shift };
+    return Math.abs(res.shift) <= rule.inTime ? { state: 'ok', shift: 0, conf: conf } : { state: 'shift', shift: res.shift, conf: conf };
   }
   // Best at the very end of the reach: it is off by more than can be told, or not this film's.
-  return { state: res.z < rule.no || res.edge ? 'bad' : 'unsure', shift: 0 };
+  return { state: res.z < rule.no || res.edge ? 'bad' : 'unsure', shift: 0, conf: conf };
 }

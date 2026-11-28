@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { STEP, FRAME, timeline, cuesWithin, energies, speech, match, Match, verdict, MIN_LINES } from '../src/js/lib/subsync.js';
+import { STEP, FRAME, timeline, cuesWithin, energies, speech, match, Match, verdict, confidence, MIN_LINES } from '../src/js/lib/subsync.js';
 
 // A made-up film: lines of dialogue at irregular moments, always the same for a given seed.
 function rng(seed) {
@@ -71,7 +71,9 @@ test('against a built-in track: the same lines are in time, moved lines are told
   const ref = timeline(film, 600, 900); // five minutes, starting ten minutes in
   const same = match(ref, 600, retimed(film, 7));
   assert.ok(Math.abs(same.shift) <= 0.3, 'shift ' + same.shift);
-  assert.deepEqual(verdict(same, 'track'), { state: 'ok', shift: 0 });
+  const v0 = verdict(same, 'track');
+  assert.deepEqual([v0.state, v0.shift], ['ok', 0]);
+  assert.ok(v0.conf >= 0.95, 'conf ' + v0.conf);
 
   // Lines that come 12.5 s late have to be brought forward by 12.5 s.
   const late = match(ref, 600, moved(retimed(film, 7), 12.5));
@@ -83,6 +85,31 @@ test('against a built-in track: the same lines are in time, moved lines are told
   const early = match(ref, 600, moved(film, -30));
   assert.ok(Math.abs(early.shift - 30) <= 0.2, 'shift ' + early.shift);
   assert.equal(verdict(early, 'track').state, 'shift');
+});
+
+test('against a built-in track, being off by under half a second is told and corrected', () => {
+  const film = dialogue(1, 1500);
+  const ref = timeline(film, 600, 900);
+  const v = verdict(match(ref, 600, moved(film, 0.4)), 'track');
+  assert.equal(v.state, 'shift');
+  assert.ok(Math.abs(v.shift + 0.4) <= 0.06, 'shift ' + v.shift);
+  // Against the sound the moment a line starts is known less finely: that much is left alone.
+  assert.equal(verdict({ shift: -0.4, r: 0.4, z: 9, lines: 40, edge: false }, 'sound').state, 'ok');
+});
+
+test('confidence grows with how far the fit stands out, and is held down by a poor fit, few lines or the edge', () => {
+  const at = (z, more) => confidence(Object.assign({ shift: 0, r: 0.6, z: z, lines: 40, edge: false }, more), 'track');
+  assert.ok(at(4) < 0.1);
+  assert.ok(Math.abs(at(5.2) - 0.5) < 0.01);
+  assert.ok(at(6.5) > 0.9);
+  assert.ok(at(9) > 0.99);
+  assert.ok(at(9, { r: 0.05 }) < 0.01); // the "fit" stands out only because nothing else fits either
+  assert.ok(at(9, { lines: 6 }) <= 0.5);
+  assert.ok(at(9, { edge: true }) <= 0.2);
+  assert.ok(confidence({ shift: 0, r: 0.3, z: 6.2, lines: 40, edge: false }, 'sound') < at(6.2));
+  // Each answer carries it: how sure "it fits" is.
+  assert.ok(verdict({ shift: 0, r: 0.7, z: 10, lines: 40, edge: false }, 'track').conf > 0.95);
+  assert.ok(verdict({ shift: 3, r: 0.1, z: 3, lines: 40, edge: false }, 'track').conf < 0.05);
 });
 
 test("against a built-in track: another film's subtitle, or one at another speed, doesn't fit", () => {

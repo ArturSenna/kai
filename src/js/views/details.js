@@ -18,6 +18,11 @@ import { isAnime } from '../api/skip.js';
 import { t, epLabel } from '../lib/i18n.js';
 import { isTizen } from '../lib/platform.js';
 import { unplayableAudio } from '../lib/trackselect.js';
+import * as lang from '../lib/lang.js';
+import * as sourcesubs from '../lib/sourcesubs.js';
+import * as filememory from '../lib/filememory.js';
+import { langShort, percent, signed } from '../lib/sublabels.js';
+import { openSyncTest } from './synctest.js';
 
 export function openDetails(type, id, opts) {
   router.push(DetailsView(type, id, opts || {}));
@@ -38,6 +43,10 @@ export function sortedVideos(meta) {
 // for the player to fall back on if a source won't play.
 const SMART_WAIT_MS = 10000;
 const SMART_FALLBACKS = 4;
+// Sources whose built-in subtitles are looked up without being asked (from the top of the list),
+// and how long the focus rests on another one before it is looked up too.
+const AUTO_PROBES = 6;
+const PROBE_DWELL_MS = 700;
 
 function DetailsView(type, id, opts) {
   const el = h('div.view');
@@ -57,6 +66,11 @@ function DetailsView(type, id, opts) {
   let watchBtn = null;
   let libBtn = null;
   let tmdbInfo = null;
+  let probeQueue = null; // built-in subtitle lookups for the source list on screen
+  let probed = {}; // stream address -> its track list, as read on this visit
+  let probeTimer = null;
+  let probeRank = 0;
+  let stopSmartNow = null; // ends Smart Choice for the source list on screen
 
   const isSeries = () => meta && sortedVideos(meta).length > 0 && meta.type !== 'movie';
 
@@ -342,6 +356,120 @@ function DetailsView(type, id, opts) {
     return out;
   }
 
+  // ---------- Built-in subtitles of each source (lib/sourcesubs.js) ----------
+  // The PC server reads the track list of the first sources, and of any the focus rests on, and
+  // each is marked with the first- and second-choice subtitle languages it has built in. What
+  // the subtitle sync test found for a source (→ key, or an earlier viewing) is marked too.
+  function probeOn() {
+    return store.settings().sourceSubsCheck !== false && server.isAvailable();
+  }
+
+  function subLangGroups() {
+    const st = store.settings();
+    return { primary: lang.prefs(st.subtitleLangs), secondary: lang.prefs(st.subtitleLangs2) };
+  }
+
+  function tracksOf(s, video) {
+    if (probed[s.url]) return probed[s.url];
+    const c = filememory.knownTracks(sourcesubs.fileIdent(s, video.id));
+    return c ? sourcesubs.expand(c) : null;
+  }
+
+  function gotTracks(s, video, tracks) {
+    probed[s.url] = tracks;
+    filememory.rememberTracks(sourcesubs.fileIdent(s, video.id), sourcesubs.compact(tracks));
+  }
+
+  // What the sync test found for this source's add-on subtitles in a wanted language: the best fit,
+  // else "out of sync" when every one tested was.
+  function syncMark(s, video) {
+    const g = subLangGroups();
+    const wanted = g.primary.concat(g.secondary);
+    const seen = filememory.seenSync(sourcesubs.fileIdent(s, video.id));
+    let best = null;
+    let bad = null;
+    Object.keys(seen).forEach((k) => {
+      const r = seen[k];
+      if (!r.lang || wanted.indexOf(r.lang) < 0) return;
+      if (r.state === 'bad') {
+        if (!bad) bad = r;
+        return;
+      }
+      const rank = (x) => wanted.indexOf(x.lang) * 2 + (x.state === 'ok' ? 0 : 1) - (x.conf || 0) / 2;
+      if (!best || rank(r) < rank(best)) best = r;
+    });
+    const sure = (r) => (typeof r.conf === 'number' ? ' · ' + percent(r.conf) : '');
+    if (best && best.state === 'ok') return h('span.s-tag.ok', { text: '✓ ' + t('Legenda {lang} em sincronia', { lang: langShort(best.lang) }) + sure(best) });
+    if (best) return h('span.s-tag.ok', { text: '✓ ' + t('Legenda {lang} em sincronia com ajuste de {n}s', { lang: langShort(best.lang), n: signed(best.shift) }) + sure(best) });
+    if (bad) return h('span.s-tag.warn', { text: '✗ ' + t('Legendas {lang} fora de sincronia', { lang: langShort(bad.lang) }) });
+    return null;
+  }
+
+  function markSource(row) {
+    const s = row.__stream;
+    const video = row.__video;
+    const el = row.__subTags;
+    clear(el);
+    const g = subLangGroups();
+    const tracks = tracksOf(s, video);
+    if (tracks && (g.primary.length || g.secondary.length)) {
+      const tags = sourcesubs.langTags(tracks, g.primary, g.secondary);
+      if (tags.primary) el.appendChild(h('span.s-tag.ok', { text: t('Embutida {lang}', { lang: langShort(tags.primary) }) }));
+      if (tags.secondary) el.appendChild(h('span.s-tag', { text: t('Embutida {lang}', { lang: langShort(tags.secondary) }) }));
+      if (!tags.primary && !tags.secondary) {
+        const names = [g.primary[0], g.secondary[0]].filter(Boolean).map(langShort).join('/');
+        el.appendChild(h('span.s-tag.dim', { text: t('Sem legenda embutida {langs}', { langs: names }) }));
+      }
+    } else if (row.__probing) el.appendChild(h('span.s-tag.dim', { text: t('Vendo as legendas embutidas...') }));
+    const sync = syncMark(s, video);
+    if (sync) el.appendChild(sync);
+  }
+
+  function wantProbe(row, rank) {
+    const s = row.__stream;
+    if (!probeQueue || !sourcesubs.canProbe(s) || tracksOf(s, row.__video) || probeQueue.has(s.url)) {
+      if (probeQueue && probeQueue.has(s.url)) probeQueue.add(s.url, s, rank); // moves it up
+      return;
+    }
+    row.__probing = true;
+    probeQueue.add(s.url, s, rank);
+    markSource(row);
+  }
+
+  // The first sources in the list, as it stands.
+  function probeTop(list) {
+    if (!probeOn()) return;
+    const items = list.querySelectorAll('.stream');
+    let n = 0;
+    for (let i = 0; i < items.length && n < AUTO_PROBES; i++) {
+      if (items[i].classList.contains('disabled') || !sourcesubs.canProbe(items[i].__stream)) continue;
+      n++;
+      wantProbe(items[i], i);
+    }
+  }
+
+  // The → key on a source: its subtitles' sync test (views/synctest.js).
+  function testSource(row) {
+    const s = row.__stream;
+    const video = row.__video;
+    if (stopSmartNow) stopSmartNow();
+    if (!server.isAvailable()) return toast(t('O teste de sincronia precisa do servidor do PC conectado (Ajustes).'), 4500);
+    if (!sourcesubs.canProbe(s)) return toast(t('O teste antes de tocar funciona com links diretos (debrid/HTTP) já prontos.'), 4500);
+    openSyncTest({
+      meta: meta,
+      video: video,
+      stream: s,
+      runtime: runtimeMinutes() * 60,
+      tracks: tracksOf(s, video),
+      onTracks: (tracks) => {
+        gotTracks(s, video, tracks);
+        markSource(row);
+      },
+      onPlay: (pick) => play(video, s, row.__all, null, pick),
+      onClose: () => alive && markSource(row),
+    });
+  }
+
   function showStreams(video, focusFirst, smart) {
     mode = 'streams';
     streamsVideo = video;
@@ -356,6 +484,21 @@ function DetailsView(type, id, opts) {
     const list = h('div.list', { 'data-scroll-y': '', 'data-pad-y': '120', 'data-group': '', 'data-vertical': '' });
     list.style.top = '178px';
     panel.appendChild(list);
+    if (probeQueue) probeQueue.stop();
+    clearTimeout(probeTimer);
+    probeQueue = sourcesubs.Queue({
+      limit: 2,
+      run: (s) => server.tracks(s.url),
+      onDone: (key, s, tracks) => {
+        if (!alive) return;
+        if (tracks) gotTracks(s, video, tracks);
+        Array.prototype.forEach.call(list.querySelectorAll('.stream'), (row) => {
+          if (row.__stream !== s) return;
+          row.__probing = false;
+          markSource(row);
+        });
+      },
+    });
     const srcs = addons
       .withResource('stream', meta.type, video.id)
       .map((a, i) => ({ a: a, i: i }))
@@ -383,10 +526,16 @@ function DetailsView(type, id, opts) {
     let smartActive = !!smart;
     const smartTimer = smartActive ? setTimeout(() => decideSmart(true), SMART_WAIT_MS) : null;
 
-    function stopSmart() {
+    // playing: Smart Choice is starting a source, nothing more to do on this list.
+    function stopSmart(playing) {
+      if (!smartActive) return;
       smartActive = false;
       clearTimeout(smartTimer);
+      if (playing) return;
+      status();
+      probeTop(list); // the list is the viewer's now: its first sources get their marks
     }
+    stopSmartNow = stopSmart;
 
     // Candidates in list order (add-on priority, then each add-on's own order), with the ones
     // that play best on the TV first: direct links before torrents, then Dolby Vision, REMUX and
@@ -427,7 +576,7 @@ function DetailsView(type, id, opts) {
         return;
       }
       if (pendingCount > 0 && !timedOut && (debridPending || !clean)) return;
-      stopSmart();
+      stopSmart(true);
       play(video, best, all, list.slice(1, 1 + SMART_FALLBACKS));
     }
 
@@ -438,7 +587,10 @@ function DetailsView(type, id, opts) {
         return;
       }
       const srv = serverOk ? t('Servidor do PC conectado') : t('Servidor do PC não conectado: só links diretos');
-      sub.textContent = srv + (pendingCount > 0 ? '  ·  ' + t('{n} addon(s) ainda carregando', { n: pendingCount }) : '  ·  ' + t('{n} fontes', { n: all.length }));
+      sub.textContent =
+        srv +
+        (pendingCount > 0 ? '  ·  ' + t('{n} addon(s) ainda carregando', { n: pendingCount }) : '  ·  ' + t('{n} fontes', { n: all.length })) +
+        (serverOk ? '  ·  → ' + t('testa a sincronia da legenda') : '');
       barFill.style.width = Math.round(((srcs.length - pendingCount) / srcs.length) * 100) + '%';
       const g = groups.find((x) => x.addon.transportUrl === filter);
       filterBtn.textContent = (g ? g.addon.manifest.name : t('Todos')) + ' ▾';
@@ -506,6 +658,7 @@ function DetailsView(type, id, opts) {
           }
           status();
           decideSmart(false);
+          if (!smartActive) probeTop(list);
         });
       })
       .catch(() => {});
@@ -520,7 +673,9 @@ function DetailsView(type, id, opts) {
     else if (needs) tags.push(h('span.s-tag', { cls: serverOk ? '' : 'warn', text: serverOk ? t('Torrent · via PC') : t('Torrent · precisa do PC') }));
     else tags.push(h('span.s-tag.ok', { text: t('Direto') }));
     streamBadges(s).forEach((b) => tags.push(h('span.s-tag', { cls: b.warn ? 'warn' : '', text: b.t })));
-    return h(
+    const subTags = h('span.s-subtags');
+    tags.push(subTags);
+    const row = h(
       'div.stream',
       {
         focusable: true,
@@ -530,19 +685,31 @@ function DetailsView(type, id, opts) {
           if (needs && !serverOk) return toast(t('Torrent precisa do stremio-service rodando no PC. Configure em Ajustes.'), 5000);
           play(video, s, all);
         },
+        // The focus resting on a source: its built-in subtitles are looked up first.
+        onFocus: (el) => {
+          clearTimeout(probeTimer);
+          if (probeOn() && !disabled) probeTimer = setTimeout(() => alive && wantProbe(el, -++probeRank), PROBE_DWELL_MS);
+        },
       },
       [
         h('div.s-addon', { text: (s.name || s.addon || '').trim() }),
         h('div.s-body', null, [h('div.s-title', { text: (s.title || s.description || '').trim() }), h('div.s-tags', null, tags)]),
       ]
     );
+    row.__stream = s;
+    row.__video = video;
+    row.__all = all;
+    row.__subTags = subTags;
+    markSource(row);
+    return row;
   }
 
-  function play(video, stream, all, fallbacks) {
+  // pick: the subtitle chosen in the sync test (views/synctest.js), or none.
+  function play(video, stream, all, fallbacks, pick) {
     const li = stremio.libraryItem(meta.id);
     const resumeMs = li && li.state && li.state.video_id === video.id ? li.state.timeOffset : 0;
     const start = (ms) =>
-      openPlayer({ meta: meta, video: video, stream: stream, streams: all, startTime: ms, isSeries: isSeries(), fallbacks: fallbacks || [] });
+      openPlayer({ meta: meta, video: video, stream: stream, streams: all, startTime: ms, isSeries: isSeries(), fallbacks: fallbacks || [], subtitle: pick || null });
     if (resumeMs > 30000) {
       menu(
         t('Continuar de onde parou?'),
@@ -603,9 +770,18 @@ function DetailsView(type, id, opts) {
 
   return {
     el: el,
+    // → on a source tests its subtitles' sync before playing (the list has nothing to its right).
+    onKey: (e) => {
+      const cur = nav.current();
+      if (e.keyCode !== nav.KEY.RIGHT || mode !== 'streams' || !cur || !cur.__stream || !panel.contains(cur)) return false;
+      testSource(cur);
+      return true;
+    },
     onShow: () => {
       if (meta && watchBtn) updateButtons();
       loadVisibleImages(panel, 300);
+      // Back from the player: what its sync test found shows on the source.
+      if (mode === 'streams') Array.prototype.forEach.call(panel.querySelectorAll('.stream'), (row) => row.__stream && markSource(row));
     },
     onBack: () => {
       if (mode === 'streams' && isSeries()) {
@@ -617,6 +793,8 @@ function DetailsView(type, id, opts) {
     },
     destroy: () => {
       alive = false;
+      clearTimeout(probeTimer);
+      if (probeQueue) probeQueue.stop();
     },
   };
 }

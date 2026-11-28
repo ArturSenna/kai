@@ -115,7 +115,9 @@ test('with a built-in track: waits for three minutes of it, then tells in time, 
   await r.run(() => Object.keys(r.results).length === 3);
   assert.equal(r.checker.needsTrack(), false); // the player may let go of the track
   assert.equal(r.sounds.length, 0); // the sound was never needed
-  assert.deepEqual(r.results.right, { state: 'ok', shift: 0, via: 'track' });
+  assert.deepEqual([r.results.right.state, r.results.right.shift, r.results.right.via], ['ok', 0, 'track']);
+  assert.ok(r.results.right.conf >= 0.95, 'conf ' + r.results.right.conf);
+  assert.ok(r.results.other.conf < 0.3, 'conf ' + r.results.other.conf);
   assert.equal(r.results.late.state, 'shift');
   assert.ok(Math.abs(r.results.late.shift + 7.5) <= 0.3, 'shift ' + r.results.late.shift);
   assert.equal(r.results.other.state, 'bad');

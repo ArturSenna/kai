@@ -7,7 +7,6 @@ import * as subs from '../lib/subs.js';
 import * as substyle from '../lib/substyle.js';
 import * as store from '../lib/store.js';
 import { log } from '../lib/log.js';
-import { getText, getBuffer } from '../lib/http.js';
 import * as server from '../api/server.js';
 import * as addons from '../api/addons.js';
 import * as stremio from '../api/stremio.js';
@@ -22,30 +21,20 @@ import * as lang from '../lib/lang.js';
 import * as probe from '../lib/probe.js';
 import * as trackselect from '../lib/trackselect.js';
 import * as asscanvas from '../lib/asscanvas.js';
-import * as relay from '../lib/relay.js';
-import * as embedsubs from '../lib/embedsubs.js';
 import * as streamwatch from '../lib/streamwatch.js';
 import * as synccheck from '../lib/synccheck.js';
-import * as soundsample from '../lib/soundsample.js';
 import * as audiodecode from '../lib/audiodecode.js';
+import * as pcread from '../lib/pcread.js';
+import { fileIdent as identOf } from '../lib/sourcesubs.js';
+import * as filememory from '../lib/filememory.js';
+import { langName, signed, syncLabel } from '../lib/sublabels.js';
 
 const HIDE_MS = 5000;
 const SAVE_MS = 15000;
-const LANG_NAMES = {
-  por: 'Português', pob: 'Português (BR)', pt: 'Português', 'pt-br': 'Português (BR)', eng: 'Inglês', en: 'Inglês',
-  spa: 'Espanhol', es: 'Espanhol', jpn: 'Japonês', ja: 'Japonês', fre: 'Francês', fra: 'Francês', fr: 'Francês',
-  ger: 'Alemão', deu: 'Alemão', de: 'Alemão', ita: 'Italiano', it: 'Italiano', kor: 'Coreano', ko: 'Coreano',
-  chi: 'Chinês', zho: 'Chinês', rus: 'Russo', ara: 'Árabe', hin: 'Hindi', und: 'Indefinido',
-  zh: 'Chinês', ru: 'Russo', ar: 'Árabe', hi: 'Hindi',
-};
 
-function langName(code) {
-  if (!code) return t('Desconhecido');
-  // However the source spells it ("pt-BR", "Portuguese (Brazil)"): see lib/lang.js.
-  const name = LANG_NAMES[String(code).toLowerCase()] || LANG_NAMES[lang.canon(code)];
-  return name ? t(name) : code;
-}
-
+// opts: { meta, video, stream, streams, startTime, isSeries, fallbacks, subtitle }
+// subtitle: picked in the source list's sync test before playing, null for the automatic pick:
+//   { kind: 'addon', key, lang, addon } or { kind: 'embedded', index, lang }
 export function openPlayer(opts) {
   router.push(PlayerView(opts));
 }
@@ -232,6 +221,7 @@ function PlayerView(opts) {
   let failedSubs = {}; // subtitles that wouldn't download, came empty or the server couldn't read
   let embeddedAuto = false; // the file's own tracks were read at the start, for the automatic pick
   let preloadIndex = null; // the file's track in the wanted language: always fetched in the background
+  let handPick = opts.subtitle || null; // picked in the source list's sync test: comes on as soon as it is listed
   const AUTO_SUB_TRIES = 4;
 
   function subKey(s) {
@@ -351,7 +341,31 @@ function PlayerView(opts) {
     refreshPreload();
   }
 
+  // The subtitle picked before playing, once its source lists it: as if picked from the menu.
+  // Until then the automatic pick fills in.
+  function applyHandPick() {
+    const p = handPick;
+    if (p.kind === 'embedded') {
+      if (!embedded || !embeddedAuto || !embedded.subs[p.index]) return false;
+      handPick = null;
+      autoDone.sub = true;
+      pendingEmbedded = null;
+      rememberChoice({ lang: p.lang, embedded: true });
+      selectEmbeddedSub(p.index);
+      return true;
+    }
+    const sub = (addonSubs || []).find((x) => subKey(x) === p.key);
+    if (!sub) return false;
+    handPick = null;
+    autoDone.sub = true;
+    pendingEmbedded = null;
+    rememberChoice({ lang: lang.canon(sub.lang), addon: sub.addon });
+    selectAddonSub(sub);
+    return true;
+  }
+
   function pickSubtitle() {
+    if (handPick && applyHandPick()) return;
     if (autoDone.sub || !settings.subtitlesAuto || autoSub.tries >= AUTO_SUB_TRIES) return;
     const choice = savedChoice();
     if (choice && choice.lang === 'off') return; // turned off by hand for this title
@@ -604,6 +618,7 @@ function PlayerView(opts) {
     // Smart Choice: before giving up, try its next-best source.
     if (!hasPlayed && opts.fallbacks && opts.fallbacks.length) {
       stream = opts.fallbacks.shift();
+      handPick = null;
       toast(t('Essa fonte não tocou. Tentando outra...'));
       triedTranscode = false;
       autoDone = { sub: false, audio: false };
@@ -1097,17 +1112,12 @@ function PlayerView(opts) {
   function embLoader(index) {
     if (embLoaders[index]) return embLoaders[index];
     const forUrl = mediaUrl;
-    const base = server.baseUrl() + 'hlsv2/';
-    const query = '?mediaURL=' + encodeURIComponent(mediaUrl);
-    embLoaders[index] = embedsubs.Loader({
-      newSession: () => 'kai' + Math.random().toString(36).slice(2),
-      blockUrl: (sid, k) => relay.through(base + sid + '/subtitle' + index + '/segment' + k + '.vtt' + query, 45000),
-      stopUrl: (sid) => relay.through(base + sid + '/destroy', 8000),
-      getText: (url) => getText(url, { timeout: 45000, quiet: true }),
-      parse: subs.parse,
-      onChange: () => alive && forUrl === mediaUrl && embeddedChanged(index),
-      onFail: () => alive && forUrl === mediaUrl && embeddedFailed(index),
-    });
+    embLoaders[index] = pcread.subtitleTrack(
+      mediaUrl,
+      index,
+      () => alive && forUrl === mediaUrl && embeddedChanged(index),
+      () => alive && forUrl === mediaUrl && embeddedFailed(index)
+    );
     return embLoaders[index];
   }
 
@@ -1201,7 +1211,6 @@ function PlayerView(opts) {
   // server. The Subtitles menu marks what was found; a subtitle that is off by a fixed amount is
   // moved by that much while it is on screen; and a subtitle the app picked itself gives way to
   // one in the same language that follows the file, when it doesn't.
-  const SYNC_SEEN = 'subSync';
   const SYNC_AFTER_TICKS = 80; // 20 s of playing first: the TV's own stream settles before the PC reads
   let checker = null;
   let syncResults = {}; // subtitle key -> { state: 'ok' | 'shift' | 'bad' | 'unsure', shift }
@@ -1214,41 +1223,25 @@ function PlayerView(opts) {
     return settings.subSyncCheck !== false;
   }
 
-  // What tells one copy of a film from another, for remembering the answers: the file's name.
-  // (Never the whole address: stream links carry account keys.)
-  function fileIdent() {
-    const bh = stream.behaviorHints || {};
-    let name = bh.filename || bh.videoHash || '';
-    if (!name && typeof stream.infoHash === 'string') name = stream.infoHash + ':' + stream.fileIdx;
-    if (!name && typeof stream.url === 'string') {
-      const last = stream.url.split(/[?#]/)[0].split('/').pop() || '';
-      if (/\.(mkv|mp4|m4v|avi|ts|webm|mov)$/i.test(last)) name = last;
-    }
-    return name ? video.id + '|' + name : '';
-  }
-
+  // Answers are remembered per file name (lib/filememory.js): the source list shows them, and
+  // the next viewing of the same file doesn't test again.
   function seenSync() {
-    const id = fileIdent();
-    return Object.assign({}, (id && (store.get(SYNC_SEEN, {}) || {})[id]) || {});
+    return filememory.seenSync(identOf(stream, video.id));
   }
 
   function rememberSync(key, v) {
-    const id = fileIdent();
-    if (!id || meta.id === 'dev' || v.state === 'unsure') return;
-    const all = store.get(SYNC_SEEN, {}) || {};
-    const mine = all[id] || {};
-    delete all[id];
-    mine[key] = { state: v.state, shift: v.shift };
-    all[id] = mine;
-    const keys = Object.keys(all);
-    if (keys.length > 40) delete all[keys[0]]; // oldest first (insertion order)
-    store.set(SYNC_SEEN, all);
+    if (meta.id === 'dev') return;
+    const s = (addonSubs || []).find((x) => subKey(x) === key);
+    filememory.rememberSync(identOf(stream, video.id), key, v, s ? lang.canon(s.lang) : '');
   }
 
   function resetSyncCheck() {
     if (checker) checker.stop();
     checker = null;
     syncResults = syncOn() ? seenSync() : {};
+    // A subtitle picked in the sync test before playing keeps what that test found, even with the
+    // test during playback turned off.
+    if (!syncOn() && handPick && handPick.key && seenSync()[handPick.key]) syncResults[handPick.key] = seenSync()[handPick.key];
     syncTrackIndex = null;
     syncHeld = false;
     subFiles = {};
@@ -1274,19 +1267,13 @@ function PlayerView(opts) {
     return !r ? 2 : r.state === 'ok' ? 0 : r.state === 'shift' ? 1 : r.state === 'bad' ? 3 : 2;
   }
 
-  function signed(v) {
-    return (v > 0 ? '+' : '') + v.toFixed(2).replace(/0$/, '');
-  }
-
   // What the Subtitles menu says about an add-on subtitle.
   function syncTag(s) {
     const key = subKey(s);
-    const r = syncResults[key];
-    if (r && r.state === 'ok') return { text: '✓ ' + t('Acompanha este arquivo'), cls: 'fits' };
-    if (r && r.state === 'shift') return { text: '✓ ' + t('Acompanha este arquivo com ajuste de {n}s', { n: signed(r.shift) }), cls: 'fits' };
-    if (r && r.state === 'bad') return { text: '✗ ' + t('Fora de sincronia com este arquivo'), cls: 'misfit' };
+    const label = syncLabel(syncResults[key]);
+    if (label.text) return label;
     if (checker && checker.waiting(key)) return { text: t('Testando a sincronia...'), cls: '' };
-    return { text: '', cls: '' };
+    return label;
   }
 
   // The add-on subtitles worth testing: the one on screen, then those in the wanted languages.
@@ -1332,33 +1319,25 @@ function PlayerView(opts) {
 
   // A stretch of the file's sound, from the PC server (lib/soundsample.js): the track being heard.
   function syncSound(from, seconds, onDone, onFail) {
-    if (!audiodecode.supported()) return null;
     const forUrl = mediaUrl;
     let heard = currentAudio;
     const native = videoEl.audioTracks;
     if (heard === null && native) for (let i = 0; i < native.length && heard === null; i++) if (native[i].enabled) heard = i;
     if (heard === null || !embedded || heard >= embedded.audio.length) heard = 0;
-    const base = server.baseUrl() + 'hlsv2/';
-    const query = '?mediaURL=' + encodeURIComponent(mediaUrl) + '&audioCodecs=aac&maxAudioChannels=2';
-    return soundsample.Sampler({
-      from: from,
-      seconds: seconds,
-      newSession: () => 'kai' + Math.random().toString(36).slice(2),
-      listUrl: (sid) => relay.through(base + sid + '/audio' + heard + '.m3u8' + query, 30000),
-      fileUrl: (sid, uri) => relay.through(base + sid + '/' + uri, 45000),
-      stopUrl: (sid) => relay.through(base + sid + '/destroy', 8000),
-      getText: (url) => getText(url, { timeout: 30000, quiet: true }),
-      getBytes: (url) => getBuffer(url, { timeout: 45000, quiet: true }),
-      decode: audiodecode.decode,
-      onDone: (sound) => alive && forUrl === mediaUrl && onDone(sound),
-      onFail: (reason) => alive && forUrl === mediaUrl && onFail(reason),
-    });
+    return pcread.sound(
+      mediaUrl,
+      heard,
+      from,
+      seconds,
+      (sound) => alive && forUrl === mediaUrl && onDone(sound),
+      (reason) => alive && forUrl === mediaUrl && onFail(reason)
+    );
   }
 
   function onSyncResult(key, v) {
     syncResults[key] = v;
     rememberSync(key, v);
-    log.info('Sincronia de legenda: ' + v.state + (v.state === 'shift' ? ' ' + signed(v.shift) + 's' : '') + ' (' + v.via + ')');
+    log.info('Sincronia de legenda: ' + v.state + (v.state === 'shift' ? ' ' + signed(v.shift) + 's' : '') + (typeof v.conf === 'number' ? ' ' + Math.round(v.conf * 100) + '%' : '') + ' (' + v.via + ')');
     if (currentSub.kind !== 'addon') return;
     if (currentSub.id === key) {
       // A delay set by hand before this answer came was an attempt at the same correction: the
@@ -1479,7 +1458,9 @@ function PlayerView(opts) {
           updateSubLoading();
           if (!file.cues.length) return subFailed(s, silent, t('Esta legenda está vazia ou em um formato que o app não lê.'));
           showSubFile(file);
-          if (!silent) toast(t('Legenda: {lang}', { lang: langName(s.lang) }));
+          // Picked by hand: says so, and how far it was moved when the sync test found it off.
+          const r = syncResults[key];
+          if (!silent) toast(t('Legenda: {lang}', { lang: langName(s.lang) }) + (r && r.state === 'shift' ? '  ·  ' + t('ajustada em {n}s para acompanhar o arquivo', { n: signed(r.shift) }) : ''), r && r.state === 'shift' ? 5000 : undefined);
         },
         () => alive && currentSub.id === key && subFailed(s, silent, t('Não foi possível baixar a legenda.'))
       );
@@ -1661,6 +1642,7 @@ function PlayerView(opts) {
         saveProgress();
         pendingStart = videoEl.currentTime * 1000;
         stream = s;
+        handPick = null;
         triedTranscode = false;
         autoDone = { sub: false, audio: false };
         start();
@@ -1682,6 +1664,7 @@ function PlayerView(opts) {
       if (match && (!server.needsServer(match) || server.isAvailable())) {
         video = nv;
         stream = match;
+        handPick = null;
         opts.streams = list;
         pendingStart = 0;
         triedTranscode = false;
